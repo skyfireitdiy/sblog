@@ -1,0 +1,3 @@
+[submodule "sflib"]
+	path = sflib
+	url = https://github.com/skyfireitdiy/sflib
