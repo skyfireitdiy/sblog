@@ -1,3 +1,9 @@
 [submodule "third_part/sflib"]
 	path = third_part/sflib
 	url = https://github.com/skyfireitdiy/sflib
+[submodule "third_part/sqlite_orm"]
+	path = third_part/sqlite_orm
+	url = https://github.com/fnc12/sqlite_orm
+[submodule "third_part/digstpp"]
+	path = third_part/digstpp
+	url = https://github.com/kerukuro/digestpp

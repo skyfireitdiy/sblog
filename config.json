@@ -4,5 +4,6 @@
     "port": 8080,
     "tmp_file_path": "/tmp"
   },
-  "static_path": "/home/skyfire/Desktop/my_blog/static"
+  "static_path": "/home/skyfire/Desktop/my_blog/static",
+  "db_path": "/home/skyfire/Desktop/my_blog/db"
 }

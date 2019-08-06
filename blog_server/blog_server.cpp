@@ -1,6 +1,7 @@
 
 #include "blog_server.h"
 #include "tools/sf_logger.hpp"
+#include "tools/sf_finally.hpp"
 
 using namespace skyfire;
 using namespace std;
@@ -13,12 +14,22 @@ blog_server::blog_server(const std::string &config_file_path) {
         assert(false);
     }
 
-    auto server_json_config = config__->value("server"s, sf_json());
+    auto server_json_config = config__->value("server"s);
     if (server_json_config.is_null())
     {
-        sf_error("config error");
+        sf_error("server config error");
         assert(false);
     }
+
+    auto db_path = config__->value("db_path"s);
+    if(db_path.is_null())
+    {
+        sf_error("db_path config error");
+        assert(false);
+    }
+
+    admin_user_manager__ = admin_user_manager::get_instance(sf_path_join(string(db_path), "admin_user.db3"s));
+
     sf_http_server_config server_conf;
     from_json(server_json_config, server_conf);
 
@@ -41,25 +52,39 @@ bool blog_server::start() {
 }
 
 void blog_server::admin_root(const sf_http_request &req, sf_http_response &res) {
-    res.get_header().set_header("Location", "/admin/index.html");
-    res.set_status(302);
+    res.redirect("/admin/index.html");
 }
 
 void blog_server::admin_login(const sf_http_request& req, sf_http_response &res) {
+    sf_json ret;
+    sf_finally f([&ret, &res]{
+        res.set_body(to_byte_array(ret.to_string()));
+    });
+
     auto param = sf_parse_param(to_string(req.get_body()));
     if (param.count("user") == 0 || param.count("password") == 0)
     {
-        res.set_status(403);
+        ret["code"] = 1;
+        ret["msg"] = "param error";
+        ret["redirect"] = "/admin/index.html";
+        return;
     }
 
-    // TODO 验证用户名密码
-    if(param["user"] != "skyfire" || param["password"] != "123456")
+    auto user_info = admin_user_manager__->check_user(param["user"], param["password"]);
+
+    if(user_info == nullptr)
     {
-        res.set_status(403);
+        ret["code"] = 2;
+        ret["msg"] = "user name or password error";
+        ret["redirect"] = "/admin/index.html";
+        return;
     }
     else {
-        res.get_header().set_header("Location", "/admin/manage.html");
-        res.set_status(302);
+        auto session_id = req.get_session_id();
+        server__->set_session(session_id, "user", to_json(*user_info));
+        ret["code"] = 0;
+        ret["msg"] = "ok";
+        ret["redirect"] = "/admin/manage.html";
     }
 }
 

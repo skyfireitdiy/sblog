@@ -14,29 +14,31 @@ private:
     static std::enable_if_t <sizeof...(Args)-1!=N, sf_json>
     get_value__(const sf_json& root, const std::tuple<Args...>& keys, const sf_json &default_value = sf_json()){
         auto key = std::get<N>(keys);
-        static_assert(std::is_same_v<std::string, decltype(key)> || std::is_same_v<int, decltype(key)>);
-        if constexpr (std::is_arithmetic<decltype(key)>::value)
+        static_assert(std::is_convertible_v<decltype(key), int> || std::is_convertible_v<decltype(key), std::string >);
+        if constexpr (std::is_convertible_v<decltype(key), int>)
         {
+            auto t_key = static_cast<int>(key);
             if (root.type() != sf_json_type::array)
             {
                 return default_value;
             }
-            else if(root.size() <= key)
+            else if(root.size() <= t_key)
             {
                 return default_value;
             } else{
-                return get_value__<N+1>(root.at(key), keys, default_value);
+                return get_value__<N+1>(root.at(t_key), keys, default_value);
             }
-        } else if (std::is_same_v<std::string, decltype(key)>){
+        } else if (std::is_convertible_v<decltype(key), std::string>){
+            auto t_key = static_cast<std::string>(key);
             if(root.type() != sf_json_type::object)
             {
                 return default_value;
             }
-            else if(!root.has(key))
+            else if(!root.has(t_key))
             {
                 return default_value;
             } else{
-                return get_value__<N+1>(root.at(key), keys, default_value);
+                return get_value__<N+1>(root.at(t_key), keys, default_value);
             }
         }
     }
@@ -46,29 +48,31 @@ private:
     static std::enable_if_t <sizeof...(Args)-1==N, sf_json>
     get_value__(const sf_json& root, const std::tuple<Args...>& keys, const sf_json &default_value = sf_json()){
         auto key = std::get<N>(keys);
-        static_assert(std::is_same_v<std::string, decltype(key)> || std::is_same_v<int, decltype(key)>);
-        if constexpr (std::is_arithmetic<decltype(key)>::value)
+        static_assert(std::is_convertible_v<decltype(key), int> || std::is_convertible_v<decltype(key), std::string >);
+        if constexpr (std::is_convertible_v<decltype(key), int>)
         {
+            auto t_key = static_cast<int>(key);
             if (root.type() != sf_json_type::array)
             {
                 return default_value;
             }
-            else if(root.size() <= key)
+            else if(root.size() <= t_key)
             {
                 return default_value;
             } else{
-                return root.at(key);
+                return root.at(t_key);
             }
-        } else if (std::is_same_v<std::string, decltype(key)>){
+        } else if (std::is_convertible_v<decltype(key), std::string>){
+            auto t_key = static_cast<std::string>(key);
             if(root.type() != sf_json_type::object)
             {
                 return default_value;
             }
-            else if(!root.has(key))
+            else if(!root.has(t_key))
             {
                 return default_value;
             } else{
-                return root.at(key);
+                return root.at(t_key);
             }
         }
     }

@@ -11,15 +11,43 @@
     <form action="/admin/login" method="post">
         <table>
             <tr>
-                <td>用户名</td><td><input name="user" type="text" placeholder="请输入用户名"></td>
+                <td>用户名</td><td><input id="name" name="user" type="text" placeholder="请输入用户名"></td>
             </tr>
             <tr>
-                <td>密码</td><td><input name="password" type="password" placeholder="请输入密码"></td>
+                <td>密码</td><td><input id="password" name="password" type="password" placeholder="请输入密码"></td>
             </tr>
         </table>
-        <button type="submit">登录</button>
+        <button type="button" onclick="login();">登录</button>
         <button type="reset">重置</button>
     </form>
+
+<script src="https://code.jquery.com/jquery-3.4.1.js"></script>
+<script>
+    function login() {
+        let name = $("#name").val();
+        let password = $("#password").val();
+        $.ajax({
+            url: "/admin/login",
+            data: {
+                user: name,
+                password: password
+            },
+            method: "POST",
+            success: function( result ) {
+                let res = JSON.parse(result);
+                if(res.code != 0)
+                {
+                    alert(res.msg);
+                }
+                else
+                {
+                    window.location.href = res.redirect;
+                }
+            }
+        });
+    }
+</script>
+
 </body>
 
 </html>
