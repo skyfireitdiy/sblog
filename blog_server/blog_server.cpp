@@ -54,19 +54,7 @@ blog_server::blog_server(const std::string &config_file_path) {
 
     string static_path = string(config__->value("static_path"s, sf_json(".")));
 
-    auto admin_part = sf_http_part_router::make_instance("/admin"s, function([this](const sf_http_request& req, sf_http_response& res){
-        return admin(req, res);
-    }), vector{{"*"s}}, 0);
-
-    admin_part->add_http_router(sf_http_router::make_instance("/login"s, std::function([this](const sf_http_request& req, sf_http_response &res){
-        admin_login(req, res);
-    }), vector{{"POST"s}}));
-
-    admin_part->add_http_router(make_static_router(sf_path_join(static_path, "admin"s), {{"GET"s}}));
-
-    server__->add_router(make_static_router(sf_path_join(static_path, "third_part"s), {{"GET"s}}));
-
-    server__->add_router(admin_part);
+    // todo 创建router
 }
 
 bool blog_server::start() {
@@ -84,7 +72,7 @@ void blog_server::admin_login(const sf_http_request& req, sf_http_response &res)
     {
         ret["code"] = 1;
         ret["msg"] = "param error";
-        ret["redirect"] = "/admin/index.html";
+        ret["redirect"] = "/html/admin_login.html";
         return;
     }
 
@@ -94,7 +82,7 @@ void blog_server::admin_login(const sf_http_request& req, sf_http_response &res)
     {
         ret["code"] = 2;
         ret["msg"] = "user name or password error";
-        ret["redirect"] = "/admin/index.html";
+        ret["redirect"] = "/admin/admin_login.html";
         return;
     }
     else {
@@ -102,12 +90,13 @@ void blog_server::admin_login(const sf_http_request& req, sf_http_response &res)
         server__->set_session(session_id, "user", to_json(*user_info));
         ret["code"] = 0;
         ret["msg"] = "ok";
-        ret["redirect"] = "/admin/manage.html";
+        ret["redirect"] = "/html/manage.html";
     }
 }
 
 bool blog_server::admin(const sf_http_request &req, sf_http_response &res) {
-    if(req.get_request_line().url == "/admin/index.html" || req.get_request_line().url == "/admin/login")
+    sf_info(req.get_request_line().url);
+    if(req.get_request_line().url != "/html/manage.html")
     {
         return true;
     }
@@ -115,7 +104,7 @@ bool blog_server::admin(const sf_http_request &req, sf_http_response &res) {
     auto session = server__->get_session(session_id);
     if(!session.has("user"))
     {
-        res.redirect("/admin/index.html");
+        res.redirect("/html/admin_login.html");
         return false;
     }
     return true;
