@@ -7,3 +7,6 @@
 [submodule "third_part/digstpp"]
 	path = third_part/digstpp
 	url = https://github.com/kerukuro/digestpp
+[submodule "static/third_part/layui"]
+	path = static/third_part/layui
+	url = https://github.com/sentsin/layui

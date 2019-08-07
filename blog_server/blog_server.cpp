@@ -2,6 +2,7 @@
 #include "blog_server.h"
 #include "tools/sf_logger.hpp"
 #include "tools/sf_finally.hpp"
+#include "network/sf_http_part_router.hpp"
 
 using namespace skyfire;
 using namespace std;
@@ -33,32 +34,49 @@ blog_server::blog_server(const std::string &config_file_path) {
     sf_http_server_config server_conf;
     from_json(server_json_config, server_conf);
 
+    if(server_conf.port == 0){
+        server_conf.port = 80;
+    }
+    if(server_conf.host.empty())
+    {
+        server_conf.host = "0.0.0.0";
+    }
+    if(server_conf.session_timeout == 0)
+    {
+        server_conf.session_timeout = 3600;
+    }
+    if(server_conf.tmp_file_path.empty())
+    {
+        server_conf.tmp_file_path = "/tmp";
+    }
+
     server__ = sf_http_server::make_instance(server_conf);
 
     string static_path = string(config__->value("static_path"s, sf_json(".")));
-    server__->add_static_router(static_path, {{"GET"s}});
 
-    server__->add_http_router("/admin", std::function([this](const sf_http_request& req, sf_http_response& res){
-        admin_root(req, res);
-    }));
+    auto admin_part = sf_http_part_router::make_instance("/admin"s, function([this](const sf_http_request& req, sf_http_response& res){
+        return admin(req, res);
+    }), vector{{"*"s}}, 0);
 
-    server__->add_http_router("/admin/login", std::function([this](const sf_http_request& req, sf_http_response &res){
+    admin_part->add_http_router(sf_http_router::make_instance("/login"s, std::function([this](const sf_http_request& req, sf_http_response &res){
         admin_login(req, res);
-    }), {{"POST"s}});
+    }), vector{{"POST"s}}));
+
+    admin_part->add_http_router(make_static_router(sf_path_join(static_path, "admin"s), {{"GET"s}}));
+
+    server__->add_router(make_static_router(sf_path_join(static_path, "third_part"s), {{"GET"s}}));
+
+    server__->add_router(admin_part);
 }
 
 bool blog_server::start() {
     return server__->start();
 }
 
-void blog_server::admin_root(const sf_http_request &req, sf_http_response &res) {
-    res.redirect("/admin/index.html");
-}
-
 void blog_server::admin_login(const sf_http_request& req, sf_http_response &res) {
     sf_json ret;
     sf_finally f([&ret, &res]{
-        res.set_body(to_byte_array(ret.to_string()));
+        res.set_json(ret);
     });
 
     auto param = sf_parse_param(to_string(req.get_body()));
@@ -86,5 +104,20 @@ void blog_server::admin_login(const sf_http_request& req, sf_http_response &res)
         ret["msg"] = "ok";
         ret["redirect"] = "/admin/manage.html";
     }
+}
+
+bool blog_server::admin(const sf_http_request &req, sf_http_response &res) {
+    if(req.get_request_line().url == "/admin/index.html" || req.get_request_line().url == "/admin/login")
+    {
+        return true;
+    }
+    auto session_id = req.get_session_id();
+    auto session = server__->get_session(session_id);
+    if(!session.has("user"))
+    {
+        res.redirect("/admin/index.html");
+        return false;
+    }
+    return true;
 }
 
