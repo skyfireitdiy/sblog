@@ -5,6 +5,6 @@
     "tmp_file_path": "/tmp",
     "session_timeout": 1800
   },
-  "static_path": "/home/skyfire/Desktop/my_blog/static",
-  "db_path": "/home/skyfire/Desktop/my_blog/db"
+  "static_path": "../../static",
+  "db_path": "../../db"
 }

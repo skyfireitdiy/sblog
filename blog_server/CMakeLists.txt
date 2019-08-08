@@ -7,7 +7,7 @@ add_executable(blog_server blog_server.cpp main.cpp config_manager.cpp admin_use
 include_directories(
         ../third_part/sflib
         ../third_part/sqlite_orm/include/sqlite_orm
-        ../third_part/digstpp
+        ../third_part/digestpp
 )
 
 target_link_libraries(blog_server pthread ssl crypto z stdc++fs sqlite3)

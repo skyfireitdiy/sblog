@@ -2,6 +2,6 @@
 
 int main()
 {
-    auto server = blog_server::make_instance("/home/skyfire/Desktop/my_blog/config.json");
+    auto server = blog_server::make_instance("config.json");
     server->start();
 }
