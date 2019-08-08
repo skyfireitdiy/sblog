@@ -18,7 +18,7 @@ private:
 
     void admin_login(const sf_http_request& req, sf_http_response &res);
 
-    bool admin(const sf_http_request& req, sf_http_response &res);
+    bool admin_check(const sf_http_request& req, sf_http_response &res);
 
 public:
     explicit blog_server(const std::string& config_file_path);
