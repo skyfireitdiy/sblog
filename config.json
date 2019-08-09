@@ -3,7 +3,10 @@
     "host": "0.0.0.0",
     "port": 8080,
     "tmp_file_path": "/tmp",
-    "session_timeout": 1800
+    "session_timeout": 1800,
+    "max_cache_count": 1024,
+    "max_cache_file_size": 1048576,
+    "debug": true
   },
   "static_path": "./static",
   "db_path": "./db"

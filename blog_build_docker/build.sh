@@ -6,7 +6,7 @@ rm -rf build blog_server
 mkdir build
 cd build
 cmake ..
-make
+make -j
 cd src
 cp blog_server /opt/my_blog/
 cd /opt/my_blog

@@ -20,6 +20,11 @@ private:
 
     bool admin_check(const sf_http_request& req, sf_http_response &res);
 
+    void get_user_info(const sf_http_request& req, sf_http_response &res);
+
+    void set_user_info(const sf_http_request& req, sf_http_response &res);
+
+
 public:
     explicit blog_server(const std::string& config_file_path);
 

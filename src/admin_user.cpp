@@ -35,6 +35,11 @@ shared_ptr<admin_user> admin_user_manager::check_user(const string &name, const 
     return std::make_shared<admin_user>(users[0]);
 }
 
+void admin_user_manager::update_user_info(const admin_user& user) {
+    storage__->update(user);
+}
+
+
 string hash_password(const std::string &password) {
     return digestpp::sha512().absorb(password).hexdigest();
 }

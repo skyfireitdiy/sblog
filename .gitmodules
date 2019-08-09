@@ -4,9 +4,6 @@
 [submodule "third_part/sqlite_orm"]
 	path = third_part/sqlite_orm
 	url = https://github.com/fnc12/sqlite_orm
-[submodule "static/third_part/layui"]
-	path = static/third_part/layui
-	url = https://github.com/sentsin/layui
 [submodule "third_part/digestpp"]
 	path = third_part/digestpp
 	url = https://github.com/kerukuro/digestpp

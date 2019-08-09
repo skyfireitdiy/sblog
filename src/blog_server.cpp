@@ -16,6 +16,7 @@ blog_server::blog_server(const std::string &config_file_path) {
     }
 
     auto server_json_config = config__->value("server"s);
+
     if (server_json_config.is_null())
     {
         sf_error("server config error");
@@ -82,6 +83,20 @@ blog_server::blog_server(const std::string &config_file_path) {
 
     root_router->add_router(api_router);
 
+    auto admin_api_router = sf_http_part_router::make_instance("/api"s, [this](const sf_http_request& req, sf_http_response&res){
+        return true;
+    });
+
+    admin_api_router->add_router(sf_http_router::make_instance("/user_info"s, function([this](const sf_http_request& req, sf_http_response& res){
+        get_user_info(req, res);
+    }), vector{{"GET"s}}));
+
+    admin_api_router->add_router(sf_http_router::make_instance("/user_info"s, function([this](const sf_http_request& req, sf_http_response& res){
+        set_user_info(req, res);
+    }), vector{{"POST"s}}));
+
+
+    admin_router->add_router(admin_api_router);
 
     server__->add_router(root_router);
 
@@ -98,7 +113,7 @@ void blog_server::admin_login(const sf_http_request& req, sf_http_response &res)
     });
 
     auto param = sf_parse_param(to_string(req.get_body()));
-    if (param.count("user") == 0 || param.count("password") == 0)
+    if (param.count("name") == 0 || param.count("password") == 0)
     {
         ret["code"] = 1;
         ret["msg"] = "param error";
@@ -106,7 +121,7 @@ void blog_server::admin_login(const sf_http_request& req, sf_http_response &res)
         return;
     }
 
-    auto user_info = admin_user_manager__->check_user(param["user"], param["password"]);
+    auto user_info = admin_user_manager__->check_user(param["name"], param["password"]);
 
     if(user_info == nullptr)
     {
@@ -144,6 +159,42 @@ void blog_server::admin_root(const sf_http_request &req, sf_http_response &res) 
     }
     else{
         res.redirect("/admin/html/manage.html");
+    }
+}
+
+void blog_server::get_user_info(const sf_http_request &req, sf_http_response &res) {
+    auto session_id = req.get_session_id();
+    auto session = server__->get_session(session_id);
+    sf_json ret;
+    ret["code"] = 0;
+    ret["data"] = session["user"];
+    res.set_json(ret);
+}
+
+void blog_server::set_user_info(const sf_http_request &req, sf_http_response &res) {
+    sf_json ret;
+    sf_finally f([&res, &ret] {
+        res.set_json(ret);
+    });
+    auto param = sf_parse_param(to_string(req.get_body()));
+    if (param.count("name") == 0 ||
+        param.count("qq") == 0 ||
+        param.count("website") == 0 ||
+        param.count("desc") == 0) {
+        ret["code"] = 1;
+        ret["msg"] = "param error";
+    } else{
+        auto session = server__->get_session(req.get_session_id());
+        session["user"]["name"] = param["name"];
+        session["user"]["qq"] = param["qq"];
+        session["user"]["website"] = param["website"];
+        session["user"]["desc"] = param["desc"];
+        admin_user user;
+        from_json(session["user"], user);
+        admin_user_manager__->update_user_info(user);
+        ret["code"] = 0;
+        ret["data"] = session["user"].clone();
+        ret["data"].remove("password");
     }
 }
 

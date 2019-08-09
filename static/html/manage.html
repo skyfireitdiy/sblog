@@ -1,10 +1,136 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>SkyFire个人博客 后台管理</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>skyfire blog 后台管理</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+
+    <link rel="stylesheet" href="https://www.layuicdn.com/layui/css/layui.css" media="all">
+    <style>
+        [v-cloak] {
+            display: none;
+        }
+    </style>
 </head>
-<body>
-    <h1>SkyFire个人博客 后台管理</h1>
+<body class="layui-layout-body">
+<div id="app" v-cloak class="layui-layout layui-layout-admin">
+    <div class="layui-header">
+        <div class="layui-logo">skyfire blog 后台管理</div>
+        <ul class="layui-nav layui-layout-left">
+            <li class="layui-nav-item"><a @click="info_manage();">信息管理</a></li>
+            <li class="layui-nav-item"><a @click="data_manage();">数据管理</a></li>
+        </ul>
+        <ul class="layui-nav layui-layout-right">
+            <li class="layui-nav-item">
+                <a href="javascript:;">
+                    <img src="//tva1.sinaimg.cn/crop.0.0.118.118.180/5db11ff4gw1e77d3nqrv8j203b03cweg.jpg"
+                         class="layui-nav-img">
+                    SkyFire
+                </a>
+            </li>
+            <li class="layui-nav-item"><a href="">注销</a></li>
+        </ul>
+    </div>
+
+    <div class="layui-side layui-bg-black">
+        <div class="layui-side-scroll">
+            <!-- 左侧导航区域（可配合layui已有的垂直导航） -->
+            <ul v-show="big_type==='info'" class="layui-nav layui-nav-tree">
+                <li class="layui-nav-item layui-nav-itemed">
+                    <a @click="blog_info_manage();">博客信息管理</a>
+                </li>
+                <li class="layui-nav-item layui-nav-itemed">
+                    <a @click="user_base_manage();">基本资料</a>
+                </li>
+                <li class="layui-nav-item layui-nav-itemed">
+                    <a @click="safe_manage();">安全设置</a>
+                </li>
+            </ul>
+
+            <ul v-show="big_type==='data'" class="layui-nav layui-nav-tree">
+                <li class="layui-nav-item layui-nav-itemed">
+                    <a @click="article_data_manage();">博文管理</a>
+                </li>
+                <li class="layui-nav-item layui-nav-itemed">
+                    <a @click="ad_data_manage();">广告管理</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="layui-body" style="overflow: hidden">
+        <iframe :src="now_src" id="iframe" width="100%" style="border: none; height: 100%;"></iframe>
+    </div>
+
+    <div class="layui-footer">
+        skyfire blog
+    </div>
+</div>
+<script type="text/javascript" src="https://unpkg.com/vue"></script>
+<script src="https://www.layuicdn.com/layui/layui.js" charset="utf-8"></script>
+<script>
+
+    let app = new Vue(
+        {
+            el: "#app",
+            data: {
+                sub_type: "blog_info",
+                big_type: "info",
+                url_map: {
+                    blog_info: "/admin/html/blog_info.html",
+                    article_data: "/admin/html/article_data.html",
+                    ad_data: "/admin/html/ad_data.html",
+                    user_base: "/admin/html/user_base.html",
+                    safe: "/admin/html/safe.html"
+                }
+            },
+            methods: {
+                info_manage: function () {
+                    this.big_type = "info";
+                },
+                blog_info_manage: function () {
+                    this.info_manage();
+                    this.sub_type = "blog_info";
+                },
+                user_base_manage: function () {
+                    this.info_manage();
+                    this.sub_type = "user_base";
+                },
+                safe_manage: function () {
+                    this.info_manage();
+                    this.sub_type = "safe";
+                },
+                data_manage: function () {
+                    this.big_type = "data";
+                },
+                article_data_manage: function () {
+                    this.data_manage();
+                    this.sub_type = "article_data";
+                },
+                ad_data_manage: function () {
+                    this.data_manage();
+                    this.sub_type = "ad_data";
+                },
+            },
+            computed: {
+                now_src: function () {
+                    return this.url_map[this.sub_type];
+                }
+            },
+            mounted: function () {
+                layui.use(['element', 'layer'], function () {
+                    let element = layui.element;
+                    let layer = layui.layer;
+                });
+            }
+        }
+    );
+</script>
 </body>
 </html>

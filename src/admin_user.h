@@ -48,5 +48,7 @@ public:
 
     shared_ptr<admin_user> check_user(const string& name, const string& password);
 
+    void update_user_info(const admin_user& user);
+
     explicit admin_user_manager(const string& path);
 };

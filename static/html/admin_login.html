@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <title>博客首页</title>
-    <link rel="stylesheet" type="text/css" href="/third_part/layui/dist/css/layui.css"/>
+    <link rel="stylesheet" type="text/css" href="https://www.layuicdn.com/layui/css/layui.css"/>
     <link rel="stylesheet" type="text/css" href="/css/admin_login.css"/>
 
 </head>
@@ -17,7 +17,7 @@
         <div class="layui-form-item">
             <label class="layui-form-label">用户名</label>
             <div class="layui-input-block">
-                <input required lay-verify="required" class="layui-input" name="user" type="text" placeholder="请输入用户名">
+                <input required lay-verify="required" class="layui-input" name="name" type="text" placeholder="请输入用户名">
             </div>
         </div>
         <div class="layui-form-item">
@@ -37,7 +37,7 @@
 
 </div>
 
-<script src="/third_part/layui/dist/layui.js"></script>
+<script src="https://www.layuicdn.com/layui/layui.js"></script>
 <script>
 
     layui.use(["form", "layer", "element"], function () {
@@ -48,8 +48,6 @@
         form.render();
 
         form.on("submit(login)", function (data) {
-            let user = $("#user").val();
-            let password = $("#password").val();
             $.ajax({
                 url: "/api/login",
                 data: data.field,
