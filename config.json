@@ -5,6 +5,6 @@
     "tmp_file_path": "/tmp",
     "session_timeout": 1800
   },
-  "static_path": "../../static",
-  "db_path": "../../db"
+  "static_path": "./static",
+  "db_path": "./db"
 }
