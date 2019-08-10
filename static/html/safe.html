@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" type="text/css" href="https://www.layuicdn.com/layui/css/layui.css" />
+    <link rel="stylesheet" type="text/css" href="/css/admin_login.css" />
+</head>
+
+<body>
+    <div style="width: 30%; margin: auto; text-align:center;">
+        <h1>安全设置</h1>
+        <br>
+        <br>
+
+        <form class="layui-form">
+            <div class="layui-form-item">
+                <label class="layui-form-label">原密码</label>
+                <div class="layui-input-block">
+                    <input class="layui-input" name="old_password" required lay-verify="required" type="password" />
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">新密码</label>
+                <div class="layui-input-block">
+                    <input class="layui-input" name="new_password" required lay-verify="required" type="password" />
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">确认新密码</label>
+                <div class="layui-input-block">
+                    <input class="layui-input" name="new_password2" required lay-verify="required" type="password" />
+                </div>
+            </div>
+            <button type="button" lay-filter="change" lay-submit class="layui-btn layui-btn-normal">修改密码</button>
+        </form>
+    </div>
+
+
+    <script src="https://www.layuicdn.com/layui/layui.js" charset="utf-8"></script>
+    <script type="text/javascript" src="https://unpkg.com/vue"></script>
+
+    <script>
+        layui.use(["form", "element", "jquery"], function () {
+            let element = layui.element;
+            let form = layui.form;
+            let $ = layui.jquery;
+
+            form.render();
+            form.on('submit(change)', function (data) {
+                if (data.field.new_password !== data.field.new_password2) {
+                    layer.alert("密码不一致");
+                    return false;
+                }
+                $.ajax({
+                    url: "/admin/api/change_password",
+                    method: "POST",
+                    data: data.field,
+                    success: function (res) {
+                        if (res.code !== 0) {
+                            layer.alert(res.msg);
+                        }
+                        else {
+                            layer.msg("密码修改成功", { icon: 1 });
+                        }
+                    }
+                });
+                return false;
+            });
+        });
+    </script>
+
+</body>
+
+</html>

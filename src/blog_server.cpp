@@ -3,6 +3,7 @@
 #include "tools/sf_logger.hpp"
 #include "tools/sf_finally.hpp"
 #include "network/sf_http_part_router.hpp"
+#include "blog_config.h"
 
 using namespace skyfire;
 using namespace std;
@@ -23,14 +24,16 @@ blog_server::blog_server(const std::string &config_file_path) {
         assert(false);
     }
 
-    auto db_path = config__->value("db_path"s);
-    if(db_path.is_null())
+    auto blog_json_config = config__->value("blog"s);
+    if(blog_json_config.is_null())
     {
-        sf_error("db_path config error");
+        sf_error("blog config error");
         assert(false);
     }
 
-    admin_user_manager__ = admin_user_manager::get_instance(sf_path_join(string(db_path), "admin_user.db3"s));
+    from_json(blog_json_config, blog_config__);
+
+    admin_user_manager__ = admin_user_manager::get_instance(sf_path_join(blog_config__.db_path, "admin_user.db3"s));
 
     sf_http_server_config server_conf;
     from_json(server_json_config, server_conf);
@@ -53,20 +56,18 @@ blog_server::blog_server(const std::string &config_file_path) {
 
     server__ = sf_http_server::make_instance(server_conf);
 
-    string static_path = string(config__->value("static_path"s, sf_json(".")));
-
     // todo 创建router
 
     auto root_router = sf_http_part_router::make_instance("/"s, [this](const sf_http_request& req, sf_http_response& res){
         return true;
     });
-    root_router->add_router(sf_static_router::make_instance(static_path));
+    root_router->add_router(sf_static_router::make_instance(blog_config__.static_path));
 
 
     auto admin_router =  sf_http_part_router::make_instance("/admin"s, [this](const sf_http_request& req, sf_http_response& res){
         return admin_check(req, res);
     });
-    admin_router->add_router(sf_static_router::make_instance(static_path));
+    admin_router->add_router(sf_static_router::make_instance(blog_config__.static_path));
 
     admin_router->add_router(sf_http_router::make_instance("/"s, function([this](const sf_http_request& req, sf_http_response& res){
         admin_root(req, res);
@@ -94,6 +95,14 @@ blog_server::blog_server(const std::string &config_file_path) {
     admin_api_router->add_router(sf_http_router::make_instance("/user_info"s, function([this](const sf_http_request& req, sf_http_response& res){
         set_user_info(req, res);
     }), vector{{"POST"s}}));
+
+    admin_api_router->add_router(sf_http_router::make_instance("/change_password"s, function([this](const sf_http_request& req, sf_http_response& res){
+        change_password(req, res);
+    }), vector{{"POST"s}}));
+
+    admin_api_router->add_router(sf_http_router::make_instance("/logout"s, function([this](const sf_http_request& req, sf_http_response& res){
+        logout(req, res);
+    }), vector{{"*"s}}));
 
 
     admin_router->add_router(admin_api_router);
@@ -167,7 +176,8 @@ void blog_server::get_user_info(const sf_http_request &req, sf_http_response &re
     auto session = server__->get_session(session_id);
     sf_json ret;
     ret["code"] = 0;
-    ret["data"] = session["user"];
+    ret["data"] = session["user"].clone();
+    ret["data"].remove("password");
     res.set_json(ret);
 }
 
@@ -193,8 +203,39 @@ void blog_server::set_user_info(const sf_http_request &req, sf_http_response &re
         from_json(session["user"], user);
         admin_user_manager__->update_user_info(user);
         ret["code"] = 0;
-        ret["data"] = session["user"].clone();
-        ret["data"].remove("password");
     }
 }
 
+
+void blog_server::change_password(const sf_http_request &req, sf_http_response &res) {
+    sf_json ret;
+    sf_finally f([&res, &ret]{
+        res.set_json(ret);
+    });
+    auto param = sf_parse_param(to_string(req.get_body()));
+    if (param.count("old_password") == 0 || param.count("new_password") == 0)
+    {
+        ret["code"] = 1;
+        ret["msg"] = "param error";
+    } else {
+        auto session = server__->get_session(req.get_session_id());
+        if(static_cast<string>(session["user"]["password"]) == hash_password(param["old_password"]))
+        {
+            session["user"]["password"] = hash_password(param["new_password"]);
+            admin_user user;
+            from_json(session["user"], user);
+            admin_user_manager__->update_user_info(user);
+            ret["code"] = 0;
+        }else{
+            ret["code"] = 2;
+            ret["msg"] = "old password error";
+        }
+    }
+}
+
+
+void blog_server::logout(const sf_http_request &req, sf_http_response &res) {
+    auto session = server__->get_session(req.get_session_id());
+    session.remove("user");
+    res.redirect("/html/admin_login.html");
+}

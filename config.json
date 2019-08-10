@@ -8,6 +8,8 @@
     "max_cache_file_size": 1048576,
     "debug": true
   },
-  "static_path": "./static",
-  "db_path": "./db"
+  "blog": {
+    "static_path": "./static",
+    "db_path": "./db"
+  }
 }
