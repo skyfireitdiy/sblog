@@ -7,19 +7,6 @@ admin_user_manager::admin_user_manager(const string &path) {
     sf_info("database path", path);
     storage__ = make_unique<StorageType >(init_user_storage(path));
     storage__->sync_schema();
-
-    if(check_empty())
-    {
-        admin_user user{
-            0,
-            "skyfire",
-            hash_password("123456"),
-            "1513008876",
-            "skyfireitdiy.cn",
-            ""
-        };
-        storage__->insert(user);
-    }
 }
 
 bool admin_user_manager::check_empty() {
@@ -42,4 +29,9 @@ void admin_user_manager::update_user_info(const admin_user& user) {
 
 string hash_password(const std::string &password) {
     return digestpp::sha512().absorb(password).hexdigest();
+}
+
+void admin_user_manager::insert_user(const admin_user& user)
+{
+    storage__->insert(user);
 }

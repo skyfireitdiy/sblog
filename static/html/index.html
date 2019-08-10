@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title></title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" type="text/css" href="https://www.layuicdn.com/layui/css/layui.css" />
+</head>
+
+<body>
+  <div id="app">
+    <div class="layui-layout layui-layout-admin">
+      <div class="layui-header">
+        <div class="layui-logo">{{ blog.blog_title }}</div>
+        <ul class="layui-nav layui-layout-left">
+          <li class="layui-nav-item" v-for="bt in blog.big_type">
+            <a @click="change_big_type(bt);">{{ bt }}</a>
+          </li>
+        </ul>
+      </div>
+      <div class="layui-body"></div>
+    </div>
+  </div>
+  <script src="https://www.layuicdn.com/layui/layui.js" charset="utf-8"></script>
+  <script type="text/javascript" src="https://unpkg.com/vue"></script>
+  <script>
+    Vue.component("blog-item", {
+      data: function () {
+        return {};
+      },
+      template: ""
+    });
+
+    let app = new Vue({
+      el: "#app",
+      data: {
+        blog: {
+          blog_title: "SkyFire 的个人博客",
+          big_type: ["编程语言", "操作系统"]
+        }
+      },
+      methods: {
+        change_big_type: function (tp) {
+          layui.use(["layer"], function () {
+            layui.layer.alert(tp);
+          });
+        }
+      },
+      mounted: function () { },
+      computed: {},
+      mounted: function () {
+        layui.use(["element"], function () {
+          let element = layui.element;
+        });
+      }
+    });
+  </script>
+</body>
+
+</html>

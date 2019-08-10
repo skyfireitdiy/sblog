@@ -25,7 +25,7 @@ inline auto init_user_storage(const string& path) {
     return make_storage(
             path,
             make_table("admin_user",
-                       make_column("id", &admin_user::id, primary_key(), unique()),
+                       make_column("id", &admin_user::id, primary_key(), unique(), autoincrement()),
                        make_column("name", &admin_user::name, unique()),
                        make_column("password", &admin_user::password),
                        make_column("qq", &admin_user::qq),
@@ -49,6 +49,8 @@ public:
     shared_ptr<admin_user> check_user(const string& name, const string& password);
 
     void update_user_info(const admin_user& user);
+
+    void insert_user(const admin_user& user);
 
     explicit admin_user_manager(const string& path);
 };

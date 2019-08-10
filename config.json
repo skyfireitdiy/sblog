@@ -11,5 +11,12 @@
   "blog": {
     "static_path": "./static",
     "db_path": "./db"
+  },
+  "default_user": {
+    "name": "skyfire",
+    "password": "123456",
+    "qq": "1513008876",
+    "website": "http://skyfireitdiy.cn",
+    "desc": ""
   }
 }

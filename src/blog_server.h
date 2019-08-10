@@ -31,6 +31,8 @@ private:
 
     void logout(const sf_http_request& req, sf_http_response &res);
 
+    void setup_server(const sf_http_server_config& server_conf);
+
 public:
     explicit blog_server(const std::string& config_file_path);
 

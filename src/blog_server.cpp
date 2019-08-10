@@ -34,6 +34,22 @@ blog_server::blog_server(const std::string &config_file_path) {
     from_json(blog_json_config, blog_config__);
 
     admin_user_manager__ = admin_user_manager::get_instance(sf_path_join(blog_config__.db_path, "admin_user.db3"s));
+    if (admin_user_manager__->check_empty())
+    {
+        if(check_empty())
+        {
+            auto default_user_json = config__->get_value("default_user");
+            if(default_user_json.is_null())
+            {
+                sf_error("default_user config error");
+                assert(false);
+            }
+            admin_user user;
+            from_json(default_user_json, user);
+            user.id = -1;
+            admin_user_manager__->insert(user);
+        }
+    }
 
     sf_http_server_config server_conf;
     from_json(server_json_config, server_conf);
@@ -54,9 +70,11 @@ blog_server::blog_server(const std::string &config_file_path) {
         server_conf.tmp_file_path = "/tmp";
     }
 
-    server__ = sf_http_server::make_instance(server_conf);
+    setup_server();
+}
 
-    // todo 创建router
+void blog_server::setup_server(const sf_http_server_config& server_conf) {
+    server__ = sf_http_server::make_instance(server_conf);
 
     auto root_router = sf_http_part_router::make_instance("/"s, [this](const sf_http_request& req, sf_http_response& res){
         return true;
@@ -108,7 +126,6 @@ blog_server::blog_server(const std::string &config_file_path) {
     admin_router->add_router(admin_api_router);
 
     server__->add_router(root_router);
-
 }
 
 bool blog_server::start() {
