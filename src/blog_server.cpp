@@ -36,19 +36,16 @@ blog_server::blog_server(const std::string &config_file_path) {
     admin_user_manager__ = admin_user_manager::get_instance(sf_path_join(blog_config__.db_path, "admin_user.db3"s));
     if (admin_user_manager__->check_empty())
     {
-        if(check_empty())
+        auto default_user_json = config__->value("default_user"s);
+        if(default_user_json.is_null())
         {
-            auto default_user_json = config__->get_value("default_user");
-            if(default_user_json.is_null())
-            {
-                sf_error("default_user config error");
-                assert(false);
-            }
-            admin_user user;
-            from_json(default_user_json, user);
-            user.id = -1;
-            admin_user_manager__->insert(user);
+            sf_error("default_user config error");
+            assert(false);
         }
+        admin_user user;
+        from_json(default_user_json, user);
+        user.id = -1;
+        admin_user_manager__->insert_user(user);
     }
 
     sf_http_server_config server_conf;
@@ -70,7 +67,7 @@ blog_server::blog_server(const std::string &config_file_path) {
         server_conf.tmp_file_path = "/tmp";
     }
 
-    setup_server();
+    setup_server(server_conf);
 }
 
 void blog_server::setup_server(const sf_http_server_config& server_conf) {
