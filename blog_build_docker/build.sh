@@ -7,7 +7,6 @@ mkdir build
 cd build
 cmake ..
 make
-cd src
 cp blog_server /opt/my_blog/
 cd /opt/my_blog
 ./blog_server
