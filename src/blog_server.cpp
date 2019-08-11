@@ -153,12 +153,26 @@ void blog_server::setup_server(const sf_http_server_config &server_conf) {
         function([this](const sf_http_request &req, sf_http_response &res) {
             add_big_group(req, res);
         }),
-        vector{{"PUT"s}}));
+        vector{{"POST"s}}));
 
     admin_api_router->add_router(sf_http_router::make_instance(
         "/sub_group"s,
         function([this](const sf_http_request &req, sf_http_response &res) {
             add_sub_group(req, res);
+        }),
+        vector{{"POST"s}}));
+
+    admin_api_router->add_router(sf_http_router::make_instance(
+        "/big_group"s,
+        function([this](const sf_http_request &req, sf_http_response &res) {
+            rename_big_group(req, res);
+        }),
+        vector{{"PUT"s}}));
+
+    admin_api_router->add_router(sf_http_router::make_instance(
+        "/sub_group"s,
+        function([this](const sf_http_request &req, sf_http_response &res) {
+            rename_sub_type(req, res);
         }),
         vector{{"PUT"s}}));
 
@@ -406,5 +420,61 @@ void blog_server::delete_sub_type(const sf_http_request &req,
         return;
     }
     database__->delete_sub_type(sub_type);
+    ret["code"] = 0;
+}
+
+void blog_server::rename_big_group(const sf_http_request &req,
+                                   sf_http_response &res) {
+    sf_json ret;
+    sf_finally f([&res, &ret] { res.set_json(ret); });
+    auto param = sf_parse_param(to_string(req.get_body()));
+    if (param.count("id") == 0 || param.count("new_name") == 0) {
+        ret["code"] = 1;
+        ret["msg"] = "param error";
+        return;
+    }
+    auto big_type = static_cast<int>(sf_string_to_long_double(param["id"]));
+    if (database__->get_big_type(big_type) == nullptr) {
+        ret["code"] = 2;
+        ret["msg"] = "type id not found";
+        return;
+    }
+    if (database__->check_big_type(param["new_name"]) != nullptr) {
+        ret["code"] = 3;
+        ret["msg"] = "type name already exists";
+        return;
+    }
+    blog_big_type t{big_type, param["new_name"]};
+    database__->update_big_type(t);
+    ret["code"] = 0;
+}
+
+void blog_server::rename_sub_type(const sf_http_request &req,
+                                  sf_http_response &res) {
+    sf_json ret;
+    sf_finally f([&res, &ret] { res.set_json(ret); });
+    auto param = sf_parse_param(to_string(req.get_body()));
+    if (param.count("id") == 0 || param.count("new_name") == 0 ||
+        param.count("big_type") == 0) {
+        ret["code"] = 1;
+        ret["msg"] = "param error";
+        return;
+    }
+    auto big_type =
+        static_cast<int>(sf_string_to_long_double(param["big_type"]));
+    auto sub_type = static_cast<int>(sf_string_to_long_double(param["id"]));
+
+    if (database__->get_sub_type(sub_type) == nullptr) {
+        ret["code"] = 2;
+        ret["msg"] = "type id not found";
+        return;
+    }
+    if (database__->check_sub_type(big_type, param["new_name"]) != nullptr) {
+        ret["code"] = 3;
+        ret["msg"] = "type name already exists";
+        return;
+    }
+    blog_sub_type t{sub_type, big_type, param["new_name"]};
+    database__->update_sub_type(t);
     ret["code"] = 0;
 }

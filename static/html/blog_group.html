@@ -29,7 +29,8 @@
                 <tr v-for="big_type in group_info">
                     <td>{{big_type.type_name}}</td>
                     <td>
-                        <button class="layui-btn layui-btn-normal">重命名</button>
+                        <button class="layui-btn layui-btn-normal"
+                            @click="rename_big_group(big_type.id, big_type.type_name);">重命名</button>
                         <button class="layui-btn layui-btn-danger" v-if="big_type.sub_type.length === 0"
                             @click="delete_big_type(big_type.id, big_type.type_name);">删除</button>
                     </td>
@@ -51,7 +52,8 @@
                                 <td>{{sub_type.type_name}}</td>
                                 <td>{{sub_type.article_count}}</td>
                                 <td>
-                                    <button class="layui-btn layui-btn-normal">重命名</button>
+                                    <button class="layui-btn layui-btn-normal"
+                                        @click="rename_sub_type(big_type.id, big_type.type_name, sub_type.id, sub_type.type_name)">重命名</button>
                                     <button class="layui-btn layui-btn-danger" v-if="sub_type.article_count === 0"
                                         @click="delete_sub_type(big_type.id, big_type.type_name, sub_type.id, sub_type.type_name);">删除</button>
                                 </td>
@@ -106,7 +108,7 @@
                         }, function (value, index, elem) {
                             $.ajax({
                                 url: "/admin/api/big_group",
-                                method: "PUT",
+                                method: "POST",
                                 data: {
                                     type_name: value
                                 },
@@ -136,7 +138,7 @@
                         }, function (value, index, elem) {
                             $.ajax({
                                 url: "/admin/api/sub_group",
-                                method: "PUT",
+                                method: "POST",
                                 data: {
                                     type_name: value,
                                     big_type: id
@@ -198,6 +200,69 @@
                                     }
                                 }
                             });
+                        });
+                    });
+                },
+                rename_big_group: function (id, type_name) {
+                    let this_ = this;
+                    layui.use(["layer", "jquery"], function () {
+                        let layer = layui.layer;
+                        let $ = layui.jquery;
+                        layer.prompt({
+                            formType: 0,
+                            title: "请输入主分组\"" + type_name + "\"的新分组名",
+                            value: type_name,
+                            maxlength: 20
+                        }, function (value, index, elem) {
+                            $.ajax({
+                                url: "/admin/api/big_group",
+                                method: "PUT",
+                                data: {
+                                    id: id,
+                                    new_name: value
+                                },
+                                success: function (res) {
+                                    if (res.code !== 0) {
+                                        layer.msg(res.msg, { icon: 0 });
+                                    } else {
+                                        layer.msg("重命名成功", { icon: 1 });
+                                        layer.close(index);
+                                        this_.init_group_info();
+                                    }
+                                }
+                            });
+                        });
+                    });
+                },
+                rename_sub_type: function (big_type, big_type_name, sub_type, sub_type_name) {
+                    let this_ = this;
+                    layui.use(["layer", "jquery"], function () {
+                        let layer = layui.layer;
+                        let $ = layui.jquery;
+                        layer.prompt({
+                            formType: 0,
+                            title: "请输入主分组\"" + big_type_name + "\"下的子分组\"" + sub_type_name + "\"的新分组名",
+                            maxlength: 20,
+                            value: sub_type_name
+                        }, function (value, index, elem) {
+                            $.ajax({
+                                url: "/admin/api/sub_group",
+                                method: "PUT",
+                                data: {
+                                    big_type: big_type,
+                                    id: sub_type,
+                                    new_name: value
+                                },
+                                success: function (res) {
+                                    if (res.code !== 0) {
+                                        layer.msg(res.msg, { icon: 0 });
+                                    } else {
+                                        layer.msg("重命名成功", { icon: 1 });
+                                        layer.close(index);
+                                        this_.init_group_info();
+                                    }
+                                }
+                            })
                         });
                     });
                 }

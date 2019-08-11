@@ -42,6 +42,10 @@ class blog_server : public sf_make_instance_t<blog_server, sf_empty_class> {
 
     void delete_sub_type(const sf_http_request &req, sf_http_response &res);
 
+    void rename_big_group(const sf_http_request &req, sf_http_response &res);
+
+    void rename_sub_type(const sf_http_request &req, sf_http_response &res);
+
    public:
     explicit blog_server(const std::string &config_file_path);
 

@@ -95,3 +95,19 @@ void database::delete_big_type(int big_type) {
 void database::delete_sub_type(int sub_type) {
     storage__->remove<blog_sub_type>(sub_type);
 }
+
+void database::update_big_type(const blog_big_type &big_type) {
+    storage__->update(big_type);
+}
+
+void database::update_sub_type(const blog_sub_type &sub_type) {
+    storage__->update(sub_type);
+}
+
+shared_ptr<blog_big_type> database::get_big_type(int id) {
+    return storage__->get_pointer<blog_big_type>(id);
+}
+
+shared_ptr<blog_sub_type> database::get_sub_type(int id) {
+    return storage__->get_pointer<blog_sub_type>(id);
+}

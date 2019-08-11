@@ -133,5 +133,13 @@ class database : public sf_single_instance<database> {
 
     void insert_sub_type(const blog_sub_type &sub_type);
 
+    void update_big_type(const blog_big_type &big_type);
+
+    void update_sub_type(const blog_sub_type &sub_type);
+
+    shared_ptr<blog_big_type> get_big_type(int id);
+
+    shared_ptr<blog_sub_type> get_sub_type(int id);
+
     explicit database(const string &path);
 };
