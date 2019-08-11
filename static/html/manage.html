@@ -45,9 +45,6 @@
                 <!-- 左侧导航区域（可配合layui已有的垂直导航） -->
                 <ul v-show="big_type==='info'" class="layui-nav layui-nav-tree">
                     <li class="layui-nav-item layui-nav-itemed">
-                        <a @click="blog_info_manage();">博客信息管理</a>
-                    </li>
-                    <li class="layui-nav-item layui-nav-itemed">
                         <a @click="user_base_manage();">基本资料</a>
                     </li>
                     <li class="layui-nav-item layui-nav-itemed">
@@ -56,6 +53,12 @@
                 </ul>
 
                 <ul v-show="big_type==='data'" class="layui-nav layui-nav-tree">
+                    <li class="layui-nav-item layui-nav-itemed">
+                        <a @click="blog_group_manage();">博客分组管理</a>
+                    </li>
+                    <li class="layui-nav-item layui-nav-itemed">
+                        <a @click="blog_label_manage();">博客标签管理</a>
+                    </li>
                     <li class="layui-nav-item layui-nav-itemed">
                         <a @click="article_data_manage();">博文管理</a>
                     </li>
@@ -85,7 +88,8 @@
                     sub_type: "blog_info",
                     big_type: "info",
                     url_map: {
-                        blog_info: "/admin/html/blog_info.html",
+                        blog_group: "/admin/html/blog_group.html",
+                        blog_label: "/admin/html/blog_label.html",
                         article_data: "/admin/html/article_data.html",
                         ad_data: "/admin/html/ad_data.html",
                         user_base: "/admin/html/user_base.html",
@@ -97,10 +101,6 @@
                     info_manage: function () {
                         this.big_type = "info";
                     },
-                    blog_info_manage: function () {
-                        this.info_manage();
-                        this.sub_type = "blog_info";
-                    },
                     user_base_manage: function () {
                         this.info_manage();
                         this.sub_type = "user_base";
@@ -111,6 +111,14 @@
                     },
                     data_manage: function () {
                         this.big_type = "data";
+                    },
+                    blog_group_manage: function () {
+                        this.data_manage();
+                        this.sub_type = "blog_group";
+                    },
+                    blog_label_manage: function () {
+                        this.data_manage();
+                        this.sub_type = "blog_label";
                     },
                     article_data_manage: function () {
                         this.data_manage();
@@ -150,7 +158,7 @@
                                 method: "GET",
                                 success: function (res) {
                                     if (res.code !== 0) {
-                                        layer.alert(res.msg);
+                                        layer.msg(res.msg, { icon: 0 });
                                     }
                                     else {
                                         this_.user_name = res.data.name;

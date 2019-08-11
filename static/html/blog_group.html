@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link rel="stylesheet" type="text/css" href="https://www.layuicdn.com/layui/css/layui.css" />
+    <link rel="stylesheet" type="text/css" href="/css/admin_login.css" />
+</head>
+
+<body>
+    <div id="app">
+
+        <div style="margin: auto; text-align: center;">
+
+            <h1>分组信息</h1>
+            <br>
+            <br>
+            <table class="layui-table">
+                <colgroup>
+                    <col>
+                    <col>
+                    <col>
+                </colgroup>
+                <thead>
+                    <td>主分组&nbsp;&nbsp;<button class="layui-btn layui-btn-green layui-btn-sm layui-btn-radius"
+                            @click="add_big_group();">添加主分组</button></td>
+                    <td>操作</td>
+                    <td>子分组</td>
+                </thead>
+                <tr v-for="big_type in group_info">
+                    <td>{{big_type.type_name}}</td>
+                    <td>
+                        <button class="layui-btn layui-btn-normal">重命名</button>
+                        <button class="layui-btn layui-btn-danger" v-if="big_type.sub_type.length === 0"
+                            @click="delete_big_type(big_type.id, big_type.type_name);">删除</button>
+                    </td>
+                    <td>
+                        <table class="layui-table">
+                            <colgroup>
+                                <col>
+                                <col>
+                            </colgroup>
+                            <thead>
+                                <td>分组名 &nbsp;&nbsp;<button
+                                        class="layui-btn layui-btn-green layui-btn-sm layui-btn-radius"
+                                        @click="add_sub_group(big_type.id, big_type.type_name);">添加子分组</button>
+                                </td>
+                                <td>博客数量</td>
+                                <td>操作</td>
+                            </thead>
+                            <tr v-for="sub_type in big_type.sub_type">
+                                <td>{{sub_type.type_name}}</td>
+                                <td>{{sub_type.article_count}}</td>
+                                <td>
+                                    <button class="layui-btn layui-btn-normal">重命名</button>
+                                    <button class="layui-btn layui-btn-danger" v-if="sub_type.article_count === 0"
+                                        @click="delete_sub_type(big_type.id, big_type.type_name, sub_type.id, sub_type.type_name);">删除</button>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+    </div>
+
+    <script src="https://www.layuicdn.com/layui/layui.js" charset="utf-8"></script>
+    <script type="text/javascript" src="https://unpkg.com/vue"></script>
+    <script>
+        let app = new Vue({
+            el: "#app",
+            data: {
+                group_info: []
+            },
+            methods: {
+                init_group_info: function () {
+                    let this_ = this;
+                    layui.use(["jquery", "element", "layer"], function () {
+                        let element = layui.element;
+                        let $ = layui.jquery;
+
+                        $.ajax({
+                            url: "/admin/api/group_info",
+                            method: "GET",
+                            success: function (res) {
+                                if (res.code !== 0) {
+                                    layer.msg(res.msg, { icon: 0 });
+                                } else {
+                                    this_.group_info = res.data;
+                                }
+                            }
+                        });
+                    });
+                },
+
+                add_big_group: function () {
+                    let this_ = this;
+                    layui.use(["layer", "jquery"], function () {
+                        let layer = layui.layer;
+                        let $ = layui.jquery;
+                        layer.prompt({
+                            formType: 0,
+                            value: "",
+                            maxlength: 20,
+                            title: "请输入要新增的分组名"
+                        }, function (value, index, elem) {
+                            $.ajax({
+                                url: "/admin/api/big_group",
+                                method: "PUT",
+                                data: {
+                                    type_name: value
+                                },
+                                success: function (res) {
+                                    if (res.code !== 0) {
+                                        layer.msg(res.msg, { icon: 0 });
+                                    } else {
+                                        layer.close(index);
+                                        this_.init_group_info();
+                                    }
+                                }
+                            });
+                        });
+                    });
+                }
+                ,
+                add_sub_group: function (id, type_name) {
+                    let this_ = this;
+                    layui.use(["layer", "jquery"], function () {
+                        let layer = layui.layer;
+                        let $ = layui.jquery;
+                        layer.prompt({
+                            formType: 0,
+                            value: "",
+                            maxlength: 20,
+                            title: "请输入要为分组\"" + type_name + "\"添加的子分组名"
+                        }, function (value, index, elem) {
+                            $.ajax({
+                                url: "/admin/api/sub_group",
+                                method: "PUT",
+                                data: {
+                                    type_name: value,
+                                    big_type: id
+                                },
+                                success: function (res) {
+                                    if (res.code !== 0) {
+                                        layer.msg(res.msg, { icon: 0 });
+                                    } else {
+                                        layer.close(index);
+                                        this_.init_group_info();
+                                    }
+                                }
+                            });
+                        });
+                    });
+                },
+                delete_big_type: function (id, type_name) {
+                    let this_ = this;
+                    layui.use(["layer", "jquery"], function () {
+                        let layer = layui.layer;
+                        let $ = layui.jquery;
+                        layer.confirm("确认删除主分组\"" + type_name + "\"吗?", function () {
+                            $.ajax({
+                                url: "/admin/api/big_group",
+                                method: "DELETE",
+                                data: {
+                                    id: id
+                                },
+                                success: function (res) {
+                                    if (res.code !== 0) {
+                                        layer.msg(res.msg, { icon: 0 });
+                                    } else {
+                                        layer.msg("删除成功", { icon: 1 });
+                                        this_.init_group_info();
+                                    }
+                                }
+                            })
+                        });
+                    });
+                },
+                delete_sub_type: function (big_type, big_type_name, sub_type, sub_type_name) {
+                    let this_ = this;
+                    layui.use(["layer", "jquery"], function () {
+                        let layer = layui.layer;
+                        let $ = layui.jquery;
+                        layer.confirm("确认删除主分组\"" + big_type_name + "\"下的子分组\”" + sub_type_name + "\"吗?", function () {
+                            $.ajax({
+                                url: "/admin/api/sub_group",
+                                method: "DELETE",
+                                data: {
+                                    id: sub_type
+                                },
+                                success: function (res) {
+                                    if (res.code !== 0) {
+                                        layer.msg(res.msg, { icon: 0 });
+                                    } else {
+                                        layer.msg("删除成功", { icon: 1 });
+                                        this_.init_group_info();
+                                    }
+                                }
+                            });
+                        });
+                    });
+                }
+            },
+            mounted: function () {
+                this.init_group_info();
+            }
+        });
+    </script>
+</body>
+
+</html>

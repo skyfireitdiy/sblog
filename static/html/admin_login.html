@@ -3,68 +3,70 @@
 <head>
     <meta charset="utf-8">
     <title>博客首页</title>
-    <link rel="stylesheet" type="text/css" href="https://www.layuicdn.com/layui/css/layui.css"/>
-    <link rel="stylesheet" type="text/css" href="/css/admin_login.css"/>
+    <link rel="stylesheet" type="text/css" href="https://www.layuicdn.com/layui/css/layui.css" />
+    <link rel="stylesheet" type="text/css" href="/css/admin_login.css" />
 
 </head>
+
 <body>
 
-<div class="mainBlock">
-    <h1>
-        后台登录
-    </h1>
-    <form class="layui-form formBlock" action="">
-        <div class="layui-form-item">
-            <label class="layui-form-label">用户名</label>
-            <div class="layui-input-block">
-                <input required lay-verify="required" class="layui-input" name="name" type="text" placeholder="请输入用户名">
+    <div class="mainBlock">
+        <h1>
+            后台登录
+        </h1>
+        <form class="layui-form formBlock" action="">
+            <div class="layui-form-item">
+                <label class="layui-form-label">用户名</label>
+                <div class="layui-input-block">
+                    <input required lay-verify="required" class="layui-input" name="name" type="text"
+                        placeholder="请输入用户名">
+                </div>
             </div>
-        </div>
-        <div class="layui-form-item">
-            <label class="layui-form-label"> 密码</label>
-            <div class="layui-input-block">
-                <input required lay-verify="required" class="layui-input" name="password" type="password"
-                       placeholder="请输入密码">
+            <div class="layui-form-item">
+                <label class="layui-form-label"> 密码</label>
+                <div class="layui-input-block">
+                    <input required lay-verify="required" class="layui-input" name="password" type="password"
+                        placeholder="请输入密码">
+                </div>
             </div>
-        </div>
 
 
-        <div class="layui-input-block">
-            <button type="button" class="layui-btn-green layui-btn" lay-submit lay-filter="login">登录</button>
-            <button type="reset" class="layui-btn-warm layui-btn">重置</button>
-        </div>
-    </form>
+            <div class="layui-input-block">
+                <button type="button" class="layui-btn-green layui-btn" lay-submit lay-filter="login">登录</button>
+                <button type="reset" class="layui-btn-warm layui-btn">重置</button>
+            </div>
+        </form>
 
-</div>
+    </div>
 
-<script src="https://www.layuicdn.com/layui/layui.js"></script>
-<script>
+    <script src="https://www.layuicdn.com/layui/layui.js"></script>
+    <script>
 
-    layui.use(["form", "layer", "element"], function () {
-        let form = layui.form;
-        let $ = layui.jquery;
-        let layer = layui.layer;
-        layui.element.init();
-        form.render();
+        layui.use(["form", "layer", "element"], function () {
+            let form = layui.form;
+            let $ = layui.jquery;
+            let layer = layui.layer;
+            layui.element.init();
+            form.render();
 
-        form.on("submit(login)", function (data) {
-            $.ajax({
-                url: "/api/login",
-                data: data.field,
-                method: "POST",
-                success: function (res) {
-                    if (res.code !== 0) {
-                        layer.alert(res.msg);
-                    } else {
-                        window.location.href = res.redirect;
+            form.on("submit(login)", function (data) {
+                $.ajax({
+                    url: "/api/login",
+                    data: data.field,
+                    method: "POST",
+                    success: function (res) {
+                        if (res.code !== 0) {
+                            layer.msg(res.msg, { icon: 0 });
+                        } else {
+                            window.location.href = res.redirect;
+                        }
                     }
-                }
+                });
+                return false;
             });
-            return false;
         });
-    });
 
-</script>
+    </script>
 
 </body>
 

@@ -51,7 +51,7 @@
             form.render();
             form.on('submit(change)', function (data) {
                 if (data.field.new_password !== data.field.new_password2) {
-                    layer.alert("密码不一致");
+                    layer.msg("密码不一致", { icon: 0 });
                     return false;
                 }
                 $.ajax({
@@ -60,7 +60,7 @@
                     data: data.field,
                     success: function (res) {
                         if (res.code !== 0) {
-                            layer.alert(res.msg);
+                            layer.msg(res.msg, { icon: 0 });
                         }
                         else {
                             layer.msg("密码修改成功", { icon: 1 });
