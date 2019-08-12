@@ -21,12 +21,16 @@ struct admin_user {
 struct blog {
     int id;
     string title;
-    string content;
     string publish_time;
     int watch_number;
     int top;
     int sub_type;
     int hide;
+};
+
+struct blog_content {
+    int id;
+    string content;
 };
 
 struct blog_big_type {
@@ -51,8 +55,8 @@ struct blog_label {
 };
 
 SF_JSONIFY(admin_user, id, name, password, qq, website, desc)
-SF_JSONIFY(blog, id, title, content, publish_time, watch_number, top, sub_type,
-           hide)
+SF_JSONIFY(blog, id, title, publish_time, watch_number, top, sub_type, hide)
+SF_JSONIFY(blog_content, id, content)
 SF_JSONIFY(blog_big_type, id, type_name)
 SF_JSONIFY(blog_sub_type, id, big_type, type_name)
 SF_JSONIFY(label, id, label_name)
@@ -73,12 +77,14 @@ inline auto init_user_storage(const string &path) {
                    make_column("id", &blog::id, autoincrement(), primary_key(),
                                unique()),
                    make_column("title", &blog::title),
-                   make_column("content", &blog::content),
                    make_column("publish_time", &blog::publish_time),
                    make_column("watch_number", &blog::watch_number),
                    make_column("top", &blog::top),
                    make_column("sub_type", &blog::sub_type),
                    make_column("hide", &blog::hide)),
+        make_table("blog_content",
+                   make_column("id", &blog_content::id, primary_key()),
+                   make_column("content", &blog_content::content)),
         make_table("blog_big_type",
                    make_column("id", &blog_big_type::id, autoincrement(),
                                primary_key(), unique()),
@@ -155,6 +161,26 @@ class database : public sf_single_instance<database> {
     vector<label> get_all_label();
 
     shared_ptr<label> get_label(int id);
+
+    vector<blog> get_all_blog();
+
+    shared_ptr<blog_content> get_blog_content(int id);
+
+    vector<label> get_blog_labels(int blog_id);
+
+    void update_blog(const blog &b);
+
+    void delete_blog(int blog_id);
+
+    void insert_blog(const blog &b);
+
+    shared_ptr<blog> get_blog(int blog_id);
+
+    void insert_blog_content(const blog_content &bc);
+
+    void delete_blog_content(int blog_id);
+
+    void update_blog_content(const blog_content &bc);
 
     explicit database(const string &path);
 };

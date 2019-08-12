@@ -131,3 +131,43 @@ vector<label> database::get_all_label() { return storage__->get_all<label>(); }
 shared_ptr<label> database::get_label(int id) {
     return storage__->get_pointer<label>(id);
 }
+
+vector<blog> database::get_all_blog() { return storage__->get_all<blog>(); }
+
+shared_ptr<blog_content> database::get_blog_content(int id) {
+    return storage__->get_pointer<blog_content>(id);
+}
+
+vector<label> database::get_blog_labels(int blog_id) {
+    auto data = storage__->select(
+        columns(&label::id, &label::label_name),
+        join<blog_label>(on(c(&label::id) == &blog_label::label_id and
+                            c(&blog_label::blog_id) == blog_id)));
+    vector<label> ret(data.size());
+    for (auto i = 0UL; i < data.size(); ++i) {
+        ret[i] = label{get<0>(data[i]), std::get<1>(data[i])};
+    }
+    return ret;
+}
+
+void database::insert_blog(const blog &b) { storage__->insert(b); }
+
+void database::delete_blog(int blog_id) { storage__->remove<blog>(blog_id); }
+
+void database::update_blog(const blog &b) { storage__->update(b); }
+
+shared_ptr<blog> database::get_blog(int id) {
+    return storage__->get_pointer<blog>(id);
+}
+
+void database::insert_blog_content(const blog_content &bc) {
+    storage__->insert(bc);
+}
+
+void database::delete_blog_content(int blog_id) {
+    storage__->remove<blog_content>(blog_id);
+}
+
+void database::update_blog_content(const blog_content &bc) {
+    storage__->update(bc);
+}

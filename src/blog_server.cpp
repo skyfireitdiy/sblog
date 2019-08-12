@@ -218,6 +218,13 @@ void blog_server::setup_server(const sf_http_server_config &server_conf) {
         }),
         vector{{"POST"s}}));
 
+    admin_api_router->add_router(sf_http_router::make_instance(
+        "/blog_info",
+        function([this](const sf_http_request &req, sf_http_response &res) {
+            get_blog_info(req, res);
+        }),
+        vector{{"GET"s}}));
+
     admin_router->add_router(admin_api_router);
 
     server__->add_router(root_router);
@@ -578,4 +585,32 @@ void blog_server::delete_label(const sf_http_request &req,
     }
     database__->delete_label(lab_id);
     ret["code"] = 0;
+}
+
+void blog_server::get_blog_info(const sf_http_request &req,
+                                sf_http_response &res) {
+    sf_json ret;
+    sf_finally f([&res, &ret] { res.set_json(ret); });
+    auto blogs = database__->get_all_blog();
+    auto blogs_json = to_json(blogs);
+    for (int i = 0; i < blogs.size(); ++i) {
+        auto sub_type = database__->get_sub_type(blogs[i].sub_type);
+        if (sub_type == nullptr) {
+            ret["code"] = 1;
+            ret["msg"] = "server error";
+            return;
+        }
+        blogs_json[i]["sub_type"] = to_json(*sub_type);
+        auto big_type = database__->get_big_type(sub_type->big_type);
+        if (big_type == nullptr) {
+            ret["code"] = 2;
+            ret["msg"] = "server error";
+            return;
+        }
+        blogs_json[i]["big_type"] = to_json(*big_type);
+        auto labels = database__->get_blog_labels(blogs[i].id);
+        blogs_json[i]["labels"] = to_json(labels);
+    }
+    ret["code"] = 0;
+    ret["data"] = blogs_json;
 }
