@@ -190,6 +190,34 @@ void blog_server::setup_server(const sf_http_server_config &server_conf) {
         }),
         vector{{"DELETE"s}}));
 
+    admin_api_router->add_router(sf_http_router::make_instance(
+        "/label"s,
+        function([this](const sf_http_request &req, sf_http_response &res) {
+            get_label(req, res);
+        }),
+        vector{{"GET"s}}));
+
+    admin_api_router->add_router(sf_http_router::make_instance(
+        "/label"s,
+        function([this](const sf_http_request &req, sf_http_response &res) {
+            delete_label(req, res);
+        }),
+        vector{{"DELETE"s}}));
+
+    admin_api_router->add_router(sf_http_router::make_instance(
+        "/label"s,
+        function([this](const sf_http_request &req, sf_http_response &res) {
+            rename_label(req, res);
+        }),
+        vector{{"PUT"s}}));
+
+    admin_api_router->add_router(sf_http_router::make_instance(
+        "/label"s,
+        function([this](const sf_http_request &req, sf_http_response &res) {
+            add_label(req, res);
+        }),
+        vector{{"POST"s}}));
+
     admin_router->add_router(admin_api_router);
 
     server__->add_router(root_router);
@@ -476,5 +504,78 @@ void blog_server::rename_sub_type(const sf_http_request &req,
     }
     blog_sub_type t{sub_type, big_type, param["new_name"]};
     database__->update_sub_type(t);
+    ret["code"] = 0;
+}
+
+void blog_server::get_label(const sf_http_request &req, sf_http_response &res) {
+    sf_json ret;
+    sf_finally f([&res, &ret] { res.set_json(ret); });
+    auto data = database__->get_all_label();
+    ret["code"] = 0;
+    ret["data"] = to_json(data);
+}
+
+void blog_server::add_label(const sf_http_request &req, sf_http_response &res) {
+    sf_json ret;
+    sf_finally f([&res, &ret] { res.set_json(ret); });
+    auto param = sf_parse_param(to_string(req.get_body()));
+    if (param.count("name") == 0) {
+        ret["code"] = 1;
+        ret["msg"] = "param error";
+        return;
+    }
+    if (database__->check_label(param["name"]) != nullptr) {
+        ret["code"] = 2;
+        ret["msg"] = "label already exists";
+        return;
+    }
+    label lab{-1, param["name"]};
+    database__->insert_label(lab);
+    ret["code"] = 0;
+}
+
+void blog_server::rename_label(const sf_http_request &req,
+                               sf_http_response &res) {
+    sf_json ret;
+    sf_finally f([&res, &ret] { res.set_json(ret); });
+    auto param = sf_parse_param(to_string(req.get_body()));
+    if (param.count("id") == 0 || param.count("name") == 0) {
+        ret["code"] = 1;
+        ret["msg"] = "param error";
+        return;
+    }
+    auto lab_id = static_cast<int>(sf_string_to_long_double(param["id"]));
+    if (database__->get_label(lab_id) == nullptr) {
+        ret["code"] = 2;
+        ret["msg"] = "label not found";
+        return;
+    }
+    if (database__->check_label(param["name"]) != nullptr) {
+        ret["code"] = 3;
+        ret["msg"] = "label already exists";
+        return;
+    }
+    label lab{lab_id, param["name"]};
+    database__->update_label(lab);
+    ret["code"] = 0;
+}
+
+void blog_server::delete_label(const sf_http_request &req,
+                               sf_http_response &res) {
+    sf_json ret;
+    sf_finally f([&res, &ret] { res.set_json(ret); });
+    auto param = sf_parse_param(to_string(req.get_body()));
+    if (param.count("id") == 0) {
+        ret["code"] = 1;
+        ret["msg"] = "param name";
+        return;
+    }
+    auto lab_id = static_cast<int>(sf_string_to_long_double(param["id"]));
+    if (database__->get_label(lab_id) == nullptr) {
+        ret["code"] = 2;
+        ret["msg"] = "label not found";
+        return;
+    }
+    database__->delete_label(lab_id);
     ret["code"] = 0;
 }

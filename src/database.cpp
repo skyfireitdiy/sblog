@@ -111,3 +111,23 @@ shared_ptr<blog_big_type> database::get_big_type(int id) {
 shared_ptr<blog_sub_type> database::get_sub_type(int id) {
     return storage__->get_pointer<blog_sub_type>(id);
 }
+
+shared_ptr<label> database::check_label(const string &name) {
+    auto data = storage__->get_all<label>(where(c(&label::label_name) == name));
+    if (data.empty()) {
+        return nullptr;
+    }
+    return make_shared<label>(data[0]);
+}
+
+void database::update_label(const label &lab) { storage__->update(lab); }
+
+void database::insert_label(const label &lab) { storage__->insert(lab); }
+
+void database::delete_label(int id) { storage__->remove<label>(id); }
+
+vector<label> database::get_all_label() { return storage__->get_all<label>(); }
+
+shared_ptr<label> database::get_label(int id) {
+    return storage__->get_pointer<label>(id);
+}

@@ -31,9 +31,7 @@
             <ul class="layui-nav layui-layout-right">
                 <li class="layui-nav-item">
                     <a href="javascript:;">
-                        <img src="//tva1.sinaimg.cn/crop.0.0.118.118.180/5db11ff4gw1e77d3nqrv8j203b03cweg.jpg"
-                            class="layui-nav-img">
-                        {{user_name}}
+                        <img src="//tva1.sinaimg.cn/crop.0.0.118.118.180/5db11ff4gw1e77d3nqrv8j203b03cweg.jpg" class="layui-nav-img"> {{user_name}}
                     </a>
                 </li>
                 <li class="layui-nav-item"><a @click="logout">注销</a></li>
@@ -80,9 +78,12 @@
     <script type="text/javascript" src="https://unpkg.com/vue"></script>
     <script src="https://www.layuicdn.com/layui/layui.js" charset="utf-8"></script>
     <script>
+        layui.use(["layer", "layer", "jquery"], function() {
+            let element = layui.element;
+            let layer = layui.layer;
+            let $ = layui.jquery;
 
-        let app = new Vue(
-            {
+            let app = new Vue({
                 el: "#app",
                 data: {
                     sub_type: "blog_info",
@@ -98,78 +99,69 @@
                     user_name: "",
                 },
                 methods: {
-                    info_manage: function () {
+                    info_manage: function() {
                         this.big_type = "info";
                     },
-                    user_base_manage: function () {
+                    user_base_manage: function() {
                         this.info_manage();
                         this.sub_type = "user_base";
                     },
-                    safe_manage: function () {
+                    safe_manage: function() {
                         this.info_manage();
                         this.sub_type = "safe";
                     },
-                    data_manage: function () {
+                    data_manage: function() {
                         this.big_type = "data";
                     },
-                    blog_group_manage: function () {
+                    blog_group_manage: function() {
                         this.data_manage();
                         this.sub_type = "blog_group";
                     },
-                    blog_label_manage: function () {
+                    blog_label_manage: function() {
                         this.data_manage();
                         this.sub_type = "blog_label";
                     },
-                    article_data_manage: function () {
+                    article_data_manage: function() {
                         this.data_manage();
                         this.sub_type = "article_data";
                     },
-                    ad_data_manage: function () {
+                    ad_data_manage: function() {
                         this.data_manage();
                         this.sub_type = "ad_data";
                     },
 
-                    logout: function () {
-                        layui.use(["layer", "jquery"], function () {
-                            let layer = layui.layer;
-                            let $ = layui.jquery;
-                            layer.confirm("确认要注销吗？", () => {
-                                window.location.href = "/admin/api/logout";
-                            });
+                    logout: function() {
+
+                        layer.confirm("确认要注销吗？", () => {
+                            window.location.href = "/admin/api/logout";
                         });
+
                         return false;
                     }
                 },
                 computed: {
-                    now_src: function () {
+                    now_src: function() {
                         return this.url_map[this.sub_type];
                     }
                 },
-                mounted: function () {
+                mounted: function() {
                     let this_ = this;
-                    layui.use(['element', 'layer', 'jquery'], function () {
-                        let element = layui.element;
-                        let layer = layui.layer;
-                        let $ = layui.jquery;
-
-                        $.ajax(
-                            {
-                                url: "/admin/api/user_info",
-                                method: "GET",
-                                success: function (res) {
-                                    if (res.code !== 0) {
-                                        layer.msg(res.msg, { icon: 0 });
-                                    }
-                                    else {
-                                        this_.user_name = res.data.name;
-                                    }
-                                }
+                    $.ajax({
+                        url: "/admin/api/user_info",
+                        method: "GET",
+                        success: function(res) {
+                            if (res.code !== 0) {
+                                layer.msg(res.msg, {
+                                    icon: 0
+                                });
+                            } else {
+                                this_.user_name = res.data.name;
                             }
-                        );
+                        }
                     });
                 }
-            }
-        );
+            });
+        });
     </script>
 </body>
 

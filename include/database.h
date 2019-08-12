@@ -26,6 +26,7 @@ struct blog {
     int watch_number;
     int top;
     int sub_type;
+    int hide;
 };
 
 struct blog_big_type {
@@ -50,7 +51,8 @@ struct blog_label {
 };
 
 SF_JSONIFY(admin_user, id, name, password, qq, website, desc)
-SF_JSONIFY(blog, id, title, content, publish_time, watch_number, top, sub_type)
+SF_JSONIFY(blog, id, title, content, publish_time, watch_number, top, sub_type,
+           hide)
 SF_JSONIFY(blog_big_type, id, type_name)
 SF_JSONIFY(blog_sub_type, id, big_type, type_name)
 SF_JSONIFY(label, id, label_name)
@@ -75,7 +77,8 @@ inline auto init_user_storage(const string &path) {
                    make_column("publish_time", &blog::publish_time),
                    make_column("watch_number", &blog::watch_number),
                    make_column("top", &blog::top),
-                   make_column("sub_type", &blog::sub_type)),
+                   make_column("sub_type", &blog::sub_type),
+                   make_column("hide", &blog::hide)),
         make_table("blog_big_type",
                    make_column("id", &blog_big_type::id, autoincrement(),
                                primary_key(), unique()),
@@ -140,6 +143,18 @@ class database : public sf_single_instance<database> {
     shared_ptr<blog_big_type> get_big_type(int id);
 
     shared_ptr<blog_sub_type> get_sub_type(int id);
+
+    shared_ptr<label> check_label(const string &name);
+
+    void update_label(const label &lab);
+
+    void insert_label(const label &lab);
+
+    void delete_label(int id);
+
+    vector<label> get_all_label();
+
+    shared_ptr<label> get_label(int id);
 
     explicit database(const string &path);
 };

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" type="text/css" href="https://www.layuicdn.com/layui/css/layui.css">
+    <style>
+        [v-cloak] {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app" v-cloak>
+        <div style=" margin: auto; text-align: center;">
+            <h1>标签列表</h1>
+            <br>
+            <br>
+            <table class="layui-table">
+                <colgroup>
+                    <col>
+                    <col>
+                </colgroup>
+                <thead>
+                    <td>标签&nbsp;&nbsp;<button class="layui-btn layui-btn-green layui-btn-sm layui-btn-radius" @click="add_label();">新增标签</button></td>
+                    <td>操作</td>
+                </thead>
+                <tr v-for="label in label_info">
+                    <td>{{label.label_name}}</td>
+                    <td>
+                        <button class="layui-btn layui-btn-normal" @click="rename_label(label.id, label.label_name);">重命名</button>
+                        <button class="layui-btn layui-btn-danger" @click="delete_label(label.id, label.label_name)">删除</button>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <script src="https://www.layuicdn.com/layui/layui.js" charset="utf-8"></script>
+    <script type="text/javascript" src="https://unpkg.com/vue"></script>
+    <script>
+        layui.use(["element", "layer", "jquery"], function() {
+
+            let layer = layui.layer;
+            let element = layui.element;
+            let $ = layui.jquery;
+
+            let app = new Vue({
+                el: "#app",
+                data: {
+                    label_info: []
+                },
+                methods: {
+                    init_label_info: function() {
+                        let this_ = this;
+                        $.ajax({
+                            url: "/admin/api/label",
+                            method: "GET",
+                            success: function(res) {
+                                if (res.code !== 0) {
+                                    layer.msg(res.msg, {
+                                        icon: 0
+                                    });
+                                } else {
+                                    this_.label_info = res.data;
+                                }
+                            }
+                        });
+                    },
+                    add_label: function() {
+                        let this_ = this;
+
+                        layer.prompt({
+                            formType: 0,
+                            title: "请输入新增的标签名称",
+                            maxlength: 20,
+                            value: ""
+                        }, function(value, index, elem) {
+                            $.ajax({
+                                url: "/admin/api/label",
+                                method: "POST",
+                                data: {
+                                    name: value
+                                },
+                                success: function(res) {
+                                    if (res.code !== 0) {
+                                        layer.msg(res.msg, {
+                                            icon: 0
+                                        });
+                                    } else {
+                                        layer.msg("新增成功", {
+                                            icon: 1
+                                        });
+                                        layer.close(index);
+                                        this_.init_label_info();
+                                    }
+                                }
+                            });
+                        });
+                    },
+                    rename_label: function(id, name) {
+                        let this_ = this;
+
+                        layer.prompt({
+                            formType: 0,
+                            maxlength: 20,
+                            title: "请输入标签\"" + name + "\"的新名称",
+                            value: name
+                        }, function(value, index, elem) {
+                            $.ajax({
+                                url: "/admin/api/label",
+                                method: "PUT",
+                                data: {
+                                    id: id,
+                                    name: value
+                                },
+                                success: function(res) {
+                                    if (res.code !== 0) {
+                                        layer.msg(res.msg, {
+                                            icon: 0
+                                        });
+                                    } else {
+                                        layer.msg("修改成功", {
+                                            icon: 1
+                                        });
+                                        layer.close(index);
+                                        this_.init_label_info();
+                                    }
+                                }
+                            });
+                        });
+                    },
+                    delete_label: function(id, name) {
+                        let this_ = this;
+                        layer.confirm("确认删除标签\"" + name + "\"吗?", function() {
+                            $.ajax({
+                                url: "/admin/api/label",
+                                method: "DELETE",
+                                data: {
+                                    id: id
+                                },
+                                success: function(res) {
+                                    if (res.code !== 0) {
+                                        layer.msg(res.msg, {
+                                            icon: 0
+                                        });
+                                    } else {
+                                        layer.msg("删除成功", {
+                                            icon: 1
+                                        });
+                                        this_.init_label_info();
+                                    }
+                                }
+                            });
+                        });
+                    }
+                },
+                mounted: function() {
+                    this.init_label_info();
+                }
+            });
+        });
+    </script>
+
+</body>
+
+</html>

@@ -46,6 +46,14 @@ class blog_server : public sf_make_instance_t<blog_server, sf_empty_class> {
 
     void rename_sub_type(const sf_http_request &req, sf_http_response &res);
 
+    void add_label(const sf_http_request &req, sf_http_response &res);
+
+    void rename_label(const sf_http_request &req, sf_http_response &res);
+
+    void get_label(const sf_http_request &req, sf_http_response &res);
+
+    void delete_label(const sf_http_request &req, sf_http_response &res);
+
    public:
     explicit blog_server(const std::string &config_file_path);
 
