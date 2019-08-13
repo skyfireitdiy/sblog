@@ -28,6 +28,12 @@ struct blog {
     int hide;
 };
 
+struct draft {
+    int id;
+    string title;
+    string content;
+};
+
 struct blog_content {
     int id;
     string content;
@@ -56,6 +62,7 @@ struct blog_label {
 
 SF_JSONIFY(admin_user, id, name, password, qq, website, desc)
 SF_JSONIFY(blog, id, title, publish_time, watch_number, top, sub_type, hide)
+SF_JSONIFY(draft, id, title, content)
 SF_JSONIFY(blog_content, id, content)
 SF_JSONIFY(blog_big_type, id, type_name)
 SF_JSONIFY(blog_sub_type, id, big_type, type_name)
@@ -82,6 +89,11 @@ inline auto init_user_storage(const string &path) {
                    make_column("top", &blog::top),
                    make_column("sub_type", &blog::sub_type),
                    make_column("hide", &blog::hide)),
+        make_table("draft",
+                   make_column("id", &draft::id, autoincrement(), primary_key(),
+                               unique()),
+                   make_column("title", &draft::title),
+                   make_column("content", &draft::content)),
         make_table("blog_content",
                    make_column("id", &blog_content::id, primary_key()),
                    make_column("content", &blog_content::content)),
@@ -181,6 +193,12 @@ class database : public sf_single_instance<database> {
     void delete_blog_content(int blog_id);
 
     void update_blog_content(const blog_content &bc);
+
+    vector<draft> get_all_draft();
+
+    int insert_draft(const draft &df);
+
+    void update_draft(const draft &df);
 
     explicit database(const string &path);
 };

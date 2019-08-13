@@ -68,7 +68,7 @@
         </div>
 
         <div class="layui-body" style="overflow: hidden">
-            <iframe :src="now_src" id="iframe" width="100%" style="border: none; height: 100%;"></iframe>
+            <iframe src="" id="iframe" width="100%" style="border: none; height: 100%;"></iframe>
         </div>
 
         <div class="layui-footer">
@@ -96,7 +96,7 @@
                         user_base: "/admin/html/user_base.html",
                         safe: "/admin/html/safe.html"
                     },
-                    user_name: "",
+                    user_name: ""
                 },
                 methods: {
                     info_manage: function() {
@@ -105,10 +105,12 @@
                     user_base_manage: function() {
                         this.info_manage();
                         this.sub_type = "user_base";
+                        this.refresh_iframe();
                     },
                     safe_manage: function() {
                         this.info_manage();
                         this.sub_type = "safe";
+                        this.refresh_iframe();
                     },
                     data_manage: function() {
                         this.big_type = "data";
@@ -116,18 +118,22 @@
                     blog_group_manage: function() {
                         this.data_manage();
                         this.sub_type = "blog_group";
+                        this.refresh_iframe();
                     },
                     blog_label_manage: function() {
                         this.data_manage();
                         this.sub_type = "blog_label";
+                        this.refresh_iframe();
                     },
                     article_data_manage: function() {
                         this.data_manage();
                         this.sub_type = "article_data";
+                        this.refresh_iframe();
                     },
                     ad_data_manage: function() {
                         this.data_manage();
                         this.sub_type = "ad_data";
+                        this.refresh_iframe();
                     },
 
                     logout: function() {
@@ -137,11 +143,16 @@
                         });
 
                         return false;
-                    }
-                },
-                computed: {
-                    now_src: function() {
-                        return this.url_map[this.sub_type];
+                    },
+
+                    refresh_iframe: function() {
+                        let new_url = window.location.protocol + "//" + window.location.host + this.url_map[this.sub_type];
+                        let url = document.getElementById("iframe").contentWindow.location.href;
+                        console.log(url);
+                        console.log(new_url);
+                        if (url !== new_url) {
+                            $("#iframe").attr('src', new_url);
+                        }
                     }
                 },
                 mounted: function() {

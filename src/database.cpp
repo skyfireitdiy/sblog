@@ -171,3 +171,9 @@ void database::delete_blog_content(int blog_id) {
 void database::update_blog_content(const blog_content &bc) {
     storage__->update(bc);
 }
+
+vector<draft> database::get_all_draft() { return storage__->get_all<draft>(); }
+
+int database::insert_draft(const draft &df) { return storage__->insert(df); }
+
+void database::update_draft(const draft &df) { storage__->update(df); }

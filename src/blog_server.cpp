@@ -3,6 +3,7 @@
 #include "blog_config.h"
 #include "database.h"
 #include "network/sf_http_part_router.hpp"
+#include "network/sf_websocket_router.hpp"
 #include "tools/sf_finally.hpp"
 #include "tools/sf_logger.hpp"
 
@@ -219,9 +220,23 @@ void blog_server::setup_server(const sf_http_server_config &server_conf) {
         vector{{"POST"s}}));
 
     admin_api_router->add_router(sf_http_router::make_instance(
-        "/blog_info",
+        "/blog_info"s,
         function([this](const sf_http_request &req, sf_http_response &res) {
             get_blog_info(req, res);
+        }),
+        vector{{"GET"s}}));
+
+    admin_api_router->add_router(sf_http_router::make_instance(
+        "/draft"s,
+        function([this](const sf_http_request &req, sf_http_response &res) {
+            update_draft(req, res);
+        }),
+        vector{{"PUT"s}}));
+
+    admin_api_router->add_router(sf_http_router::make_instance(
+        "/draft_list"s,
+        function([this](const sf_http_request &req, sf_http_response &res) {
+            get_draft_list(req, res);
         }),
         vector{{"GET"s}}));
 
@@ -613,4 +628,33 @@ void blog_server::get_blog_info(const sf_http_request &req,
     }
     ret["code"] = 0;
     ret["data"] = blogs_json;
+}
+
+void blog_server::get_draft_list(const sf_http_request &req,
+                                 sf_http_response &res) {
+    sf_json ret;
+    sf_finally f([&res, &ret] { res.set_json(ret); });
+    ret["code"] = 0;
+    ret["data"] = to_json(database__->get_all_draft());
+}
+
+void blog_server::update_draft(const sf_http_request &req,
+                               sf_http_response &res) {
+    sf_json ret;
+    sf_finally f([&res, &ret] { res.set_json(ret); });
+    auto param = sf_parse_param(to_string(req.get_body()));
+    if (param.count("id") == 0 || param.count("title") == 0 ||
+        param.count("content") == 0) {
+        ret["code"] = 1;
+        ret["msg"] = "param error";
+        return;
+    }
+    auto draft_id = static_cast<int>(sf_string_to_long_double(param["id"]));
+    draft df{draft_id, param["title"], param["content"]};
+    ret["code"] = 0;
+    if (df.id == -1) {
+        ret["data"] = database__->insert_draft(df);
+    } else {
+        ret["data"] = df.id;
+    }
 }
