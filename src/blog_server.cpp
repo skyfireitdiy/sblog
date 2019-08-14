@@ -735,7 +735,7 @@ void blog_server::add_blog(const sf_http_request &req, sf_http_response &res) {
     auto param = sf_parse_param(to_string(req.get_body()));
     if (param.count("title") == 0 || param.count("content") == 0 ||
         param.count("sub_type") == 0 || param.count("article_id") == 0 ||
-        param.count("draft_id")) {
+        param.count("draft_id") == 0) {
         ret["code"] = 1;
         ret["msg"] = "param error";
         return;
@@ -799,7 +799,7 @@ void blog_server::editor(const sf_http_request &req, sf_http_response &res) {
     if (type == 0) {
         data["group_data"] = get_group_info();
         data["big_type_index"] = 0;
-        data["sub_type"] = 0;
+        data["sub_type"] = -1;
         data["converter"] = sf_json();
         data["editor"] = sf_json();
         data["article_id"] = -1;

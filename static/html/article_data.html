@@ -10,14 +10,6 @@
         [v-cloak] {
             display: none;
         }
-        
-        .layui-table {
-            margin: 0;
-        }
-        
-        .layui-table td {
-            padding: 0;
-        }
     </style>
 </head>
 
@@ -25,7 +17,11 @@
     <div id="app" v-cloak>
 
         <div>
+            <button class="layui-btn" @click="add_new_blog();">发布新文章</button>
             <button class="layui-btn">批量置顶</button>
+            <button class="layui-btn">批量取消置顶</button>
+            <button class="layui-btn">批量隐藏</button>
+            <button class="layui-btn">批量取消隐藏</button>
             <button class="layui-btn">批量删除</button>
             <button class="layui-btn">批量修改分类</button>
             <button class="layui-btn">批量添加标签</button>
@@ -43,11 +39,8 @@
                     <col>
                 </colgroup>
                 <thead>
-                    <td><input type="checkbox" class="laytable-cell-checkbox"> 选中</td>
-                    <td>
-                        标题 &nbsp;&nbsp;
-                        <a href="/admin/api/editor?type=0"><button class="layui-btn">发布新文章</button></a>
-                    </td>
+                    <td><input type="checkbox" v-model="select_all_flag" @change="on_select_all();" class="laytable-cell-checkbox"> 选中</td>
+                    <td>标题</td>
                     <td>发布时间</td>
                     <td>阅读数</td>
                     <td>置顶</td>
@@ -94,9 +87,22 @@
                 el: "#app",
                 data: {
                     blog_data: [],
-                    checked_item: []
+                    checked_item: [],
+                    select_all_flag: false
                 },
                 methods: {
+                    add_new_blog: function() {
+                        window.location.href = "/admin/api/editor?type=0";
+                    },
+
+                    on_select_all: function() {
+                        this.checked_item = []
+                        if (this.select_all_flag) {
+                            for (let k in this.blog_data) {
+                                this.checked_item.push(this.blog_data[k].id);
+                            }
+                        }
+                    },
                     init_blog_data: function() {
                         let this_ = this;
                         $.ajax({
