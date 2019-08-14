@@ -61,6 +61,9 @@
                         <a @click="article_data_manage();">博文管理</a>
                     </li>
                     <li class="layui-nav-item layui-nav-itemed">
+                        <a @click="draft_data_manage();">草稿箱管理</a>
+                    </li>
+                    <li class="layui-nav-item layui-nav-itemed">
                         <a @click="ad_data_manage();">广告管理</a>
                     </li>
                 </ul>
@@ -94,7 +97,8 @@
                         article_data: "/admin/html/article_data.html",
                         ad_data: "/admin/html/ad_data.html",
                         user_base: "/admin/html/user_base.html",
-                        safe: "/admin/html/safe.html"
+                        safe: "/admin/html/safe.html",
+                        draft: "/admin/html/draft.html",
                     },
                     user_name: ""
                 },
@@ -128,6 +132,11 @@
                     article_data_manage: function() {
                         this.data_manage();
                         this.sub_type = "article_data";
+                        this.refresh_iframe();
+                    },
+                    draft_data_manage: function() {
+                        this.data_manage();
+                        this.sub_type = "draft";
                         this.refresh_iframe();
                     },
                     ad_data_manage: function() {

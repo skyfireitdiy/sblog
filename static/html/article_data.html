@@ -24,11 +24,7 @@
 <body>
     <div id="app" v-cloak>
 
-        <div style=" margin: auto; text-align: center;">
-            <h1>文章管理</h1>
-            <br>
-            <br>
-            <button class="layui-btn">全选</button>
+        <div>
             <button class="layui-btn">批量置顶</button>
             <button class="layui-btn">批量删除</button>
             <button class="layui-btn">批量修改分类</button>
@@ -47,10 +43,10 @@
                     <col>
                 </colgroup>
                 <thead>
-                    <td>选中</td>
+                    <td><input type="checkbox" class="laytable-cell-checkbox"> 选中</td>
                     <td>
                         标题 &nbsp;&nbsp;
-                        <a href="/admin/html/edit_new.html"><button class="layui-btn">发布新文章</button></a>
+                        <a href="/admin/api/editor?type=0"><button class="layui-btn">发布新文章</button></a>
                     </td>
                     <td>发布时间</td>
                     <td>阅读数</td>
@@ -61,7 +57,7 @@
                     <td>操作</td>
                 </thead>
                 <tr v-for="art in blog_data">
-                    <td><input type="checkbox"></td>
+                    <td><input type="checkbox" :value="art.id" v-model="checked_item"></td>
                     <td>{{art.title}}</td>
                     <td>{{art.publish_time}}</td>
                     <td>{{art.watch_number}}</td>
@@ -97,7 +93,8 @@
             let app = new Vue({
                 el: "#app",
                 data: {
-                    blog_data: []
+                    blog_data: [],
+                    checked_item: []
                 },
                 methods: {
                     init_blog_data: function() {

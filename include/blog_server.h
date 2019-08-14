@@ -3,6 +3,7 @@
 #include "blog_config.h"
 #include "config_manager.h"
 #include "database.h"
+#include "inja.hpp"
 #include "network/sf_http_server.hpp"
 // #include "network/sf_websocket_param_t.hpp"
 
@@ -13,9 +14,15 @@ class blog_server : public sf_make_instance_t<blog_server, sf_empty_class> {
     std::shared_ptr<sf_http_server> server__;
     std::shared_ptr<config_manager> config__;
 
+    inja::Environment env;
+
     blog_config blog_config__;
 
     std::shared_ptr<database> database__ = nullptr;
+
+    static nlohmann::json sf_json_to_nlo_json(const sf_json &js) {
+        return nlohmann::json::parse(js.to_string());
+    }
 
     void admin_root(const sf_http_request &req, sf_http_response &res);
 
@@ -34,6 +41,8 @@ class blog_server : public sf_make_instance_t<blog_server, sf_empty_class> {
     void setup_server(const sf_http_server_config &server_conf);
 
     void get_group_info(const sf_http_request &req, sf_http_response &res);
+
+    sf_json get_group_info();
 
     void add_big_group(const sf_http_request &req, sf_http_response &res);
 
@@ -59,7 +68,15 @@ class blog_server : public sf_make_instance_t<blog_server, sf_empty_class> {
 
     void get_draft_list(const sf_http_request &req, sf_http_response &res);
 
+    void delete_draft_list(const sf_http_request &req, sf_http_response &res);
+
     void update_draft(const sf_http_request &req, sf_http_response &res);
+
+    void delete_draft(const sf_http_request &req, sf_http_response &res);
+
+    void add_blog(const sf_http_request &req, sf_http_response &res);
+
+    void editor(const sf_http_request &req, sf_http_response &res);
 
    public:
     explicit blog_server(const std::string &config_file_path);

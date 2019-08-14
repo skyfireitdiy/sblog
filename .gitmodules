@@ -7,3 +7,6 @@
 [submodule "third_part/digestpp"]
 	path = third_part/digestpp
 	url = https://github.com/kerukuro/digestpp
+[submodule "third_part/inja"]
+	path = third_part/inja
+	url = https://github.com/pantor/inja

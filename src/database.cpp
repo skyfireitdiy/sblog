@@ -150,7 +150,7 @@ vector<label> database::get_blog_labels(int blog_id) {
     return ret;
 }
 
-void database::insert_blog(const blog &b) { storage__->insert(b); }
+int database::insert_blog(const blog &b) { return storage__->insert(b); }
 
 void database::delete_blog(int blog_id) { storage__->remove<blog>(blog_id); }
 
@@ -177,3 +177,9 @@ vector<draft> database::get_all_draft() { return storage__->get_all<draft>(); }
 int database::insert_draft(const draft &df) { return storage__->insert(df); }
 
 void database::update_draft(const draft &df) { storage__->update(df); }
+
+shared_ptr<draft> database::get_draft(int id) {
+    return storage__->get_pointer<draft>(id);
+}
+
+void database::delete_draft(int id) { storage__->remove<draft>(id); }

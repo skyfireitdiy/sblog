@@ -11,6 +11,8 @@ include_directories(
         third_part/sflib
         third_part/sqlite_orm/include/sqlite_orm
         third_part/digestpp
+        third_part/inja/single_include/inja
+        third_part/inja/third_party/include
         include
 )
 

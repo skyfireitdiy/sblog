@@ -11,6 +11,7 @@ using namespace skyfire;
 using namespace std;
 
 blog_server::blog_server(const std::string &config_file_path) {
+    env.set_expression("<<", ">>");
     config__ = config_manager::make_instance(config_file_path);
     if (!config__->inited()) {
         sf_error("config file load error", config_file_path);
@@ -234,9 +235,37 @@ void blog_server::setup_server(const sf_http_server_config &server_conf) {
         vector{{"PUT"s}}));
 
     admin_api_router->add_router(sf_http_router::make_instance(
+        "/draft"s,
+        function([this](const sf_http_request &req, sf_http_response &res) {
+            delete_draft(req, res);
+        }),
+        vector{{"DELETE"s}}));
+
+    admin_api_router->add_router(sf_http_router::make_instance(
         "/draft_list"s,
         function([this](const sf_http_request &req, sf_http_response &res) {
             get_draft_list(req, res);
+        }),
+        vector{{"GET"s}}));
+
+    admin_api_router->add_router(sf_http_router::make_instance(
+        "/draft_list"s,
+        function([this](const sf_http_request &req, sf_http_response &res) {
+            delete_draft_list(req, res);
+        }),
+        vector{{"DELETE"s}}));
+
+    admin_api_router->add_router(sf_http_router::make_instance(
+        "/blog"s,
+        function([this](const sf_http_request &req, sf_http_response &res) {
+            add_blog(req, res);
+        }),
+        vector{{"POST"s}}));
+
+    admin_api_router->add_router(sf_http_router::make_instance(
+        "/editor"s,
+        function([this](const sf_http_request &req, sf_http_response &res) {
+            editor(req, res);
         }),
         vector{{"GET"s}}));
 
@@ -369,7 +398,14 @@ void blog_server::get_group_info(const sf_http_request &req,
     auto sub_types = database__->get_all_sub_type();
     auto article_count = database__->get_sub_type_article_count();
     ret["code"] = 0;
-    ret["data"] = sf_json();
+    ret["data"] = get_group_info();
+}
+
+sf_json blog_server::get_group_info() {
+    auto big_types = database__->get_all_big_type();
+    auto sub_types = database__->get_all_sub_type();
+    auto article_count = database__->get_sub_type_article_count();
+    sf_json ret;
     for (auto &p : big_types) {
         sf_json tmp = to_json(p);
         tmp["sub_type"] = sf_json();
@@ -385,8 +421,9 @@ void blog_server::get_group_info(const sf_http_request &req,
                 tmp["sub_type"].append(tmp_sub);
             }
         }
-        ret["data"].append(tmp);
+        ret.append(tmp);
     }
+    return ret;
 }
 
 void blog_server::add_big_group(const sf_http_request &req,
@@ -655,6 +692,121 @@ void blog_server::update_draft(const sf_http_request &req,
     if (df.id == -1) {
         ret["data"] = database__->insert_draft(df);
     } else {
+        database__->update_draft(df);
         ret["data"] = df.id;
+    }
+}
+
+void blog_server::delete_draft(const sf_http_request &req,
+                               sf_http_response &res) {
+    sf_json ret;
+    sf_finally f([&res, &ret] { res.set_json(ret); });
+    auto param = sf_parse_param(to_string(req.get_body()));
+    if (param.count("id") == 0) {
+        ret["code"] = 1;
+        ret["msg"] = "param error";
+        return;
+    }
+    auto draft_id = static_cast<int>(sf_string_to_long_double(param["id"]));
+    if (database__->get_draft(draft_id) == nullptr) {
+        ret["code"] = 2;
+        ret["msg"] = "draft not found";
+        return;
+    }
+    database__->delete_draft(draft_id);
+    ret["code"] = 0;
+}
+
+void blog_server::delete_draft_list(const sf_http_request &req,
+                                    sf_http_response &res) {
+    sf_json ret;
+    sf_finally f([&res, &ret] { res.set_json(ret); });
+    vector<int> ids;
+    from_json(sf_json::from_string(to_string(req.get_body())), ids);
+    for (auto &id : ids) {
+        database__->delete_draft(id);
+    }
+    ret["code"] = 0;
+}
+
+void blog_server::add_blog(const sf_http_request &req, sf_http_response &res) {
+    sf_json ret;
+    sf_finally f([&res, &ret] { res.set_json(ret); });
+    auto param = sf_parse_param(to_string(req.get_body()));
+    if (param.count("title") == 0 || param.count("content") == 0 ||
+        param.count("sub_type") == 0 || param.count("article_id") == 0 ||
+        param.count("draft_id")) {
+        ret["code"] = 1;
+        ret["msg"] = "param error";
+        return;
+    }
+    auto article_id =
+        static_cast<int>(sf_string_to_long_double(param["article_id"]));
+    auto draft_id =
+        static_cast<int>(sf_string_to_long_double(param["draft_id"]));
+    auto sub_type =
+        static_cast<int>(sf_string_to_long_double(param["sub_type"]));
+    ret["code"] = 0;
+    if (article_id == -1) {
+        blog b{article_id, param["title"], sf_make_http_time_str(), 0, false,
+               sub_type,   false};
+        article_id = database__->insert_blog(b);
+        blog_content bc{article_id, param["content"]};
+        database__->insert_blog_content(bc);
+    } else {
+        auto b = database__->get_blog(article_id);
+        if (!b) {
+            ret["code"] = 2;
+            ret["msg"] = "server error";
+            return;
+        }
+        b->title = param["title"];
+        b->sub_type = sub_type;
+        database__->update_blog(*b);
+        blog_content bc{article_id, param["content"]};
+        database__->update_blog_content(bc);
+    }
+    database__->delete_draft(draft_id);
+}
+
+void blog_server::editor(const sf_http_request &req, sf_http_response &res) {
+    sf_json data;
+    bool ok = true;
+    sf_finally f([&data, &res, this, &ok] {
+        if (ok) {
+            sf_json ret;
+            ret["data"] = data;
+            auto result = env.render_file(
+                sf_path_join(blog_config__.static_path, "html/editor.html"s),
+                sf_json_to_nlo_json(ret));
+            res.set_body(to_byte_array(result));
+        }
+    });
+
+    string url;
+    sf_http_header_t param;
+    string frame;
+    sf_parse_url(req.get_request_line().url, url, param, frame);
+
+    if (param.count("type") == 0) {
+        ok = false;
+        res.set_status(401);
+        return;
+    }
+
+    auto type = static_cast<int>(sf_string_to_long_double(param["type"]));
+
+    if (type == 0) {
+        data["group_data"] = get_group_info();
+        data["big_type_index"] = 0;
+        data["sub_type"] = 0;
+        data["converter"] = sf_json();
+        data["editor"] = sf_json();
+        data["article_id"] = -1;
+        data["draft_id"] = -1;
+        data["type"] = 0;
+        data["title"] = "";
+        data["auto_save_flag"] = false;
+        data["timer"] = sf_json();
     }
 }

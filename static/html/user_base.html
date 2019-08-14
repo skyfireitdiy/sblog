@@ -89,23 +89,19 @@
                                 }
                             }
                         });
-
-
-
-                        $.ajax({
-                            url: "/admin/api/user_info",
-                            method: "GET",
-                            success: function(res) {
-                                if (res.code !== 0) {
-                                    layer.msg(res.msg, {
-                                        icon: 0
-                                    });
-                                } else {
-                                    this_.user_info = res.data;
-                                }
+                    });
+                    $.ajax({
+                        url: "/admin/api/user_info",
+                        method: "GET",
+                        success: function(res) {
+                            if (res.code !== 0) {
+                                layer.msg(res.msg, {
+                                    icon: 0
+                                });
+                            } else {
+                                this_.user_info = res.data;
                             }
-                        });
-
+                        }
                     });
                 }
             });

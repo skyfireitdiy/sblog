@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title></title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="https://www.layuicdn.com/layui/css/layui.css">
+    <style>
+        [v-cloak] {
+            display: none;
+        }
+        
+        html,
+        body {
+            height: 100%;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .h_div {
+            height: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app" v-cloak class="h_div">
+        <div class="layui-row h_div">
+            <div class="layui-col-md6 h_div">
+                <button class="layui-btn layui-btn-warm" @click="delete_all();">删除选中</button>
+                <table class="layui-table">
+                    <colgroup>
+                        <col>
+                        <col>
+                        <col>
+                    </colgroup>
+                    <thead>
+                        <td>
+                            <input @change="check_all();" v-model="check_all_state" type="checkbox" class="layui-form-checkbox">全选</input>
+                        </td>
+                        <td>标题</td>
+                        <td>操作</td>
+                    </thead>
+                    <tbody>
+                        <tr v-for="draft, index in draft_list">
+                            <td><input type="checkbox" v-model="checked_item" :value="draft.id"></td>
+                            <td @click="show_article(index);">{{draft.title}}</td>
+                            <td><button @click="delete_draft(draft.id, draft.title);" class="layui-btn layui-btn-warm">删除</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="layui-col-md6 h_div" style="overflow: hidden;">
+                <iframe id="html_content" src="/admin/html/show_article.html" style="width: 100%; height: 100%;"></iframe>
+            </div>
+
+        </div>
+    </div>
+
+
+    <script src="https://www.layuicdn.com/layui/layui.js" charset="utf-8"></script>
+    <script type="text/javascript" src="https://cdn.bootcss.com/vue/2.6.10/vue.js"></script>
+    <script src="https://cdn.bootcss.com/showdown/1.9.0/showdown.min.js"></script>
+    <script>
+        layui.use(["form", "element", "layer", "jquery"], function() {
+            let form = layui.form;
+            let $ = layui.jquery;
+            let layer = layui.layer;
+            let element = layui.element;
+
+            let converter = new showdown.Converter();
+            converter.setOption("omitExtraWLInCodeBlocks", true);
+            converter.setOption("ghCompatibleHeaderId", true);
+            converter.setOption("prefixHeaderId", true);
+            converter.setOption("headerLevelStart", 1);
+            converter.setOption("parseImgDimensions", true);
+            converter.setOption("literalMidWordUnderscores", true);
+            converter.setOption("tables", true);
+            converter.setOption("tablesHeaderId", true);
+            converter.setOption("ghCodeBlocks", true);
+            converter.setOption("tasklists", true);
+            converter.setOption("smartIndentationFix", true);
+            converter.setOption("simpleLineBreaks", true);
+            converter.setOption("requireSpaceBeforeHeadingText", true);
+            converter.setOption("openLinksInNewWindow", true);
+            converter.setOption("backslashEscapesHTMLTags", true);
+            converter.setOption("emoji", true);
+
+            form.render();
+
+            let app = new Vue({
+                el: "#app",
+                data: {
+                    draft_list: [],
+                    check_all_state: false,
+                    checked_item: []
+                },
+                methods: {
+                    check_all: function() {
+                        this.checked_item = [];
+                        if (this.check_all_state) {
+                            for (let k in this.draft_list) {
+                                this.checked_item.push(this.draft_list[k].id);
+                            }
+                        }
+                    },
+                    delete_all: function() {
+                        if (this.checked_item.length === 0) {
+                            layer.msg("请选择要操作的对象", {
+                                icon: 1
+                            });
+                            return;
+                        }
+                        let this_ = this;
+                        layer.confirm("确认删除选中的草稿?<br><b>注意:此操作不可恢复！</b>", () => {
+                            $.ajax({
+                                url: "/admin/api/draft_list",
+                                method: "DELETE",
+                                data: JSON.stringify(this.checked_item),
+                                success: function(res) {
+                                    if (res.code !== 0) {
+                                        layer.msg(res.msg, {
+                                            icon: 0
+                                        });
+                                    } else {
+                                        layer.msg("删除成功", {
+                                            icon: 1
+                                        });
+                                        this_.init_draft_list();
+                                    }
+                                }
+                            });
+                        });
+                    },
+                    show_article: function(index) {
+                        $(document.getElementById('html_content').contentWindow.document.body).html(converter.makeHtml(this.draft_list[index].content));
+                    },
+                    delete_draft: function(id, title) {
+                        let this_ = this;
+                        layer.confirm("确认删除草稿\"" + title + "\"?", function() {
+                            $.ajax({
+                                url: "/admin/api/draft",
+                                method: "DELETE",
+                                data: {
+                                    id: id,
+                                },
+                                success: function(res) {
+                                    if (res.code !== 0) {
+                                        layer.msg(res.msg, {
+                                            icon: 0
+                                        });
+                                    } else {
+                                        layer.msg("删除成功", {
+                                            icon: 1
+                                        });
+                                        this_.init_draft_list();
+                                    }
+                                }
+                            });
+                        });
+                    },
+                    init_draft_list: function() {
+                        let this_ = this;
+                        $.ajax({
+                            url: "/admin/api/draft_list",
+                            method: "GET",
+                            success: function(res) {
+                                console.log(res);
+                                if (res.code !== 0) {
+                                    layer.msg(res.msg, {
+                                        icon: 0
+                                    });
+                                } else {
+                                    this_.draft_list = res.data;
+                                }
+                            }
+                        });
+                    }
+                },
+                mounted: function() {
+                    this.init_draft_list();
+                }
+            });
+
+        });
+    </script>
+</body>
+
+</html>

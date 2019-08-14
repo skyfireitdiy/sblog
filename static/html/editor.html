@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" type="text/css" href="https://www.layuicdn.com/layui/css/layui.css">
+    <style>
+        #editor {
+            border: 1px dashed #333333;
+            width: 100%;
+            height: 100%;
+        }
+        
+        html,
+        body {
+            height: 100%;
+            padding: 0;
+            margin: 0;
+        }
+    </style>
+</head>
+
+<body style="height: 100%; margin: 0; padding: 0;">
+    <div id="app" style="height: 100%; margin: 0;">
+        <form class="layui-form">
+            <div class="layui-form-item">
+                <label class="layui-form-label">标题</label>
+                <div class="layui-input-block layui-input-inline">
+                    <input v-model="title" type="text" id="title" class="layui-input">
+                </div>
+            </div>
+
+            <label class="layui-form-label">分类</label>
+            <div class="layui-input-block  layui-input-inline">
+                <select v-model="big_type_index" id="big_type" lay-ignore>
+                    <option v-for="(bt, index) in group_data" :value="index" v-if="bt.sub_type.length !== 0">
+                        {{ bt.type_name }}
+                    </option>
+                </select>
+            </div>
+            <div class="layui-input-block layui-input-inline">
+                <select v-model="sub_type" lay-ignore>
+                    <option v-for="st in group_data[big_type_index].sub_type" :value="st.id">
+                        {{st.type_name}}
+                    </option>
+                </select>
+            </div>
+            <div class=layui-form-item>
+                <button @click="publish();" class="layui-btn layui-btn-green" type="button">发布</button>
+                <button type="button" @click="save_draft();" class="layui-btn layui-btn-normal">保存为草稿</button>
+                <input type="checkbox" v-model="auto_save_flag" @change="auto_save_draft();" class="layui-btn layui-btn-warm">自动保存</button>
+            </div>
+        </form>
+        <div class="layui-row" style="height:80%; margin:0;">
+            <div class="layui-col-md5" style="height: 100%;">
+                <pre id="editor"></pre>
+            </div>
+            <div class="layui-col-md5" style="overflow: hidden; height: 100%;">
+                <iframe id="html_content" src="/admin/html/show_article.html" style="width:100%; height: 100%;"></iframe>
+
+            </div>
+            <div class="layui-col-md2" style="min-height:100%; background: linen">
+
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript" src="https://www.layuicdn.com/layui/layui.js"></script>
+    <script src="https://cdn.bootcss.com/ace/1.4.5/ace.js"></script>
+    <script src="https://cdn.bootcss.com/ace/1.4.5/ext-language_tools.js"></script>
+    <script src="https://cdn.bootcss.com/ace/1.4.5/ext-emmet.js"></script>
+    <script src="https://cdn.bootcss.com/ace/1.4.5/ext-elastic_tabstops_lite.js"></script>
+
+    <script src="https://cdn.bootcss.com/vue/2.6.10/vue.min.js"></script>
+
+    <script src="https://cdn.bootcss.com/showdown/1.9.0/showdown.min.js"></script>
+    <script>
+        let on_set_draft_data = null;
+        let app = new Vue({
+            el: "#app",
+            data: << data >> ,
+            methods: {
+                auto_save_draft: function() {
+                    if (this.auto_save_flag) {
+                        this.timer = window.setInterval(this_.auto_save, 10 * 1000);
+                    } else {
+                        window.clearInterval(this.timer);
+                    }
+                },
+                publish: function() {
+                    let this_ = this;
+                    layui.use(["jquery", "layer"], function() {
+                        let layer = layui.layer;
+                        let $ = layui.jquery;
+                        if (this_.title === "") {
+                            layer.msg("请填写标题", {
+                                icon: 0
+                            });
+                            return false;
+                        }
+                        console.log({
+                            fraft_id: this_.draft_id,
+                            article_id: this_.article_id,
+                            title: this_.title,
+                            content: this_.editor.getValue(),
+                            sub_type: this_.sub_type
+                        })
+                        $.ajax({
+                            url: "/admin/api/blog",
+                            method: "POST",
+                            data: {
+                                fraft_id: this_.draft_id,
+                                article_id: this_.article_id,
+                                title: this_.title,
+                                content: this_.editor.getValue(),
+                                sub_type: this_.sub_type
+                            },
+                            success: function(res) {
+                                if (res.code !== 0) {
+                                    layer.msg(res.msg, {
+                                        icon: 0
+                                    });
+                                } else {
+                                    layer.alert("发布成功", () => {
+                                        window.location.href = "/admin/html/article_data.html";
+                                    });
+                                }
+                            }
+                        });
+
+                    });
+
+
+                },
+
+                on_set_draft_data: function(index) {
+                    let this_ = this;
+                    layui.use(["layer"], function() {
+                        let layer = layui.layer;
+                        this_.title = draft_data[index].title;
+                        this_.editor.setValue(draft_data[index].content);
+                        this_.draft_id = draft_data[index].id;
+                        layer.closeAll();
+                    });
+                },
+
+                save: function(succ_callback, err_callback) {
+                    let this_ = this;
+                    layui.use(["jquery"], function() {
+                        let $ = layui.jquery;
+                        let content = this_.editor.getValue();
+                        let title = this_.title;
+                        if (this_.draft_id === -1 && title.length === 0) {
+                            return;
+                        }
+                        $.ajax({
+                            url: "/admin/api/draft",
+                            method: "PUT",
+                            data: {
+                                id: this_.draft_id,
+                                title: title,
+                                content: content
+                            },
+                            success: function(res) {
+                                if (res.code !== 0) {
+                                    err_callback(res.msg);
+                                } else {
+                                    this_.draft_id = res.data;
+                                    succ_callback();
+                                }
+                            }
+                        });
+                    });
+                },
+
+                save_draft: function() {
+                    let this_ = this;
+                    layui.user(["layer"], function() {
+                        this_.save(() => {
+                            layer.msg("保存草稿成功", {
+                                icon: 1
+                            });
+                        }, (msg) => {
+                            layer.msg(msg, {
+                                icon: 0
+                            });
+                        });
+                    });
+                },
+
+                auto_save: function() {
+                    let this_ = this;
+                    layui.use(["layer"], function() {
+                        this_.save(() => {}, (msg) => {
+                            layer.msg(msg, {
+                                icon: 0
+                            });
+                        });
+                    });
+                },
+
+                get_draft: function() {
+                    let this_ = this;
+                    layui.use(["jquery"], function() {
+                        let $ = layui.jquery;
+
+
+                        let html_encode = function(html) {
+                            return $("<div>").text(html).html();
+                        };
+
+                        $.ajax({
+                            url: "/admin/api/draft_list",
+                            method: "GET",
+                            success: function(res) {
+                                if (res.code !== 0) {
+                                    layer.msg(res.msg, {
+                                        icon: 0
+                                    });
+                                } else {
+                                    if (res.data.length !== 0) {
+
+                                        layer.confirm("检测到有草稿，是否继续编辑？", function() {
+                                            draft_data = res.data;
+                                            let layer_content = "";
+                                            for (let k in res.data) {
+                                                layer_content += "<a class='layui-link' onclick=\"on_set_draft_data(" + k + ");\">" + k + "." + html_encode(res.data[k].title) + "</a><br/>";
+                                            }
+                                            console.log(layer_content);
+                                            layer.open({
+                                                type: 1,
+                                                skin: 'layui-layer-lan', //样式类名
+                                                closeBtn: 1, //不显示关闭按钮
+                                                anim: 2,
+                                                shadeClose: false,
+                                                title: "请选择草稿进行编辑",
+                                                content: layer_content,
+                                                area: ['500px', '300px'],
+                                            });
+                                        });
+                                    }
+                                }
+                            }
+                        });
+                    });
+                },
+
+                init_data: function() {
+                    let this_ = this;
+                    layui.use(["form", "element", "layer", "jquery"], function() {
+                        let form = layui.form;
+                        let $ = layui.jquery;
+                        let layer = layui.layer;
+                        let element = layui.element;
+                        this_.converter = new showdown.Converter();
+
+                        let draft_data = null;
+                        let article_id = -1;
+                        let group_data = [];
+
+                        this_.converter.setOption("omitExtraWLInCodeBlocks", true);
+                        this_.converter.setOption("ghCompatibleHeaderId", true);
+                        this_.converter.setOption("prefixHeaderId", true);
+                        this_.converter.setOption("headerLevelStart", 1);
+                        this_.converter.setOption("parseImgDimensions", true);
+                        this_.converter.setOption("literalMidWordUnderscores", true);
+                        this_.converter.setOption("tables", true);
+                        this_.converter.setOption("tablesHeaderId", true);
+                        this_.converter.setOption("ghCodeBlocks", true);
+                        this_.converter.setOption("tasklists", true);
+                        this_.converter.setOption("smartIndentationFix", true);
+                        this_.converter.setOption("simpleLineBreaks", true);
+                        this_.converter.setOption("requireSpaceBeforeHeadingText", true);
+                        this_.converter.setOption("openLinksInNewWindow", true);
+                        this_.converter.setOption("backslashEscapesHTMLTags", true);
+                        this_.converter.setOption("emoji", true);
+
+
+                        ace.require("ace/ext/language_tools");
+                        this_.editor = ace.edit("editor");
+                        this_.editor.session.on("change", function(evt) {
+                            $(document.getElementById('html_content').contentWindow.document.body).html(this_.converter.makeHtml(this_.editor.getValue()));
+                        });
+
+                        this_.editor.setOption("wrap", "free");
+                        this_.editor.setOptions({
+                            enableBasicAutocompletion: true,
+                            enableSnippets: true,
+                            enableLiveAutocompletion: true,
+                            wrap: "free",
+                            highlightActiveLine: true,
+                            highlightSelectedWord: true,
+                            selectionStyle: "text",
+                            readOnly: false,
+                            cursorStyle: "ace",
+                            mergeUndoDeltas: "always",
+                            behavioursEnabled: true,
+                            wrapBehavioursEnabled: true,
+                            autoScrollEditorIntoView: true,
+                            copyWithEmptySelection: false,
+                            useSoftTabs: true,
+                            navigateWithinSoftTabs: true,
+                            enableMultiselect: true,
+
+                            hScrollBarAlwaysVisible: false,
+                            vScrollBarAlwaysVisible: false,
+                            highlightGutterLine: true,
+                            animatedScroll: true,
+                            showInvisibles: true,
+                            showPrintMargin: true,
+                            printMarginColumn: 80,
+                            printMargin: 80,
+                            fadeFoldWidgets: true,
+                            showFoldWidgets: true,
+                            showLineNumbers: true,
+                            showGutter: true,
+                            displayIndentGuides: true,
+                            fontFamily: "Consolas, Tahoma, 'Times New Roman', 'Microsoft Yahei', '微软雅黑', 'Heiti SC', '文泉驿微米黑'",
+                            fontSize: 13,
+                            scrollPastEnd: true,
+                            fixedWidthGutter: true,
+                            theme: "ace/theme/clouds",
+
+                            mode: "ace/mode/markdown",
+                            dragEnabled: true,
+                            newLineMode: "auto",
+                            foldStyle: "markbeginend",
+                            enableSnippets: true,
+                            enableEmmet: true,
+                            useElasticTabstops: true
+                        });
+
+
+
+                        if (this_.type === 0) {
+                            this_.get_draft();
+                        }
+
+
+
+
+
+                    });
+                }
+            },
+            mounted: function() {
+                on_set_draft_data = this.on_set_draft_data;
+                console.log(this.group_data);
+                let empty_flag = true;
+                for (let k in this.group_data) {
+                    console.log(this.group_data[k]);
+                    if (this.group_data[k].sub_type.length !== 0) {
+                        empty_flag = false;
+                        break;
+                    }
+                }
+                if (empty_flag) {
+                    layer.alert("请先添加分组！", () => {
+                        window.location.href = "/admin/html/blog_group.html";
+                    });
+                } else {
+                    this.init_data();
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

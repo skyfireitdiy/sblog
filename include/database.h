@@ -184,7 +184,7 @@ class database : public sf_single_instance<database> {
 
     void delete_blog(int blog_id);
 
-    void insert_blog(const blog &b);
+    int insert_blog(const blog &b);
 
     shared_ptr<blog> get_blog(int blog_id);
 
@@ -199,6 +199,10 @@ class database : public sf_single_instance<database> {
     int insert_draft(const draft &df);
 
     void update_draft(const draft &df);
+
+    shared_ptr<draft> get_draft(int id);
+
+    void delete_draft(int id);
 
     explicit database(const string &path);
 };
