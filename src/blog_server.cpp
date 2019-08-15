@@ -1164,6 +1164,8 @@ void blog_server::user_get_content(const sf_http_request &req,
         ret["msg"] = "blog is hiddem";
         return;
     }
+    ++base_info->watch_number;
+    database__->update_blog(*base_info);
     ret["code"] = 0;
     ret["data"] = to_json(*data);
 }
