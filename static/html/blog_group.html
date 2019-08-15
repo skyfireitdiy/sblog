@@ -37,11 +37,11 @@
                     <td>操作</td>
                     <td>子分组</td>
                 </thead>
-                <tr v-for="big_type in group_info">
-                    <td>{{big_type.type_name}}</td>
+                <tr v-for="big_group in group_info">
+                    <td>{{big_group.group_name}}</td>
                     <td>
-                        <button class="layui-btn layui-btn-normal" @click="rename_big_group(big_type.id, big_type.type_name);">重命名</button>
-                        <button class="layui-btn layui-btn-danger" v-if="big_type.sub_type.length === 0" @click="delete_big_type(big_type.id, big_type.type_name);">删除</button>
+                        <button class="layui-btn layui-btn-normal" @click="rename_big_group(big_group.id, big_group.group_name);">重命名</button>
+                        <button class="layui-btn layui-btn-danger" v-if="big_group.sub_group.length === 0" @click="delete_big_group(big_group.id, big_group.group_name);">删除</button>
                     </td>
                     <td>
                         <table class="layui-table">
@@ -50,17 +50,17 @@
                                 <col>
                             </colgroup>
                             <thead>
-                                <td>分组名 &nbsp;&nbsp;<button class="layui-btn layui-btn-green layui-btn-sm layui-btn-radius" @click="add_sub_group(big_type.id, big_type.type_name);">添加子分组</button>
+                                <td>分组名 &nbsp;&nbsp;<button class="layui-btn layui-btn-green layui-btn-sm layui-btn-radius" @click="add_sub_group(big_group.id, big_group.group_name);">添加子分组</button>
                                 </td>
                                 <td>博客数量</td>
                                 <td>操作</td>
                             </thead>
-                            <tr v-for="sub_type in big_type.sub_type">
-                                <td>{{sub_type.type_name}}</td>
-                                <td>{{sub_type.article_count}}</td>
+                            <tr v-for="sub_group in big_group.sub_group">
+                                <td>{{sub_group.group_name}}</td>
+                                <td>{{sub_group.blog_count}}</td>
                                 <td>
-                                    <button class="layui-btn layui-btn-normal" @click="rename_sub_type(big_type.id, big_type.type_name, sub_type.id, sub_type.type_name)">重命名</button>
-                                    <button class="layui-btn layui-btn-danger" v-if="sub_type.article_count === 0" @click="delete_sub_type(big_type.id, big_type.type_name, sub_type.id, sub_type.type_name);">删除</button>
+                                    <button class="layui-btn layui-btn-normal" @click="rename_sub_group(big_group.id, big_group.group_name, sub_group.id, sub_group.group_name)">重命名</button>
+                                    <button class="layui-btn layui-btn-danger" v-if="sub_group.blog_count === 0" @click="delete_sub_group(big_group.id, big_group.group_name, sub_group.id, sub_group.group_name);">删除</button>
                                 </td>
                             </tr>
                         </table>
@@ -117,7 +117,7 @@
                                 url: "/admin/api/big_group",
                                 method: "POST",
                                 data: {
-                                    type_name: value
+                                    group_name: value
                                 },
                                 success: function(res) {
                                     if (res.code !== 0) {
@@ -136,21 +136,21 @@
                             });
                         });
                     },
-                    add_sub_group: function(id, type_name) {
+                    add_sub_group: function(id, group_name) {
                         let this_ = this;
 
                         layer.prompt({
                             formType: 0,
                             value: "",
                             maxlength: 20,
-                            title: "请输入要为分组\"" + type_name + "\"添加的子分组名"
+                            title: "请输入要为分组\"" + group_name + "\"添加的子分组名"
                         }, function(value, index, elem) {
                             $.ajax({
                                 url: "/admin/api/sub_group",
                                 method: "POST",
                                 data: {
-                                    type_name: value,
-                                    big_type: id
+                                    group_name: value,
+                                    big_group: id
                                 },
                                 success: function(res) {
                                     if (res.code !== 0) {
@@ -166,10 +166,10 @@
 
                         });
                     },
-                    delete_big_type: function(id, type_name) {
+                    delete_big_group: function(id, group_name) {
                         let this_ = this;
 
-                        layer.confirm("确认删除主分组\"" + type_name + "\"吗?", function() {
+                        layer.confirm("确认删除主分组\"" + group_name + "\"吗?", function() {
                             $.ajax({
                                 url: "/admin/api/big_group",
                                 method: "DELETE",
@@ -192,15 +192,15 @@
 
                         });
                     },
-                    delete_sub_type: function(big_type, big_type_name, sub_type, sub_type_name) {
+                    delete_sub_group: function(big_group, big_group_name, sub_group, sub_group_name) {
                         let this_ = this;
 
-                        layer.confirm("确认删除主分组\"" + big_type_name + "\"下的子分组\”" + sub_type_name + "\"吗?", function() {
+                        layer.confirm("确认删除主分组\"" + big_group_name + "\"下的子分组\”" + sub_group_name + "\"吗?", function() {
                             $.ajax({
                                 url: "/admin/api/sub_group",
                                 method: "DELETE",
                                 data: {
-                                    id: sub_type
+                                    id: sub_group
                                 },
                                 success: function(res) {
                                     if (res.code !== 0) {
@@ -218,13 +218,13 @@
 
                         });
                     },
-                    rename_big_group: function(id, type_name) {
+                    rename_big_group: function(id, group_name) {
                         let this_ = this;
 
                         layer.prompt({
                             formType: 0,
-                            title: "请输入主分组\"" + type_name + "\"的新分组名",
-                            value: type_name,
+                            title: "请输入主分组\"" + group_name + "\"的新分组名",
+                            value: group_name,
                             maxlength: 20
                         }, function(value, index, elem) {
                             $.ajax({
@@ -251,21 +251,21 @@
                         });
 
                     },
-                    rename_sub_type: function(big_type, big_type_name, sub_type, sub_type_name) {
+                    rename_sub_group: function(big_group, big_group_name, sub_group, sub_group_name) {
                         let this_ = this;
 
                         layer.prompt({
                             formType: 0,
-                            title: "请输入主分组\"" + big_type_name + "\"下的子分组\"" + sub_type_name + "\"的新分组名",
+                            title: "请输入主分组\"" + big_group_name + "\"下的子分组\"" + sub_group_name + "\"的新分组名",
                             maxlength: 20,
-                            value: sub_type_name
+                            value: sub_group_name
                         }, function(value, index, elem) {
                             $.ajax({
                                 url: "/admin/api/sub_group",
                                 method: "PUT",
                                 data: {
-                                    big_type: big_type,
-                                    id: sub_type,
+                                    big_group: big_group,
+                                    id: sub_group,
                                     new_name: value
                                 },
                                 success: function(res) {

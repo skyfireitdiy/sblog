@@ -33,83 +33,83 @@ string hash_password(const std::string &password) {
 
 void database::insert_user(const admin_user &user) { storage__->insert(user); }
 
-vector<blog_big_type> database::get_all_big_type() {
-    return storage__->get_all<blog_big_type>();
+vector<blog_big_group> database::get_all_big_group() {
+    return storage__->get_all<blog_big_group>();
 }
 
-vector<blog_sub_type> database::get_all_sub_type() {
-    return storage__->get_all<blog_sub_type>();
+vector<blog_sub_group> database::get_all_sub_group() {
+    return storage__->get_all<blog_sub_group>();
 }
 
-map<int, int> database::get_sub_type_article_count() {
+map<int, int> database::get_sub_group_blog_count() {
     map<int, int> ret;
-    auto data = storage__->select(columns(&blog::sub_type, count(&blog::id)),
-                                  group_by(&blog::sub_type));
+    auto data = storage__->select(columns(&blog::sub_group, count(&blog::id)),
+                                  group_by(&blog::sub_group));
     for (auto &p : data) {
         ret[get<0>(p)] = get<1>(p);
     }
     return ret;
 }
 
-int database::get_sub_type_article_count(int sub_type) {
-    return storage__->count<blog>(where(c(&blog::sub_type) == sub_type));
+int database::get_sub_group_blog_count(int sub_group) {
+    return storage__->count<blog>(where(c(&blog::sub_group) == sub_group));
 }
 
-shared_ptr<blog_big_type> database::check_big_type(const string &type_name) {
-    auto big_types = storage__->get_all<blog_big_type>(
-        where(c(&blog_big_type::type_name) == type_name));
-    if (big_types.empty()) {
+shared_ptr<blog_big_group> database::check_big_group(const string &group_name) {
+    auto big_groups = storage__->get_all<blog_big_group>(
+        where(c(&blog_big_group::group_name) == group_name));
+    if (big_groups.empty()) {
         return nullptr;
     }
-    return make_shared<blog_big_type>(big_types[0]);
+    return make_shared<blog_big_group>(big_groups[0]);
 }
 
-shared_ptr<blog_sub_type> database::check_sub_type(int big_type,
-                                                   const string &type_name) {
-    auto sub_types = storage__->get_all<blog_sub_type>(
-        where(c(&blog_sub_type::big_type) == big_type and
-              c(&blog_sub_type::type_name) == type_name));
-    if (sub_types.empty()) {
+shared_ptr<blog_sub_group> database::check_sub_group(int big_group,
+                                                   const string &group_name) {
+    auto sub_groups = storage__->get_all<blog_sub_group>(
+        where(c(&blog_sub_group::big_group) == big_group and
+              c(&blog_sub_group::group_name) == group_name));
+    if (sub_groups.empty()) {
         return nullptr;
     }
-    return make_shared<blog_sub_type>(sub_types[0]);
+    return make_shared<blog_sub_group>(sub_groups[0]);
 }
 
-void database::insert_big_type(const blog_big_type &big_type) {
-    storage__->insert(big_type);
+void database::insert_big_group(const blog_big_group &big_group) {
+    storage__->insert(big_group);
 }
 
-void database::insert_sub_type(const blog_sub_type &sub_type) {
-    storage__->insert(sub_type);
+void database::insert_sub_group(const blog_sub_group &sub_group) {
+    storage__->insert(sub_group);
 }
 
-int database::get_sub_type_count(int big_type) {
-    return storage__->count<blog_sub_type>(
-        where(c(&blog_sub_type::big_type) == big_type));
+int database::get_sub_group_count(int big_group) {
+    return storage__->count<blog_sub_group>(
+        where(c(&blog_sub_group::big_group) == big_group));
 }
 
-void database::delete_big_type(int big_type) {
-    storage__->remove<blog_big_type>(big_type);
+void database::delete_big_group(int big_group) {
+    storage__->remove<blog_big_group>(big_group);
 }
 
-void database::delete_sub_type(int sub_type) {
-    storage__->remove<blog_sub_type>(sub_type);
+void database::delete_sub_group(int sub_group) {
+    storage__->remove<blog_sub_group>(sub_group);
 }
 
-void database::update_big_type(const blog_big_type &big_type) {
-    storage__->update(big_type);
+void database::update_big_group(const blog_big_group &big_group) {
+    storage__->update(big_group);
 }
 
-void database::update_sub_type(const blog_sub_type &sub_type) {
-    storage__->update(sub_type);
+void database::update_sub_group(const blog_sub_group &sub_group) {
+    storage__->update(sub_group);
 }
 
-shared_ptr<blog_big_type> database::get_big_type(int id) {
-    return storage__->get_pointer<blog_big_type>(id);
+shared_ptr<blog_big_group> database::get_big_group(int id) {
+    return storage__->get_pointer<blog_big_group>(id);
 }
 
-shared_ptr<blog_sub_type> database::get_sub_type(int id) {
-    return storage__->get_pointer<blog_sub_type>(id);
+shared_ptr<blog_sub_group> database::get_sub_group(int id) {
+    return storage__->get_pointer<blog_sub_group>(id);
 }
 
 shared_ptr<label> database::check_label(const string &name) {
@@ -183,3 +183,23 @@ shared_ptr<draft> database::get_draft(int id) {
 }
 
 void database::delete_draft(int id) { storage__->remove<draft>(id); }
+
+shared_ptr<blog_label> database::check_blog_label(int blog_id, int label_id) {
+    auto data = storage__->get_all<blog_label>(
+        where(c(&blog_label::blog_id) == blog_id and
+              c(&blog_label::label_id) == label_id));
+    if (data.empty()) {
+        return nullptr;
+    }
+    return make_shared<blog_label>(data[0]);
+}
+
+void database::insert_blog_label(const blog_label &bl) {
+    storage__->insert(bl);
+}
+
+void database::delete_blog_label(int blog_id, int label_id) {
+    storage__->remove_all<blog_label>(
+        where(c(&blog_label::label_id) == label_id and
+              c(&blog_label::blog_id) == blog_id));
+}

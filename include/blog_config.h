@@ -5,8 +5,7 @@
 using namespace skyfire;
 using namespace std;
 
-struct blog_config
-{
+struct blog_config {
     string db_path;
     string static_path;
 };

@@ -1,71 +1,66 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+
+<head>
     <title></title>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link
-      rel="stylesheet"
-      type="text/css"
-      href="https://www.layuicdn.com/layui/css/layui.css"
-    />
+    <link rel="stylesheet" type="text/css" href="https://www.layuicdn.com/layui/css/layui.css" />
     <style>
-      [v-cloak] {
-        display: none;
-      }
+        [v-cloak] {
+            display: none;
+        }
     </style>
-  </head>
+</head>
 
-  <body>
+<body>
     <div id="app" v-cloak>
-      <div class="layui-layout layui-layout-admin">
-        <div class="layui-header">
-          <div class="layui-logo">{{ blog.blog_title }}</div>
-          <ul class="layui-nav layui-layout-left">
-            <li class="layui-nav-item" v-for="bt in blog.big_type">
-              <a @click="change_big_type(bt);">{{ bt }}</a>
-            </li>
-          </ul>
+        <div class="layui-layout layui-layout-admin">
+            <div class="layui-header">
+                <div class="layui-logo">{{ blog.blog_title }}</div>
+                <ul class="layui-nav layui-layout-left">
+                    <li class="layui-nav-item" v-for="bt in blog.big_group">
+                        <a @click="change_big_group(bt);">{{ bt }}</a>
+                    </li>
+                </ul>
+            </div>
+            <div class="layui-body"></div>
         </div>
-        <div class="layui-body"></div>
-      </div>
     </div>
-    <script
-      src="https://www.layuicdn.com/layui/layui.js"
-      charset="utf-8"
-    ></script>
+    <script src="https://www.layuicdn.com/layui/layui.js" charset="utf-8"></script>
     <script type="text/javascript" src="https://cdn.bootcss.com/vue/2.6.10/vue.min.js"></script>
     <script>
-      Vue.component("blog-item", {
-        data: function() {
-          return {};
-        },
-        template: ""
-      });
+        Vue.component("blog-item", {
+            data: function() {
+                return {};
+            },
+            template: ""
+        });
 
-      let app = new Vue({
-        el: "#app",
-        data: {
-          blog: {
-            blog_title: "SkyFire 的个人博客",
-            big_type: ["编程语言", "操作系统"]
-          }
-        },
-        methods: {
-          change_big_type: function(tp) {
-            layui.use(["layer"], function() {
-              layui.layer.alert(tp);
-            });
-          }
-        },
-        mounted: function() {},
-        computed: {},
-        mounted: function() {
-          layui.use(["element"], function() {
-            let element = layui.element;
-          });
-        }
-      });
+        let app = new Vue({
+            el: "#app",
+            data: {
+                blog: {
+                    blog_title: "SkyFire 的个人博客",
+                    big_group: ["编程语言", "操作系统"]
+                }
+            },
+            methods: {
+                change_big_group: function(tp) {
+                    layui.use(["layer"], function() {
+                        layui.layer.alert(tp);
+                    });
+                }
+            },
+            mounted: function() {},
+            computed: {},
+            mounted: function() {
+                layui.use(["element"], function() {
+                    let element = layui.element;
+                });
+            }
+        });
     </script>
-  </body>
+</body>
+
 </html>

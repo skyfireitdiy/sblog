@@ -24,7 +24,7 @@ struct blog {
     string publish_time;
     int watch_number;
     int top;
-    int sub_type;
+    int sub_group;
     int hide;
 };
 
@@ -39,15 +39,15 @@ struct blog_content {
     string content;
 };
 
-struct blog_big_type {
+struct blog_big_group {
     int id;
-    string type_name;
+    string group_name;
 };
 
-struct blog_sub_type {
+struct blog_sub_group {
     int id;
-    int big_type;
-    string type_name;
+    int big_group;
+    string group_name;
 };
 
 struct label {
@@ -61,11 +61,11 @@ struct blog_label {
 };
 
 SF_JSONIFY(admin_user, id, name, password, qq, website, desc)
-SF_JSONIFY(blog, id, title, publish_time, watch_number, top, sub_type, hide)
+SF_JSONIFY(blog, id, title, publish_time, watch_number, top, sub_group, hide)
 SF_JSONIFY(draft, id, title, content)
 SF_JSONIFY(blog_content, id, content)
-SF_JSONIFY(blog_big_type, id, type_name)
-SF_JSONIFY(blog_sub_type, id, big_type, type_name)
+SF_JSONIFY(blog_big_group, id, group_name)
+SF_JSONIFY(blog_sub_group, id, big_group, group_name)
 SF_JSONIFY(label, id, label_name)
 SF_JSONIFY(blog_label, blog_id, label_id)
 
@@ -87,7 +87,7 @@ inline auto init_user_storage(const string &path) {
                    make_column("publish_time", &blog::publish_time),
                    make_column("watch_number", &blog::watch_number),
                    make_column("top", &blog::top),
-                   make_column("sub_type", &blog::sub_type),
+                   make_column("sub_group", &blog::sub_group),
                    make_column("hide", &blog::hide)),
         make_table("draft",
                    make_column("id", &draft::id, autoincrement(), primary_key(),
@@ -97,15 +97,15 @@ inline auto init_user_storage(const string &path) {
         make_table("blog_content",
                    make_column("id", &blog_content::id, primary_key()),
                    make_column("content", &blog_content::content)),
-        make_table("blog_big_type",
-                   make_column("id", &blog_big_type::id, autoincrement(),
+        make_table("blog_big_group",
+                   make_column("id", &blog_big_group::id, autoincrement(),
                                primary_key(), unique()),
-                   make_column("type_name", &blog_big_type::type_name)),
-        make_table("blog_sub_type",
-                   make_column("id", &blog_sub_type::id, autoincrement(),
+                   make_column("group_name", &blog_big_group::group_name)),
+        make_table("blog_sub_group",
+                   make_column("id", &blog_sub_group::id, autoincrement(),
                                primary_key(), unique()),
-                   make_column("big_type", &blog_sub_type::big_type),
-                   make_column("type_name", &blog_sub_type::type_name)),
+                   make_column("big_group", &blog_sub_group::big_group),
+                   make_column("group_name", &blog_sub_group::group_name)),
         make_table("label",
                    make_column("id", &label::id, autoincrement(), primary_key(),
                                unique()),
@@ -127,40 +127,40 @@ class database : public sf_single_instance<database> {
     shared_ptr<admin_user> check_user(const string &name,
                                       const string &password);
 
-    shared_ptr<blog_big_type> check_big_type(const string &type_name);
+    shared_ptr<blog_big_group> check_big_group(const string &group_name);
 
-    shared_ptr<blog_sub_type> check_sub_type(int ig_id,
-                                             const string &type_name);
+    shared_ptr<blog_sub_group> check_sub_group(int ig_id,
+                                             const string &group_name);
 
-    int get_sub_type_count(int big_type);
+    int get_sub_group_count(int big_group);
 
-    void delete_big_type(int big_type);
+    void delete_big_group(int big_group);
 
-    void delete_sub_type(int sub_type);
+    void delete_sub_group(int sub_group);
 
     void update_user_info(const admin_user &user);
 
     void insert_user(const admin_user &user);
 
-    vector<blog_big_type> get_all_big_type();
+    vector<blog_big_group> get_all_big_group();
 
-    vector<blog_sub_type> get_all_sub_type();
+    vector<blog_sub_group> get_all_sub_group();
 
-    map<int, int> get_sub_type_article_count();
+    map<int, int> get_sub_group_blog_count();
 
-    int get_sub_type_article_count(int sub_type);
+    int get_sub_group_blog_count(int sub_group);
 
-    void insert_big_type(const blog_big_type &big_type);
+    void insert_big_group(const blog_big_group &big_group);
 
-    void insert_sub_type(const blog_sub_type &sub_type);
+    void insert_sub_group(const blog_sub_group &sub_group);
 
-    void update_big_type(const blog_big_type &big_type);
+    void update_big_group(const blog_big_group &big_group);
 
-    void update_sub_type(const blog_sub_type &sub_type);
+    void update_sub_group(const blog_sub_group &sub_group);
 
-    shared_ptr<blog_big_type> get_big_type(int id);
+    shared_ptr<blog_big_group> get_big_group(int id);
 
-    shared_ptr<blog_sub_type> get_sub_type(int id);
+    shared_ptr<blog_sub_group> get_sub_group(int id);
 
     shared_ptr<label> check_label(const string &name);
 
@@ -203,6 +203,12 @@ class database : public sf_single_instance<database> {
     shared_ptr<draft> get_draft(int id);
 
     void delete_draft(int id);
+
+    shared_ptr<blog_label> check_blog_label(int blog_id, int label_id);
+
+    void insert_blog_label(const blog_label &bl);
+
+    void delete_blog_label(int blog_id, int label_id);
 
     explicit database(const string &path);
 };

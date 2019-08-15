@@ -41,7 +41,7 @@
         <div class="layui-side layui-bg-black">
             <div class="layui-side-scroll">
                 <!-- 左侧导航区域（可配合layui已有的垂直导航） -->
-                <ul v-show="big_type==='info'" class="layui-nav layui-nav-tree">
+                <ul v-show="big_group==='info'" class="layui-nav layui-nav-tree">
                     <li class="layui-nav-item layui-nav-itemed">
                         <a @click="user_base_manage();">基本资料</a>
                     </li>
@@ -50,7 +50,7 @@
                     </li>
                 </ul>
 
-                <ul v-show="big_type==='data'" class="layui-nav layui-nav-tree">
+                <ul v-show="big_group==='data'" class="layui-nav layui-nav-tree">
                     <li class="layui-nav-item layui-nav-itemed">
                         <a @click="blog_group_manage();">博客分组管理</a>
                     </li>
@@ -58,7 +58,7 @@
                         <a @click="blog_label_manage();">博客标签管理</a>
                     </li>
                     <li class="layui-nav-item layui-nav-itemed">
-                        <a @click="article_data_manage();">博文管理</a>
+                        <a @click="blog_data_manage();">博文管理</a>
                     </li>
                     <li class="layui-nav-item layui-nav-itemed">
                         <a @click="draft_data_manage();">草稿箱管理</a>
@@ -89,12 +89,12 @@
             let app = new Vue({
                 el: "#app",
                 data: {
-                    sub_type: "blog_info",
-                    big_type: "info",
+                    sub_group: "blog_info",
+                    big_group: "info",
                     url_map: {
                         blog_group: "/admin/html/blog_group.html",
                         blog_label: "/admin/html/blog_label.html",
-                        article_data: "/admin/html/article_data.html",
+                        blog_data: "/admin/html/blog_data.html",
                         ad_data: "/admin/html/ad_data.html",
                         user_base: "/admin/html/user_base.html",
                         safe: "/admin/html/safe.html",
@@ -104,44 +104,44 @@
                 },
                 methods: {
                     info_manage: function() {
-                        this.big_type = "info";
+                        this.big_group = "info";
                     },
                     user_base_manage: function() {
                         this.info_manage();
-                        this.sub_type = "user_base";
+                        this.sub_group = "user_base";
                         this.refresh_iframe();
                     },
                     safe_manage: function() {
                         this.info_manage();
-                        this.sub_type = "safe";
+                        this.sub_group = "safe";
                         this.refresh_iframe();
                     },
                     data_manage: function() {
-                        this.big_type = "data";
+                        this.big_group = "data";
                     },
                     blog_group_manage: function() {
                         this.data_manage();
-                        this.sub_type = "blog_group";
+                        this.sub_group = "blog_group";
                         this.refresh_iframe();
                     },
                     blog_label_manage: function() {
                         this.data_manage();
-                        this.sub_type = "blog_label";
+                        this.sub_group = "blog_label";
                         this.refresh_iframe();
                     },
-                    article_data_manage: function() {
+                    blog_data_manage: function() {
                         this.data_manage();
-                        this.sub_type = "article_data";
+                        this.sub_group = "blog_data";
                         this.refresh_iframe();
                     },
                     draft_data_manage: function() {
                         this.data_manage();
-                        this.sub_type = "draft";
+                        this.sub_group = "draft";
                         this.refresh_iframe();
                     },
                     ad_data_manage: function() {
                         this.data_manage();
-                        this.sub_type = "ad_data";
+                        this.sub_group = "ad_data";
                         this.refresh_iframe();
                     },
 
@@ -155,7 +155,7 @@
                     },
 
                     refresh_iframe: function() {
-                        let new_url = window.location.protocol + "//" + window.location.host + this.url_map[this.sub_type];
+                        let new_url = window.location.protocol + "//" + window.location.host + this.url_map[this.sub_group];
                         let url = document.getElementById("iframe").contentWindow.location.href;
                         console.log(url);
                         console.log(new_url);
