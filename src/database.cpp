@@ -65,7 +65,7 @@ shared_ptr<blog_big_group> database::check_big_group(const string &group_name) {
 }
 
 shared_ptr<blog_sub_group> database::check_sub_group(int big_group,
-                                                   const string &group_name) {
+                                                     const string &group_name) {
     auto sub_groups = storage__->get_all<blog_sub_group>(
         where(c(&blog_sub_group::big_group) == big_group and
               c(&blog_sub_group::group_name) == group_name));
@@ -202,4 +202,16 @@ void database::delete_blog_label(int blog_id, int label_id) {
     storage__->remove_all<blog_label>(
         where(c(&blog_label::label_id) == label_id and
               c(&blog_label::blog_id) == blog_id));
+}
+
+vector<blog> database::get_top_blogs(int sub_group) {
+    return storage__->get_all<blog>(where(c(&blog::sub_group) == sub_group and
+                                          c(&blog::hide) == 0 and
+                                          c(&blog::top) == 1));
+}
+
+vector<blog> database::get_normal_blogs(int sub_group) {
+    return storage__->get_all<blog>(where(c(&blog::sub_group) == sub_group and
+                                          c(&blog::hide) == 0 and
+                                          c(&blog::top) == 0));
 }

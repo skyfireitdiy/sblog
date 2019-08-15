@@ -130,7 +130,7 @@ class database : public sf_single_instance<database> {
     shared_ptr<blog_big_group> check_big_group(const string &group_name);
 
     shared_ptr<blog_sub_group> check_sub_group(int ig_id,
-                                             const string &group_name);
+                                               const string &group_name);
 
     int get_sub_group_count(int big_group);
 
@@ -209,6 +209,10 @@ class database : public sf_single_instance<database> {
     void insert_blog_label(const blog_label &bl);
 
     void delete_blog_label(int blog_id, int label_id);
+
+    vector<blog> get_top_blogs(int sub_group);
+
+    vector<blog> get_normal_blogs(int sub_group);
 
     explicit database(const string &path);
 };

@@ -112,6 +112,34 @@ void blog_server::setup_server(const sf_http_server_config &server_conf) {
             admin_login(req, res);
         })));
 
+    api_router->add_router(sf_http_router::make_instance(
+        "/group_info"s,
+        function([this](const sf_http_request &req, sf_http_response &res) {
+            get_group_info(req, res);
+        }),
+        vector{{"GET"s}}));
+
+    api_router->add_router(sf_http_router::make_instance(
+        "/blog"s,
+        function([this](const sf_http_request &req, sf_http_response &res) {
+            user_get_blog(req, res);
+        }),
+        vector{{"GET"s}}));
+
+    api_router->add_router(sf_http_router::make_instance(
+        "/blog_content"s,
+        function([this](const sf_http_request &req, sf_http_response &res) {
+            user_get_content(req, res);
+        }),
+        vector{{"GET"s}}));
+
+    api_router->add_router(sf_http_router::make_instance(
+        "/blog_labels"s,
+        function([this](const sf_http_request &req, sf_http_response &res) {
+            user_get_label(req, res);
+        }),
+        vector{{"GET"s}}));
+
     root_router->add_router(api_router);
 
     auto admin_api_router = sf_http_part_router::make_instance(
@@ -146,13 +174,6 @@ void blog_server::setup_server(const sf_http_server_config &server_conf) {
             logout(req, res);
         }),
         vector{{"*"s}}));
-
-    admin_api_router->add_router(sf_http_router::make_instance(
-        "/group_info"s,
-        function([this](const sf_http_request &req, sf_http_response &res) {
-            get_group_info(req, res);
-        }),
-        vector{{"GET"s}}));
 
     admin_api_router->add_router(sf_http_router::make_instance(
         "/big_group"s,
@@ -1093,4 +1114,85 @@ void blog_server::update_blog_group(const sf_http_request &req,
     data->sub_group = sub_group;
     database__->update_blog(*data);
     ret["code"] = 0;
+}
+
+void blog_server::user_get_blog(const sf_http_request &req,
+                                sf_http_response &res) {
+    sf_json ret;
+    sf_finally f([&res, &ret] { res.set_json(ret); });
+    string url;
+    sf_http_param_t param;
+    string frame;
+    sf_parse_url(req.get_request_line().url, url, param, frame);
+    if (!check_param(param, {"sub_group"})) {
+        ret["code"] = 1;
+        ret["msg"] = "param error";
+        return;
+    }
+    auto sub_group =
+        static_cast<int>(sf_string_to_long_double(param["sub_group"]));
+    auto data = database__->get_top_blogs(sub_group);
+    auto data_normal = database__->get_normal_blogs(sub_group);
+    data.insert(data.begin(), data_normal.begin(), data_normal.end());
+    ret["code"] = 0;
+    ret["data"] = to_json(data);
+}
+
+void blog_server::user_get_content(const sf_http_request &req,
+                                   sf_http_response &res) {
+    sf_json ret;
+    sf_finally f([&res, &ret] { res.set_json(ret); });
+    string url;
+    sf_http_param_t param;
+    string frame;
+    sf_parse_url(req.get_request_line().url, url, param, frame);
+    if (!check_param(param, {"blog_id"})) {
+        ret["code"] = 1;
+        ret["msg"] = "param error";
+        return;
+    }
+    auto blog_id = static_cast<int>(sf_string_to_long_double(param["blog_id"]));
+    auto data = database__->get_blog_content(blog_id);
+    if (!data) {
+        ret["code"] = 2;
+        ret["msg"] = "blog not found";
+        return;
+    }
+    auto base_info = database__->get_blog(blog_id);
+    if (base_info->hide) {
+        ret["code"] = 3;
+        ret["msg"] = "blog is hiddem";
+        return;
+    }
+    ret["code"] = 0;
+    ret["data"] = to_json(*data);
+}
+
+void blog_server::user_get_label(const sf_http_request &req,
+                                 sf_http_response &res) {
+    sf_json ret;
+    sf_finally f([&res, &ret] { res.set_json(ret); });
+    string url;
+    sf_http_param_t param;
+    string frame;
+    sf_parse_url(req.get_request_line().url, url, param, frame);
+    if (!check_param(param, {"blog_id"})) {
+        ret["code"] = 1;
+        ret["msg"] = "param error";
+        return;
+    }
+    auto blog_id = static_cast<int>(sf_string_to_long_double(param["blog_id"]));
+    auto base_info = database__->get_blog(blog_id);
+    if (!base_info) {
+        ret["code"] = 2;
+        ret["msg"] = "blog not found";
+        return;
+    }
+    if (base_info->hide) {
+        ret["code"] = 3;
+        ret["msg"] = "blog is hiddem";
+        return;
+    }
+    ret["code"] = 0;
+    ret["data"] = to_json(database__->get_blog_labels(blog_id));
 }

@@ -10,54 +10,229 @@
         [v-cloak] {
             display: none;
         }
+        
+        html,
+        body {
+            height: 100%;
+        }
+        
+        iframe {
+            border: none;
+        }
+        
+        .v_h {
+            height: 100%;
+            width: 100%;
+        }
     </style>
 </head>
 
 <body>
-    <div id="app" v-cloak>
-        <div class="layui-layout layui-layout-admin">
+    <div id="app" class="v_h" v-cloak>
+        <div class="layui-layout layui-layout-admin" style="height: 93%;">
             <div class="layui-header">
-                <div class="layui-logo">{{ blog.blog_title }}</div>
+                <div class="layui-logo">{{ blog_title }}</div>
                 <ul class="layui-nav layui-layout-left">
-                    <li class="layui-nav-item" v-for="bt in blog.big_group">
-                        <a @click="change_big_group(bt);">{{ bt }}</a>
+                    <li class="layui-nav-item" v-for="(bg, index) in group_info">
+                        <a @click="change_big_group(index);">{{ bg.group_name }}</a>
+                        <dl class="layui-nav-child" v-if="group_info.length !== 0">
+                            <dd v-for="sg in bg.sub_group">
+                                <a @click="get_blog(sg.id);">{{sg.group_name}}</a>
+                            </dd>
+                        </dl>
                     </li>
                 </ul>
             </div>
-            <div class="layui-body"></div>
+            <div style="height: 3%" class="layui-bg-black">
+                <div v-if="current_blog" style="text-align: center">
+                    标题： {{current_blog.title}} &nbsp;&nbsp; 发布时间：{{current_blog.publish_time}}&nbsp;&nbsp; 阅读数量： {{current_blog.watch_number}}&nbsp;&nbsp; 标签： <span v-for="lb in labels">
+                        {{lb.label_name}}&nbsp;
+                    </span>
+                </div>
+            </div>
+            <div style="height: 97%; overflow:hidden;">
+                <iframe id="html_content" src="/html/show_blog.html" class="v_h"></iframe>
+            </div>
         </div>
-    </div>
-    <script src="https://www.layuicdn.com/layui/layui.js" charset="utf-8"></script>
-    <script type="text/javascript" src="https://cdn.bootcss.com/vue/2.6.10/vue.min.js"></script>
-    <script>
-        Vue.component("blog-item", {
-            data: function() {
-                return {};
-            },
-            template: ""
-        });
 
+        <div hidden id="blog_list">
+            <table class="layui-table">
+                <colgroup>
+                    <col>
+                    <col>
+                    <col>
+                    <col>
+                </colgroup>
+                <thead>
+                    <td>标题</td>
+                    <td>发布时间</td>
+                    <td>阅读数</td>
+                </thead>
+                <tbody>
+                    <tr v-for="blog in blogs" @click="read_blog(blog);">
+                        <td>{{blog.title}}</td>
+                        <td>{{blog.publish_time}}</td>
+                        <td>{{blog.watch_number}}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+    <script src="https://www.layuicdn.com/layui/layui.js " charset="utf-8 "></script>
+    <script src="https://cdn.bootcss.com/showdown/1.9.0/showdown.min.js"></script>
+    <script type="text/javascript " src="https://cdn.bootcss.com/vue/2.6.10/vue.min.js "></script>
+    <script>
         let app = new Vue({
-            el: "#app",
+            el: "#app ",
             data: {
-                blog: {
-                    blog_title: "SkyFire 的个人博客",
-                    big_group: ["编程语言", "操作系统"]
-                }
+                blog_title: "SkyFire 的个人博客 ",
+                group_info: [],
+                big_group_index: 0,
+                sub_group_index: 0,
+                blogs: [],
+                current_blog: null,
+                labels: [],
+                converter: null,
             },
             methods: {
-                change_big_group: function(tp) {
-                    layui.use(["layer"], function() {
-                        layui.layer.alert(tp);
+                read_blog: function(blog) {
+                    let this_ = this;
+                    layui.use(["layer", "jquery"], function() {
+                        let layer = layui.layer;
+                        let $ = layui.jquery;
+                        layer.closeAll();
+                        this_.current_blog = blog;
+                        $.ajax({
+                            url: "/api/blog_labels",
+                            method: "GET",
+                            data: {
+                                blog_id: blog.id,
+                            },
+                            success: function(res) {
+                                if (res.code !== 0) {
+                                    layer.msg(res.msg, {
+                                        icon: 0
+                                    });
+                                } else {
+                                    this_.labels = res.data;
+                                }
+                            }
+                        });
+                        $.ajax({
+                            url: "/api/blog_content",
+                            method: "GET",
+                            data: {
+                                blog_id: blog.id
+                            },
+                            success: function(res) {
+                                if (res.code !== 0) {
+                                    layer.msg(res.msg, {
+                                        icon: 0
+                                    });
+                                } else {
+                                    $(document.getElementById('html_content').contentWindow.document.body).html(this_.converter.makeHtml(res.data.content));
+                                }
+                            }
+                        });
+                    });
+                },
+                change_big_group: function(index) {
+                    this.big_group_index = index;
+                },
+
+                get_blog: function(id) {
+                    let this_ = this;
+                    layui.use(["jquery", "layer"], function() {
+                        let $ = layui.jquery;
+                        let layer = layui.layer;
+                        $.ajax({
+                            url: "/api/blog",
+                            method: "GET",
+                            data: {
+                                sub_group: id
+                            },
+                            success: function(res) {
+                                if (res.code !== 0) {
+                                    layer.msg(res.msg, {
+                                        icon: 0
+                                    });
+                                } else {
+                                    this_.blogs = res.data;
+                                    this_.show_blog_list();
+                                }
+                            }
+                        });
+                    });
+                },
+
+                show_blog_list: function() {
+                    layui.use(["layer", "jquery"], function() {
+                        let $ = layui.jquery;
+                        let layer = layui.layer;
+                        let this_ = this;
+
+                        layer.open({
+                            type: 1,
+                            content: $("#blog_list"),
+                            area: ["50%", "100%"],
+                            offset: "lt",
+                            closeBtn: 0,
+                            shade: 0.2,
+                            shadeClose: 1,
+                            anim: parseInt(Math.random() * 7),
+                            title: "文章列表"
+                        });
+                    });
+                },
+
+                init_group_info: function() {
+                    let this_ = this;
+                    layui.use(["jquery"], function() {
+                        let $ = layui.jquery;
+                        $.ajax({
+                            url: "/api/group_info",
+                            method: "GET",
+                            success: function(res) {
+                                if (res.code !== 0) {
+                                    layer.msg(res.msg, {
+                                        icon: 0
+                                    });
+                                } else {
+                                    this_.group_info = res.data;
+                                    Vue.nextTick(() => {
+                                        layui.use(["element", "layer", "jquery"], function() {
+                                            let layer = layui.layer;
+                                            let element = layui.element;
+                                            let $ = layui.jquery;
+                                            element.init();
+                                        });
+                                    });
+                                }
+                            }
+                        });
                     });
                 }
             },
-            mounted: function() {},
-            computed: {},
             mounted: function() {
-                layui.use(["element"], function() {
-                    let element = layui.element;
-                });
+                this.converter = new showdown.Converter();
+                this.converter.setOption("omitExtraWLInCodeBlocks", true);
+                this.converter.setOption("ghCompatibleHeaderId", true);
+                this.converter.setOption("prefixHeaderId", true);
+                this.converter.setOption("headerLevelStart", 1);
+                this.converter.setOption("parseImgDimensions", true);
+                this.converter.setOption("literalMidWordUnderscores", true);
+                this.converter.setOption("tables", true);
+                this.converter.setOption("tablesHeaderId", true);
+                this.converter.setOption("ghCodeBlocks", true);
+                this.converter.setOption("tasklists", true);
+                this.converter.setOption("smartIndentationFix", true);
+                this.converter.setOption("simpleLineBreaks", true);
+                this.converter.setOption("requireSpaceBeforeHeadingText", true);
+                this.converter.setOption("openLinksInNewWindow", true);
+                this.converter.setOption("backslashEscapesHTMLTags", true);
+                this.converter.setOption("emoji", true);
+                this.init_group_info();
             }
         });
     </script>
