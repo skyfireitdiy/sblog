@@ -224,5 +224,9 @@ class database : public sf_single_instance<database> {
 
     shared_ptr<blog_info> get_blog_info();
 
+    vector<blog> get_top_blogs();
+
+    vector<blog> get_normal_blogs();
+
     explicit database(const string &path);
 };

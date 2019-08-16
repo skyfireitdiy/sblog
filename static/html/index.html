@@ -24,11 +24,16 @@
             height: 100%;
             width: 100%;
         }
+        
+        .float_btn {
+            position: absolute;
+        }
     </style>
 </head>
 
 <body>
     <div id="app" class="v_h" v-cloak>
+        <title>{{ blog_info.title }}</title>
         <div class="layui-layout layui-layout-admin" style="height: 93%;">
             <div class="layui-header">
                 <div class="layui-logo">{{ blog_info.title }}</div>
@@ -41,9 +46,14 @@
                             </dd>
                         </dl>
                     </li>
+
+                    <li class="layui-nav-item">
+                        <a @click="all_blog();">所有博客</a>
+                    </li>
                 </ul>
             </div>
             <div style="height: 3%" class="layui-bg-black">
+                <button @click="show_blog_list()" class="layui-btn layui-btn-sm layui-btn-warm layui-btn-radius float_btn">+</button>
                 <div v-if="current_blog" style="text-align: center">
                     标题： {{current_blog.title}} &nbsp;&nbsp; 发布时间：{{current_blog.publish_time}}&nbsp;&nbsp; 阅读数量： {{current_blog.watch_number}}&nbsp;&nbsp; 标签： <span v-for="lb in labels">
                         {{lb.label_name}}&nbsp;
@@ -67,24 +77,30 @@
                     <td>标题</td>
                     <td>发布时间</td>
                     <td>阅读数</td>
+                    <td>分类</td>
+                    <td>标签</td>
                 </thead>
                 <tbody>
-                    <tr v-for="blog in blogs" @click="read_blog(blog);">
+                    <tr v-for="blog in blogs" @click="read_blog(blog);" :class='{"layui-bg-orange":blog.top}'>
                         <td>{{blog.title}}</td>
                         <td>{{blog.publish_time}}</td>
                         <td>{{blog.watch_number}}</td>
+                        <td>{{blog.big_group.group_name}} - {{blog.sub_group.group_name}}</td>
+                        <td>
+                            <span v-for="lb in blog.labels">{{lb.label_name}}&nbsp;&nbsp;</span>
+                        </td>
                     </tr>
                 </tbody>
             </table>
         </div>
 
     </div>
-    <script src="https://www.layuicdn.com/layui/layui.js " charset="utf-8 "></script>
+    <script src="https://www.layuicdn.com/layui/layui.js" charset="utf-8"></script>
     <script src="https://cdn.bootcss.com/showdown/1.9.0/showdown.min.js"></script>
-    <script type="text/javascript " src="https://cdn.bootcss.com/vue/2.6.10/vue.min.js "></script>
+    <script type="text/javascript" src="https://cdn.bootcss.com/vue/2.6.10/vue.min.js"></script>
     <script>
         let app = new Vue({
-            el: "#app ",
+            el: "#app",
             data: {
                 blog_info: {
                     title: "",
@@ -169,6 +185,30 @@
                     });
                 },
 
+
+                all_blog: function() {
+                    let this_ = this;
+                    layui.use(["jquery", "layer"], function() {
+                        let $ = layui.jquery;
+                        let layer = layui.layer;
+                        $.ajax({
+                            url: "/api/blog_all",
+                            method: "GET",
+                            success: function(res) {
+                                if (res.code !== 0) {
+                                    layer.msg(res.msg, {
+                                        icon: 0
+                                    });
+                                } else {
+                                    this_.blogs = res.data;
+                                    this_.show_blog_list();
+                                }
+                            }
+                        });
+                    });
+                },
+
+
                 show_blog_list: function() {
                     layui.use(["layer", "jquery"], function() {
                         let $ = layui.jquery;
@@ -179,7 +219,7 @@
                             type: 1,
                             content: $("#blog_list"),
                             area: ["50%", "100%"],
-                            offset: "lt",
+                            offset: "rt",
                             closeBtn: 0,
                             shade: 0.2,
                             shadeClose: 1,

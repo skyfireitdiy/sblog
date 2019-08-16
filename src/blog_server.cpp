@@ -159,6 +159,13 @@ void blog_server::setup_server(const sf_http_server_config &server_conf) {
         }),
         vector{{"GET"s}}));
 
+    api_router->add_router(sf_http_router::make_instance(
+        "/blog_all"s,
+        function([this](const sf_http_request &req, sf_http_response &res) {
+            user_get_all_blog(req, res);
+        }),
+        vector{{"GET"s}}));
+
     root_router->add_router(api_router);
 
     auto admin_api_router = sf_http_part_router::make_instance(
@@ -1185,11 +1192,60 @@ void blog_server::user_get_blog(const sf_http_request &req,
     }
     auto sub_group =
         static_cast<int>(sf_string_to_long_double(param["sub_group"]));
-    auto data = database__->get_top_blogs(sub_group);
+    auto blogs = database__->get_top_blogs(sub_group);
     auto data_normal = database__->get_normal_blogs(sub_group);
-    data.insert(data.begin(), data_normal.begin(), data_normal.end());
+    blogs.insert(blogs.end(), data_normal.begin(), data_normal.end());
+    auto blogs_json = to_json(blogs);
+    for (int i = 0; i < blogs.size(); ++i) {
+        auto sub_group = database__->get_sub_group(blogs[i].sub_group);
+        if (sub_group == nullptr) {
+            ret["code"] = 2;
+            ret["msg"] = "server error";
+            return;
+        }
+        blogs_json[i]["sub_group"] = to_json(*sub_group);
+        auto big_group = database__->get_big_group(sub_group->big_group);
+        if (big_group == nullptr) {
+            ret["code"] = 3;
+            ret["msg"] = "server error";
+            return;
+        }
+        blogs_json[i]["big_group"] = to_json(*big_group);
+        auto labels = database__->get_blog_labels(blogs[i].id);
+        blogs_json[i]["labels"] = to_json(labels);
+    }
     ret["code"] = 0;
-    ret["data"] = to_json(data);
+    ret["data"] = blogs_json;
+}
+
+void blog_server::user_get_all_blog(const sf_http_request &req,
+                                    sf_http_response &res) {
+    sf_json ret;
+    sf_finally f([&res, &ret] { res.set_json(ret); });
+    auto blogs = database__->get_top_blogs();
+    auto data_normal = database__->get_normal_blogs();
+    blogs.insert(blogs.end(), data_normal.begin(), data_normal.end());
+    auto blogs_json = to_json(blogs);
+    for (int i = 0; i < blogs.size(); ++i) {
+        auto sub_group = database__->get_sub_group(blogs[i].sub_group);
+        if (sub_group == nullptr) {
+            ret["code"] = 1;
+            ret["msg"] = "server error";
+            return;
+        }
+        blogs_json[i]["sub_group"] = to_json(*sub_group);
+        auto big_group = database__->get_big_group(sub_group->big_group);
+        if (big_group == nullptr) {
+            ret["code"] = 2;
+            ret["msg"] = "server error";
+            return;
+        }
+        blogs_json[i]["big_group"] = to_json(*big_group);
+        auto labels = database__->get_blog_labels(blogs[i].id);
+        blogs_json[i]["labels"] = to_json(labels);
+    }
+    ret["code"] = 0;
+    ret["data"] = blogs_json;
 }
 
 void blog_server::user_get_content(const sf_http_request &req,

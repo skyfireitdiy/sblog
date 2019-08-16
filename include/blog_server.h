@@ -119,6 +119,8 @@ class blog_server : public sf_make_instance_t<blog_server, sf_empty_class> {
 
     void user_get_blog(const sf_http_request &req, sf_http_response &res);
 
+    void user_get_all_blog(const sf_http_request &req, sf_http_response &res);
+
     void user_get_content(const sf_http_request &req, sf_http_response &res);
 
     void user_get_label(const sf_http_request &req, sf_http_response &res);

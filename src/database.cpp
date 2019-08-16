@@ -224,6 +224,15 @@ vector<blog> database::get_normal_blogs(int sub_group) {
                                           c(&blog::hide) == 0 and
                                           c(&blog::top) == 0));
 }
+vector<blog> database::get_top_blogs() {
+    return storage__->get_all<blog>(
+        where(c(&blog::hide) == 0 and c(&blog::top) == 1));
+}
+
+vector<blog> database::get_normal_blogs() {
+    return storage__->get_all<blog>(
+        where(c(&blog::hide) == 0 and c(&blog::top) == 0));
+}
 
 void database::insert_blog_info(const blog_info &bi) { storage__->insert(bi); }
 
