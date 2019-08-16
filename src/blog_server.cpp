@@ -893,7 +893,9 @@ void blog_server::add_blog(const sf_http_request &req, sf_http_response &res) {
         blog_content bc{blog_id, param["content"]};
         database__->update_blog_content(bc);
     }
-    database__->delete_draft(draft_id);
+    if (draft_id != -1) {
+        database__->delete_draft(draft_id);
+    }
 }
 
 void blog_server::get_draft(const sf_http_request &req, sf_http_response &res) {
