@@ -12,6 +12,10 @@ bool database::check_user_empty() {
     return storage__->count<admin_user>() == 0;
 }
 
+bool database::check_blog_info_empty() {
+    return storage__->count<blog_info>() == 0;
+}
+
 shared_ptr<admin_user> database::check_user(const string &name,
                                             const string &password) {
     auto users = storage__->get_all<admin_user>(
@@ -152,7 +156,12 @@ vector<label> database::get_blog_labels(int blog_id) {
 
 int database::insert_blog(const blog &b) { return storage__->insert(b); }
 
-void database::delete_blog(int blog_id) { storage__->remove<blog>(blog_id); }
+void database::delete_blog(int blog_id) {
+    storage__->remove<blog>(blog_id);
+    storage__->remove_all<blog_label>(
+        where(c(&blog_label::blog_id) == blog_id));
+    storage__->remove<blog_content>(blog_id);
+}
 
 void database::update_blog(const blog &b) { storage__->update(b); }
 
@@ -214,4 +223,19 @@ vector<blog> database::get_normal_blogs(int sub_group) {
     return storage__->get_all<blog>(where(c(&blog::sub_group) == sub_group and
                                           c(&blog::hide) == 0 and
                                           c(&blog::top) == 0));
+}
+
+void database::insert_blog_info(const blog_info &bi) { storage__->insert(bi); }
+
+void database::update_blog_info(const string &title, const string &desc) {
+    storage__->update_all(sqlite_orm::set(c(&blog_info::title) = title,
+                                          c(&blog_info::desc) = desc));
+}
+
+shared_ptr<blog_info> database::get_blog_info() {
+    auto data = storage__->get_all<blog_info>();
+    if (data.empty()) {
+        return nullptr;
+    }
+    return make_shared<blog_info>(data[0]);
 }

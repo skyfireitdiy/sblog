@@ -31,7 +31,7 @@
     <div id="app" class="v_h" v-cloak>
         <div class="layui-layout layui-layout-admin" style="height: 93%;">
             <div class="layui-header">
-                <div class="layui-logo">{{ blog_title }}</div>
+                <div class="layui-logo">{{ blog_info.title }}</div>
                 <ul class="layui-nav layui-layout-left">
                     <li class="layui-nav-item" v-for="(bg, index) in group_info">
                         <a @click="change_big_group(index);">{{ bg.group_name }}</a>
@@ -86,7 +86,10 @@
         let app = new Vue({
             el: "#app ",
             data: {
-                blog_title: "SkyFire 的个人博客 ",
+                blog_info: {
+                    title: "",
+                    desc: ""
+                },
                 group_info: [],
                 big_group_index: 0,
                 sub_group_index: 0,
@@ -180,7 +183,7 @@
                             closeBtn: 0,
                             shade: 0.2,
                             shadeClose: 1,
-                            anim: parseInt(Math.random() * 7),
+                            anim: 4,
                             title: "文章列表"
                         });
                     });
@@ -188,8 +191,9 @@
 
                 init_group_info: function() {
                     let this_ = this;
-                    layui.use(["jquery"], function() {
+                    layui.use(["jquery", "layer"], function() {
                         let $ = layui.jquery;
+                        let layer = layui.layer;
                         $.ajax({
                             url: "/api/group_info",
                             method: "GET",
@@ -208,6 +212,27 @@
                                             element.init();
                                         });
                                     });
+                                }
+                            }
+                        });
+                    });
+                },
+                init_blog_info: function() {
+                    let this_ = this;
+                    layui.use(["jquery", "layer"], function() {
+                        let $ = layui.jquery;
+                        let layer = layui.layer;
+                        $.ajax({
+                            url: "/api/blog_info",
+                            method: "GET",
+                            success: function(res) {
+                                if (res.code !== 0) {
+                                    layer.msg(res.msg, {
+                                        icon: 0
+                                    });
+                                } else {
+                                    this_.blog_info = res.data;
+                                    $(document.getElementById('html_content').contentWindow.document.body).html(res.data.desc);
                                 }
                             }
                         });
@@ -233,6 +258,7 @@
                 this.converter.setOption("backslashEscapesHTMLTags", true);
                 this.converter.setOption("emoji", true);
                 this.init_group_info();
+                this.init_blog_info();
             }
         });
     </script>

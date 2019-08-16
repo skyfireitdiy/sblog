@@ -18,13 +18,13 @@
 
         <div>
             <button class="layui-btn" @click="add_new_blog();">发布新文章</button>
-            <button class="layui-btn">批量置顶</button>
-            <button class="layui-btn">批量取消置顶</button>
-            <button class="layui-btn">批量隐藏</button>
-            <button class="layui-btn">批量取消隐藏</button>
-            <button class="layui-btn">批量删除</button>
-            <button class="layui-btn">批量修改分类</button>
-            <button class="layui-btn">批量添加标签</button>
+            <button class="layui-btn" @click="set_top_bat(true);">批量置顶</button>
+            <button class="layui-btn" @click="set_top_bat(false);">批量取消置顶</button>
+            <button class="layui-btn" @click="set_hide_bat(true);">批量隐藏</button>
+            <button class="layui-btn" @click="set_hide_bat(false);">批量取消隐藏</button>
+            <button class="layui-btn" @click="delete_blog_bat();">批量删除</button>
+            <button class="layui-btn" @click="update_blog_group_bat();">批量修改分类</button>
+            <button class="layui-btn" @click="add_blog_label_bat();">批量添加标签</button>
             <br><br>
             <table class="layui-table">
                 <colgroup>
@@ -65,7 +65,7 @@
                     <td style="text-align: left">
                         <div v-for="lab in art.labels" style="margin-right: 3px;  border: burlywood thick solid; float: left; background-color: burlywood; border-radius: 5px;">
                             {{lab.label_name}}
-                            <button @click="delete_label(index, item.id)" class="layui-btn layui-btn-sm layui-btn-radius">x</button>
+                            <button @click="delete_label(index, lab.id)" class="layui-btn layui-btn-sm layui-btn-radius">x</button>
                         </div>
                         <div v-show="calc_labels(index).length !== 0">
                             <button class="layui-btn layui-btn-normal layui-btn-radius" @click="prepare_add_label(index);"> 增加标签 </button>
@@ -121,6 +121,94 @@
                     sub_group_index: 0,
                 },
                 methods: {
+
+                    delete_blog_bat: function() {
+                        let this_ = this;
+                        if (this_.checked_item.length === 0) {
+                            layer.msg("请选择要操作的对象");
+                            return;
+                        }
+                        layer.confirm("确认将选中的博文删除吗?", function() {
+                            $.ajax({
+                                url: "/admin/api/blog_bat",
+                                method: "DELETE",
+                                data: JSON.stringify(this_.checked_item),
+                                success: function(res) {
+                                    if (res.code !== 0) {
+                                        layer.msg(res.msg, {
+                                            icon: 0
+                                        });
+                                    } else {
+                                        layer.msg("操作成功", {
+                                            icon: 1
+                                        });
+                                        this_.init_blog_data();
+                                    }
+                                }
+                            });
+                        });
+                    },
+
+                    set_top_bat: function(value) {
+                        let this_ = this;
+                        if (this_.checked_item.length === 0) {
+                            layer.msg("请选择要操作的对象");
+                            return;
+                        }
+                        layer.confirm("确认将选中的博文" + (value ? "" : "取消") + "置顶吗?", function() {
+                            $.ajax({
+                                url: "/admin/api/top_bat",
+                                method: "PUT",
+                                data: JSON.stringify({
+                                    blogs: this_.checked_item,
+                                    value: value
+                                }),
+                                success: function(res) {
+                                    if (res.code !== 0) {
+                                        layer.msg(res.msg, {
+                                            icon: 0
+                                        });
+                                    } else {
+                                        layer.msg("操作成功", {
+                                            icon: 1
+                                        });
+                                        this_.init_blog_data();
+                                    }
+                                }
+                            });
+                        });
+                    },
+
+                    set_hide_bat: function(value) {
+                        let this_ = this;
+                        if (this_.checked_item.length === 0) {
+                            layer.msg("请选择要操作的对象");
+                            return;
+                        }
+                        layer.confirm("确认将选中的博文" + (value ? "" : "取消") + "隐藏吗?", function() {
+                            $.ajax({
+                                url: "/admin/api/hide_bat",
+                                method: "PUT",
+                                data: JSON.stringify({
+                                    blogs: this_.checked_item,
+                                    value: value
+                                }),
+                                success: function(res) {
+                                    if (res.code !== 0) {
+                                        layer.msg(res.msg, {
+                                            icon: 0
+                                        });
+                                    } else {
+                                        layer.msg("操作成功", {
+                                            icon: 1
+                                        });
+                                        this_.init_blog_data();
+                                    }
+                                }
+                            });
+                        });
+                    },
+
                     change_group: function(index) {
                         let this_ = this;
                         this_.big_group_index = 0;
@@ -154,6 +242,41 @@
                             }
                         });
                     },
+
+                    update_blog_group_bat: function() {
+                        let this_ = this;
+                        this_.big_group_index = 0;
+                        this_.sub_group_index = 0;
+                        let id = layer.open({
+                            type: 1,
+                            content: $("#group_show"),
+                            btn: ["确认", "取消"],
+                            yes: function() {
+                                $.ajax({
+                                    url: "/admin/api/blog_group_bat",
+                                    method: "PUT",
+                                    data: JSON.stringify({
+                                        blogs: this_.checked_item,
+                                        sub_group: this_.group_info[this_.big_group_index].sub_group[this_.sub_group_index].id
+                                    }),
+                                    success: function(res) {
+                                        if (res.code !== 0) {
+                                            layer.msg(res.msg, {
+                                                icon: 0
+                                            });
+                                        } else {
+                                            layer.msg("操作成功", {
+                                                icon: 1
+                                            });
+                                            this_.init_blog_data();
+                                        }
+                                    }
+                                });
+                                layer.close(id);
+                            }
+                        });
+                    },
+
                     delete_label: function(index, id) {
                         let this_ = this;
                         $.ajax({
@@ -176,7 +299,7 @@
                                         }
                                     }
                                     layer.msg("删除成功", {
-                                        icon: 0
+                                        icon: 1
                                     });
 
                                 }
@@ -228,6 +351,51 @@
                             }
                         });
                     },
+
+                    add_blog_label_bat: function() {
+                        let this_ = this;
+                        if (this_.checked_item.length === 0) {
+                            layer.msg("请选择要操作的对象");
+                            return;
+                        }
+                        this.selected_labels = []
+                        this.want_labels = this_.labels;
+                        let id = layer.open({
+                            type: 1,
+                            content: $("#label_show"),
+                            btn: ["添加", "取消"],
+                            yes: function() {
+                                if (this_.selected_labels.length === 0) {
+                                    layer.msg("请先选择标签", {
+                                        icon: 0
+                                    });
+                                    return;
+                                }
+                                layer.close(id);
+                                $.ajax({
+                                    url: "/admin/api/blog_label_bat",
+                                    method: "POST",
+                                    data: JSON.stringify({
+                                        blogs: this_.checked_item,
+                                        labels: this_.selected_labels
+                                    }),
+                                    success: function(res) {
+                                        if (res.code !== 0) {
+                                            layer.msg(res.msg, {
+                                                icon: 0
+                                            });
+                                        } else {
+                                            layer.msg("操作成功", {
+                                                icon: 1
+                                            });
+                                            this_.init_blog_data();
+                                        }
+                                    }
+                                });
+                            }
+                        });
+                    },
+
                     calc_labels: function(index) {
                         let ret = JSON.parse(JSON.stringify(this.labels));
                         console.log("ret1", ret);
@@ -344,7 +512,7 @@
                     init_blog_data: function() {
                         let this_ = this;
                         $.ajax({
-                            url: "/admin/api/blog_info",
+                            url: "/admin/api/blog_list",
                             method: "GET",
                             success: function(res) {
                                 if (res.code !== 0) {

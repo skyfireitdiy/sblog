@@ -13,8 +13,10 @@ struct admin_user {
     int id;
     string name;
     string password;
-    string qq;
-    string website;
+};
+
+struct blog_info {
+    string title;
     string desc;
 };
 
@@ -60,7 +62,8 @@ struct blog_label {
     int label_id;
 };
 
-SF_JSONIFY(admin_user, id, name, password, qq, website, desc)
+SF_JSONIFY(admin_user, id, name, password)
+SF_JSONIFY(blog_info, title, desc)
 SF_JSONIFY(blog, id, title, publish_time, watch_number, top, sub_group, hide)
 SF_JSONIFY(draft, id, title, content)
 SF_JSONIFY(blog_content, id, content)
@@ -76,10 +79,9 @@ inline auto init_user_storage(const string &path) {
                    make_column("id", &admin_user::id, autoincrement(),
                                primary_key(), unique()),
                    make_column("name", &admin_user::name, unique()),
-                   make_column("password", &admin_user::password),
-                   make_column("qq", &admin_user::qq),
-                   make_column("website", &admin_user::website),
-                   make_column("desc", &admin_user::desc)),
+                   make_column("password", &admin_user::password)),
+        make_table("blog_info", make_column("title", &blog_info::title),
+                   make_column("desc", &blog_info::desc)),
         make_table("blog",
                    make_column("id", &blog::id, autoincrement(), primary_key(),
                                unique()),
@@ -123,6 +125,8 @@ class database : public sf_single_instance<database> {
 
    public:
     bool check_user_empty();
+
+    bool check_blog_info_empty();
 
     shared_ptr<admin_user> check_user(const string &name,
                                       const string &password);
@@ -213,6 +217,12 @@ class database : public sf_single_instance<database> {
     vector<blog> get_top_blogs(int sub_group);
 
     vector<blog> get_normal_blogs(int sub_group);
+
+    void insert_blog_info(const blog_info &bi);
+
+    void update_blog_info(const string &title, const string &desc);
+
+    shared_ptr<blog_info> get_blog_info();
 
     explicit database(const string &path);
 };

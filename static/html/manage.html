@@ -23,7 +23,7 @@
 <body class="layui-layout-body">
     <div id="app" v-cloak class="layui-layout layui-layout-admin">
         <div class="layui-header">
-            <div class="layui-logo">skyfire blog 后台管理</div>
+            <div class="layui-logo">{{ blog_info.title}} 后台管理</div>
             <ul class="layui-nav layui-layout-left">
                 <li class="layui-nav-item"><a @click="info_manage();">信息管理</a></li>
                 <li class="layui-nav-item"><a @click="data_manage();">数据管理</a></li>
@@ -63,9 +63,6 @@
                     <li class="layui-nav-item layui-nav-itemed">
                         <a @click="draft_data_manage();">草稿箱管理</a>
                     </li>
-                    <li class="layui-nav-item layui-nav-itemed">
-                        <a @click="ad_data_manage();">广告管理</a>
-                    </li>
                 </ul>
             </div>
         </div>
@@ -95,12 +92,15 @@
                         blog_group: "/admin/html/blog_group.html",
                         blog_label: "/admin/html/blog_label.html",
                         blog_data: "/admin/html/blog_data.html",
-                        ad_data: "/admin/html/ad_data.html",
                         user_base: "/admin/html/user_base.html",
                         safe: "/admin/html/safe.html",
                         draft: "/admin/html/draft.html",
                     },
-                    user_name: ""
+                    user_name: "",
+                    blog_info: {
+                        title: "",
+                        desc: ""
+                    }
                 },
                 methods: {
                     info_manage: function() {
@@ -139,12 +139,6 @@
                         this.sub_group = "draft";
                         this.refresh_iframe();
                     },
-                    ad_data_manage: function() {
-                        this.data_manage();
-                        this.sub_group = "ad_data";
-                        this.refresh_iframe();
-                    },
-
                     logout: function() {
 
                         layer.confirm("确认要注销吗？", () => {
@@ -176,6 +170,19 @@
                                 });
                             } else {
                                 this_.user_name = res.data.name;
+                            }
+                        }
+                    });
+                    $.ajax({
+                        url: "/api/blog_info",
+                        method: "GET",
+                        success: function(res) {
+                            if (res.code !== 0) {
+                                layer.msg(res.msg, {
+                                    icon: 0
+                                });
+                            } else {
+                                this_.blog_info = res.data;
                             }
                         }
                     });

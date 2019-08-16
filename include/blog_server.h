@@ -42,7 +42,7 @@ class blog_server : public sf_make_instance_t<blog_server, sf_empty_class> {
 
     void get_user_info(const sf_http_request &req, sf_http_response &res);
 
-    void set_user_info(const sf_http_request &req, sf_http_response &res);
+    void set_base_info(const sf_http_request &req, sf_http_response &res);
 
     void change_password(const sf_http_request &req, sf_http_response &res);
 
@@ -74,7 +74,7 @@ class blog_server : public sf_make_instance_t<blog_server, sf_empty_class> {
 
     void delete_label(const sf_http_request &req, sf_http_response &res);
 
-    void get_blog_info(const sf_http_request &req, sf_http_response &res);
+    void get_blog_list(const sf_http_request &req, sf_http_response &res);
 
     void get_blog(const sf_http_request &req, sf_http_response &res);
 
@@ -94,6 +94,17 @@ class blog_server : public sf_make_instance_t<blog_server, sf_empty_class> {
 
     void set_top(const sf_http_request &req, sf_http_response &res);
 
+    void set_top_bat(const sf_http_request &req, sf_http_response &res);
+
+    void set_hide_bat(const sf_http_request &req, sf_http_response &res);
+
+    void delete_blog_bat(const sf_http_request &req, sf_http_response &res);
+
+    void update_blog_group_bat(const sf_http_request &req,
+                               sf_http_response &res);
+
+    void add_blog_label_bat(const sf_http_request &req, sf_http_response &res);
+
     void set_hide(const sf_http_request &req, sf_http_response &res);
 
     void delete_blog(const sf_http_request &req, sf_http_response &res);
@@ -111,6 +122,8 @@ class blog_server : public sf_make_instance_t<blog_server, sf_empty_class> {
     void user_get_content(const sf_http_request &req, sf_http_response &res);
 
     void user_get_label(const sf_http_request &req, sf_http_response &res);
+
+    void get_blog_info(const sf_http_request &req, sf_http_response &res);
 
    public:
     explicit blog_server(const std::string &config_file_path);

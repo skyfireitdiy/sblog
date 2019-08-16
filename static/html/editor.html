@@ -418,6 +418,7 @@
                 }
             },
             mounted: function() {
+                let this_ = this;
                 on_set_draft_data = this.on_set_draft_data;
                 console.log(this.group_data);
                 let empty_flag = true;
@@ -429,8 +430,10 @@
                     }
                 }
                 if (empty_flag) {
-                    layer.alert("请先添加分组！", () => {
-                        window.location.href = "/admin/html/blog_group.html";
+                    layui.use(["layer"], function() {
+                        layer.alert("请先添加分组！", () => {
+                            window.location.href = "/admin/html/blog_group.html";
+                        });
                     });
                 } else {
                     this.init_data();
