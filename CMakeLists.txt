@@ -5,6 +5,8 @@ set(CMAKE_CXX_STANDARD 20)
 
 file(GLOB sources src/*)
 
+add_definitions(-D SF_DEBUG)
+
 add_executable(blog_server ${sources})
 
 include_directories(
