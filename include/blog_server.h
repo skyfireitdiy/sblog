@@ -127,6 +127,8 @@ class blog_server : public sf_make_instance_t<blog_server, sf_empty_class> {
 
     void get_blog_info(const sf_http_request &req, sf_http_response &res);
 
+    void read_blog(const sf_http_request &req, sf_http_response &res);
+
    public:
     explicit blog_server(const std::string &config_file_path);
 

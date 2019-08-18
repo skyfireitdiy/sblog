@@ -96,8 +96,16 @@ void blog_server::setup_server(const sf_http_server_config &server_conf) {
     root_router->add_router(sf_http_router::make_instance(
         "/"s,
         function([this](const sf_http_request &req, sf_http_response &res) {
-            res.redirect("/html/index.html");
-        })));
+            res.redirect("/blog");
+        }),
+        vector{{"GET"s}}));
+
+    root_router->add_router(sf_http_router::make_instance(
+        "/blog"s,
+        function([this](const sf_http_request &req, sf_http_response &res) {
+            read_blog(req, res);
+        }),
+        vector{{"GET"s}}));
 
     auto admin_router = sf_http_part_router::make_instance(
         "/admin"s, [this](const sf_http_request &req, sf_http_response &res) {
@@ -1428,4 +1436,33 @@ void blog_server::add_blog_label_bat(const sf_http_request &req,
         }
     }
     ret["code"] = 0;
+}
+
+void blog_server::read_blog(const sf_http_request &req, sf_http_response &res) {
+    sf_json ret;
+    sf_finally f([&res, &ret, this] {
+        res.set_body(to_byte_array(env.render_file(
+            sf_path_join(blog_config__.static_path, "html/index.html"s),
+            sf_json_to_nlo_json(ret))));
+    });
+
+    string url;
+    sf_http_param_t param;
+    string frame;
+    sf_parse_url(req.get_request_line().url, url, param, frame);
+    ret["type"] = 0;
+    ret["blog"] = sf_json();
+    sf_info(ret);
+    sf_json(to_json(param));
+    if (param.count("blog") != 0) {
+        ret["type"] = 1;
+        auto blog_id =
+            static_cast<int>(sf_string_to_long_double(param["blog"]));
+        auto data = database__->get_blog(blog_id);
+        if (!data) {
+            ret["type"] = 0;
+        } else {
+            ret["blog"] = to_json(*data);
+        }
+    }
 }

@@ -139,7 +139,7 @@
                                             icon: 0
                                         });
                                     } else {
-                                        layer.msg("操作成功", {
+                                        layer.msg("删除成功", {
                                             icon: 1
                                         });
                                         this_.init_blog_data();
@@ -231,7 +231,7 @@
                                                 icon: 0
                                             });
                                         } else {
-                                            layer.msg("修改成功", {
+                                            layer.msg("修改分组成功", {
                                                 icon: 1
                                             });
                                             this_.init_blog_data();
@@ -265,7 +265,7 @@
                                                 icon: 0
                                             });
                                         } else {
-                                            layer.msg("操作成功", {
+                                            layer.msg("批量修改分组成功", {
                                                 icon: 1
                                             });
                                             this_.init_blog_data();
@@ -343,8 +343,8 @@
                                         icon: 0
                                     });
                                 } else {
-                                    layer.msg("增加成功", {
-                                        icon: 0
+                                    layer.msg("增加标签成功", {
+                                        icon: 1
                                     });
                                     this_.init_blog_data();
                                 }
@@ -462,7 +462,7 @@
                                     });
                                     return false;
                                 } else {
-                                    layer.msg("修改成功", {
+                                    layer.msg("操作成功", {
                                         icon: 1
                                     });
                                     Vue.set(this_.blog_data[index], "top", new_value);
@@ -488,7 +488,7 @@
                                     });
                                     return false;
                                 } else {
-                                    layer.msg("修改成功", {
+                                    layer.msg("操作成功", {
                                         icon: 1
                                     });
                                     Vue.set(this_.blog_data[index], "hide", new_value);
