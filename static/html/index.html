@@ -316,7 +316,7 @@
 
                 let clip = new ClipboardJS("#share_btn", {
                     text: function() {
-                        let data = window.location.protocol + "://" + window.location.host + "/blog?blog=" + this_.current_blog.id;
+                        let data = window.location.protocol + "//" + window.location.host + "/blog?blog=" + this_.current_blog.id;
                         layui.use(["layer"], function() {
                             let layer = layui.layer;
                             layer.msg(data + "<br>链接已复制", {
