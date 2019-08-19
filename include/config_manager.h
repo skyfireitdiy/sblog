@@ -12,7 +12,7 @@ class config_manager
     bool inited__ = false;
 
     template <int N, typename... Args>
-    static std::enable_if_t<sizeof...(Args) - 1 != N, sf_json> get_value__(
+    static std::enable_if_t<sizeof...(Args) - 1 != N, sf_json> value__(
         const sf_json &root, const std::tuple<Args...> &keys,
         const sf_json &default_value = sf_json()) {
         auto key = std::get<N>(keys);
@@ -25,7 +25,7 @@ class config_manager
             } else if (root.size() <= t_key) {
                 return default_value;
             } else {
-                return get_value__<N + 1>(root.at(t_key), keys, default_value);
+                return value__<N + 1>(root.at(t_key), keys, default_value);
             }
         } else if (std::is_convertible_v<decltype(key), std::string>) {
             auto t_key = static_cast<std::string>(key);
@@ -34,13 +34,13 @@ class config_manager
             } else if (!root.has(t_key)) {
                 return default_value;
             } else {
-                return get_value__<N + 1>(root.at(t_key), keys, default_value);
+                return value__<N + 1>(root.at(t_key), keys, default_value);
             }
         }
     }
 
     template <int N, typename... Args>
-    static std::enable_if_t<sizeof...(Args) - 1 == N, sf_json> get_value__(
+    static std::enable_if_t<sizeof...(Args) - 1 == N, sf_json> value__(
         const sf_json &root, const std::tuple<Args...> &keys,
         const sf_json &default_value = sf_json()) {
         auto key = std::get<N>(keys);
@@ -75,14 +75,14 @@ class config_manager
         const T &key,
         const skyfire::sf_json &default_value = skyfire::sf_json()) const {
         std::tuple<T> keys = {key};
-        return get_value__<0>(config__, keys, default_value);
+        return value__<0>(config__, keys, default_value);
     }
 
     template <typename... Args>
     skyfire::sf_json value(
         const std::tuple<Args...> &keys,
         const skyfire::sf_json &default_value = skyfire::sf_json()) const {
-        return get_value__<0>(config__, keys, default_value);
+        return value__<0>(config__, keys, default_value);
     }
 
     [[nodiscard]] bool inited() const;

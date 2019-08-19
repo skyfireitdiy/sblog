@@ -40,7 +40,7 @@ class blog_server : public sf_make_instance_t<blog_server, sf_empty_class> {
 
     bool admin_check(const sf_http_request &req, sf_http_response &res);
 
-    void get_user_info(const sf_http_request &req, sf_http_response &res);
+    void user_info(const sf_http_request &req, sf_http_response &res);
 
     void set_base_info(const sf_http_request &req, sf_http_response &res);
 
@@ -50,9 +50,9 @@ class blog_server : public sf_make_instance_t<blog_server, sf_empty_class> {
 
     void setup_server(const sf_http_server_config &server_conf);
 
-    void get_group_info(const sf_http_request &req, sf_http_response &res);
+    void group_info(const sf_http_request &req, sf_http_response &res);
 
-    sf_json get_group_info();
+    sf_json group_info();
 
     void add_big_group(const sf_http_request &req, sf_http_response &res);
 
@@ -74,11 +74,11 @@ class blog_server : public sf_make_instance_t<blog_server, sf_empty_class> {
 
     void delete_label(const sf_http_request &req, sf_http_response &res);
 
-    void get_blog_list(const sf_http_request &req, sf_http_response &res);
+    void blog_list(const sf_http_request &req, sf_http_response &res);
 
     void get_blog(const sf_http_request &req, sf_http_response &res);
 
-    void get_draft_list(const sf_http_request &req, sf_http_response &res);
+    void draft_list(const sf_http_request &req, sf_http_response &res);
 
     void delete_draft_list(const sf_http_request &req, sf_http_response &res);
 

@@ -223,7 +223,7 @@
                     });
                 },
 
-                get_blog_content: function() {
+                blog_content: function() {
                     let this_ = this;
                     layui.use(["jquery", "layer"], function() {
                         let layer = layui.layer;
@@ -247,7 +247,7 @@
                     });
                 },
 
-                get_draft: function() {
+                draft: function() {
                     let this_ = this;
                     layui.use(["jquery", "layer"], function() {
                         let $ = layui.jquery;
@@ -272,7 +272,7 @@
                     });
                 },
 
-                get_draft_list: function() {
+                draft_list: function() {
                     let this_ = this;
                     layui.use(["jquery"], function() {
                         let $ = layui.jquery;
@@ -407,11 +407,11 @@
 
 
                         if (this_.type === 0) {
-                            this_.get_draft_list();
+                            this_.draft_list();
                         } else if (this_.type === 1) {
-                            this_.get_draft();
+                            this_.draft();
                         } else if (this_.type === 2) {
-                            this_.get_blog_content();
+                            this_.blog_content();
                         }
 
                     });

@@ -37,15 +37,15 @@ string hash_password(const std::string &password) {
 
 void database::insert_user(const admin_user &user) { storage__->insert(user); }
 
-vector<blog_big_group> database::get_all_big_group() {
+vector<blog_big_group> database::all_big_group() {
     return storage__->get_all<blog_big_group>();
 }
 
-vector<blog_sub_group> database::get_all_sub_group() {
+vector<blog_sub_group> database::all_sub_group() {
     return storage__->get_all<blog_sub_group>();
 }
 
-map<int, int> database::get_sub_group_blog_count() {
+map<int, int> database::sub_group_blog_count() {
     map<int, int> ret;
     auto data = storage__->select(columns(&blog::sub_group, count(&blog::id)),
                                   group_by(&blog::sub_group));
@@ -55,7 +55,7 @@ map<int, int> database::get_sub_group_blog_count() {
     return ret;
 }
 
-int database::get_sub_group_blog_count(int sub_group) {
+int database::sub_group_blog_count(int sub_group) {
     return storage__->count<blog>(where(c(&blog::sub_group) == sub_group));
 }
 
@@ -87,7 +87,7 @@ void database::insert_sub_group(const blog_sub_group &sub_group) {
     storage__->insert(sub_group);
 }
 
-int database::get_sub_group_count(int big_group) {
+int database::sub_group_count(int big_group) {
     return storage__->count<blog_sub_group>(
         where(c(&blog_sub_group::big_group) == big_group));
 }
@@ -108,11 +108,11 @@ void database::update_sub_group(const blog_sub_group &sub_group) {
     storage__->update(sub_group);
 }
 
-shared_ptr<blog_big_group> database::get_big_group(int id) {
+shared_ptr<blog_big_group> database::big_group(int id) {
     return storage__->get_pointer<blog_big_group>(id);
 }
 
-shared_ptr<blog_sub_group> database::get_sub_group(int id) {
+shared_ptr<blog_sub_group> database::sub_group(int id) {
     return storage__->get_pointer<blog_sub_group>(id);
 }
 
@@ -130,19 +130,19 @@ void database::insert_label(const label &lab) { storage__->insert(lab); }
 
 void database::delete_label(int id) { storage__->remove<label>(id); }
 
-vector<label> database::get_all_label() { return storage__->get_all<label>(); }
+vector<label> database::all_label() { return storage__->get_all<label>(); }
 
 shared_ptr<label> database::get_label(int id) {
     return storage__->get_pointer<label>(id);
 }
 
-vector<blog> database::get_all_blog() { return storage__->get_all<blog>(); }
+vector<blog> database::all_blog() { return storage__->get_all<blog>(); }
 
 shared_ptr<blog_content> database::get_blog_content(int id) {
     return storage__->get_pointer<blog_content>(id);
 }
 
-vector<label> database::get_blog_labels(int blog_id) {
+vector<label> database::blog_labels(int blog_id) {
     auto data = storage__->select(
         columns(&label::id, &label::label_name),
         join<blog_label>(on(c(&label::id) == &blog_label::label_id and
@@ -181,7 +181,7 @@ void database::update_blog_content(const blog_content &bc) {
     storage__->update(bc);
 }
 
-vector<draft> database::get_all_draft() { return storage__->get_all<draft>(); }
+vector<draft> database::all_draft() { return storage__->get_all<draft>(); }
 
 int database::insert_draft(const draft &df) { return storage__->insert(df); }
 
@@ -213,23 +213,23 @@ void database::delete_blog_label(int blog_id, int label_id) {
               c(&blog_label::blog_id) == blog_id));
 }
 
-vector<blog> database::get_top_blogs(int sub_group) {
+vector<blog> database::top_blogs(int sub_group) {
     return storage__->get_all<blog>(where(c(&blog::sub_group) == sub_group and
                                           c(&blog::hide) == 0 and
                                           c(&blog::top) == 1));
 }
 
-vector<blog> database::get_normal_blogs(int sub_group) {
+vector<blog> database::normal_blogs(int sub_group) {
     return storage__->get_all<blog>(where(c(&blog::sub_group) == sub_group and
                                           c(&blog::hide) == 0 and
                                           c(&blog::top) == 0));
 }
-vector<blog> database::get_top_blogs() {
+vector<blog> database::top_blogs() {
     return storage__->get_all<blog>(
         where(c(&blog::hide) == 0 and c(&blog::top) == 1));
 }
 
-vector<blog> database::get_normal_blogs() {
+vector<blog> database::normal_blogs() {
     return storage__->get_all<blog>(
         where(c(&blog::hide) == 0 and c(&blog::top) == 0));
 }

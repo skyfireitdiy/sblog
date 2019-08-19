@@ -136,7 +136,7 @@ class database : public sf_single_instance<database> {
     shared_ptr<blog_sub_group> check_sub_group(int ig_id,
                                                const string &group_name);
 
-    int get_sub_group_count(int big_group);
+    int sub_group_count(int big_group);
 
     void delete_big_group(int big_group);
 
@@ -146,13 +146,13 @@ class database : public sf_single_instance<database> {
 
     void insert_user(const admin_user &user);
 
-    vector<blog_big_group> get_all_big_group();
+    vector<blog_big_group> all_big_group();
 
-    vector<blog_sub_group> get_all_sub_group();
+    vector<blog_sub_group> all_sub_group();
 
-    map<int, int> get_sub_group_blog_count();
+    map<int, int> sub_group_blog_count();
 
-    int get_sub_group_blog_count(int sub_group);
+    int sub_group_blog_count(int sub_group);
 
     void insert_big_group(const blog_big_group &big_group);
 
@@ -162,9 +162,9 @@ class database : public sf_single_instance<database> {
 
     void update_sub_group(const blog_sub_group &sub_group);
 
-    shared_ptr<blog_big_group> get_big_group(int id);
+    shared_ptr<blog_big_group> big_group(int id);
 
-    shared_ptr<blog_sub_group> get_sub_group(int id);
+    shared_ptr<blog_sub_group> sub_group(int id);
 
     shared_ptr<label> check_label(const string &name);
 
@@ -174,15 +174,15 @@ class database : public sf_single_instance<database> {
 
     void delete_label(int id);
 
-    vector<label> get_all_label();
+    vector<label> all_label();
 
     shared_ptr<label> get_label(int id);
 
-    vector<blog> get_all_blog();
+    vector<blog> all_blog();
 
     shared_ptr<blog_content> get_blog_content(int id);
 
-    vector<label> get_blog_labels(int blog_id);
+    vector<label> blog_labels(int blog_id);
 
     void update_blog(const blog &b);
 
@@ -198,7 +198,7 @@ class database : public sf_single_instance<database> {
 
     void update_blog_content(const blog_content &bc);
 
-    vector<draft> get_all_draft();
+    vector<draft> all_draft();
 
     int insert_draft(const draft &df);
 
@@ -214,9 +214,9 @@ class database : public sf_single_instance<database> {
 
     void delete_blog_label(int blog_id, int label_id);
 
-    vector<blog> get_top_blogs(int sub_group);
+    vector<blog> top_blogs(int sub_group);
 
-    vector<blog> get_normal_blogs(int sub_group);
+    vector<blog> normal_blogs(int sub_group);
 
     void insert_blog_info(const blog_info &bi);
 
@@ -224,9 +224,9 @@ class database : public sf_single_instance<database> {
 
     shared_ptr<blog_info> get_blog_info();
 
-    vector<blog> get_top_blogs();
+    vector<blog> top_blogs();
 
-    vector<blog> get_normal_blogs();
+    vector<blog> normal_blogs();
 
     explicit database(const string &path);
 };
