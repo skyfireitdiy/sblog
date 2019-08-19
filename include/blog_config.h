@@ -8,6 +8,7 @@ using namespace std;
 struct blog_config {
     string db_path;
     string static_path;
+    string template_path;
 };
 
-SF_JSONIFY(blog_config, db_path, static_path)
+SF_JSONIFY(blog_config, db_path, static_path, template_path)

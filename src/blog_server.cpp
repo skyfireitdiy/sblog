@@ -1,6 +1,7 @@
 
 #include "blog_server.h"
 #include "blog_config.h"
+#include "core/sf_stdc++.h"
 #include "database.h"
 #include "network/sf_http_part_router.hpp"
 #include "network/sf_websocket_router.hpp"
@@ -37,8 +38,8 @@ blog_server::blog_server(const std::string &config_file_path) {
 
     from_json(blog_json_config, blog_config__);
 
-    database__ = database::instance(
-        sf_path_join(blog_config__.db_path, "database.db3"s));
+    database__ =
+        database::instance((fs::path(blog_config__.db_path) / "database.db3"s));
     if (database__->check_user_empty()) {
         auto default_user_json = config__->value("default_user"s);
         if (default_user_json.is_null()) {
@@ -1070,7 +1071,7 @@ void blog_server::editor(const sf_http_request &req, sf_http_response &res) {
             sf_json ret;
             ret["data"] = data;
             auto result = env.render_file(
-                sf_path_join(blog_config__.static_path, "html/editor.html"s),
+                fs::path(blog_config__.template_path) / "html/editor.html"s,
                 sf_json_to_nlo_json(ret));
             res.set_html(result);
         }
@@ -1427,7 +1428,7 @@ void blog_server::read_blog(const sf_http_request &req, sf_http_response &res) {
     sf_json ret;
     sf_finally f([&res, &ret, this] {
         res.set_html(env.render_file(
-            sf_path_join(blog_config__.static_path, "html/index.html"s),
+            fs::path(blog_config__.template_path) / "html/index.html"s,
             sf_json_to_nlo_json(ret)));
     });
 

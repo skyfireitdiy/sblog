@@ -10,6 +10,7 @@
     },
     "blog": {
         "static_path": "./static",
+        "template_path: "./template",
         "db_path": "./db"
     },
     "default_user": {
