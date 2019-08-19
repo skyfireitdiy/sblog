@@ -1,6 +1,7 @@
 #!/bin/bash
 set -e
 mkdir -p /opt/my_blog/db
+mkdir -p /opt/my_blog/file
 cd /opt/my_blog/
 rm -rf build blog_server
 mkdir build
