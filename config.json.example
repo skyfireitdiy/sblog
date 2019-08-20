@@ -10,8 +10,9 @@
     },
     "blog": {
         "static_path": "./static",
-        "template_path: "./template",
-        "db_path": "./db"
+        "template_path": "./template",
+        "db_path": "./db",
+        "uploaded_file_path": "./file"
     },
     "default_user": {
         "name": "admin",

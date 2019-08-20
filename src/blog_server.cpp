@@ -420,6 +420,13 @@ void blog_server::setup_server(const sf_http_server_config &server_conf) {
         }),
         vector{{"POST"s}}));
 
+    admin_api_router->add_router(sf_http_router::make_instance(
+        "/uploaded_file_list"s,
+        function([this](const sf_http_request &req, sf_http_response &res) {
+            uploaded_file_list(req, res);
+        }),
+        vector{{"GET"s}}));
+
     admin_router->add_router(admin_api_router);
 
     server__->add_router(root_router);
@@ -1446,6 +1453,21 @@ void blog_server::read_blog(const sf_http_request &req, sf_http_response &res) {
             ret["type"] = 0;
         } else {
             ret["blog"] = to_json(*data);
+        }
+    }
+}
+
+void blog_server::uploaded_file_list(const sf_http_request &req,
+                                     sf_http_response &res) {
+    sf_json ret;
+    sf_finally f([&res, &ret] { res.set_json(ret); });
+    ret["code"] = 0;
+    ret["data"] = sf_json();
+    ret["data"].convert_to_array();
+    for (auto &p :
+         fs::recursive_directory_iterator(blog_config__.uploaded_file_path)) {
+        if (!fs::is_directory(p.path())) {
+            ret["data"].append(sf_json(string(p.path())));
         }
     }
 }
