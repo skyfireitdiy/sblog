@@ -58,15 +58,35 @@
             </div>
         </form>
         <div class="layui-row" style="height:80%; margin:0;">
-            <div class="layui-col-md5" style="height: 100%;">
+            <div class="layui-col-md4" style="height: 100%;">
                 <pre id="editor"></pre>
             </div>
             <div class="layui-col-md5" style="overflow: hidden; height: 100%;">
                 <iframe id="html_content" src="/admin/html/show_blog.html" style="width:100%; height: 100%;"></iframe>
 
             </div>
-            <div class="layui-col-md2" style="min-height:100%; background: linen">
-
+            <div class="layui-col-md3" style="height:100%; overflow:scroll;">
+                <div>
+                    <table class=layui-table>
+                        <colgroup>
+                            <col>
+                            <col>
+                        </colgroup>
+                        <thead>
+                            <td>文件路径</td>
+                            <td>操作</td>
+                        </thead>
+                        <tbody>
+                            <tr v-for="item in files">
+                                <td>{{item}}</td>
+                                <td>
+                                    <button class="copy_link layui-btn layui-btn-normal layui-btn-sm layui-btn-radius" :data="item">复制链接</button>
+                                    <a :href="item"><button class="layui-btn layui-btn-sm layui-btn-radius">下载</button></a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -75,7 +95,7 @@
     <script src="https://cdn.bootcss.com/ace/1.4.5/ext-language_tools.js"></script>
     <script src="https://cdn.bootcss.com/ace/1.4.5/ext-emmet.js"></script>
     <script src="https://cdn.bootcss.com/ace/1.4.5/ext-elastic_tabstops_lite.js"></script>
-
+    <script src="https://cdn.jsdelivr.net/npm/clipboard@2/dist/clipboard.min.js"></script>
     <script src="https://cdn.bootcss.com/vue/2.6.10/vue.min.js"></script>
 
     <script src="https://cdn.bootcss.com/showdown/1.9.0/showdown.min.js"></script>
@@ -319,6 +339,29 @@
                     });
                 },
 
+
+                file_list: function() {
+                    let this_ = this;
+                    layui.use(["jquery", "layer"], function() {
+                        let $ = layui.jquery;
+                        let layer = layui.layer;
+                        $.ajax({
+                            url: "/admin/api/uploaded_file_list",
+                            method: "GET",
+                            success: function(res) {
+                                if (res.code !== 0) {
+                                    layer.msg(res.msg, {
+                                        icon: 0
+                                    });
+                                } else {
+                                    this_.files = res.data;
+                                }
+                            }
+                        });
+                    });
+                },
+
+
                 init_data: function() {
                     let this_ = this;
                     layui.use(["form", "element", "layer", "jquery"], function() {
@@ -404,6 +447,29 @@
                             useElasticTabstops: true
                         });
 
+                        window.setInterval(function() {
+                            let this_ = this;
+                            layui.use(["jquery"], function() {
+                                $.ajax({
+                                    url: "/admin/api/heart_beat",
+                                    method: "GET"
+                                });
+                            });
+                        }, 60 * 1000);
+
+
+                        this_.file_list();
+
+                        let clip = new ClipboardJS(".copy_link", {
+                            text: function(trigger) {
+                                layui.use(["layer"], function() {
+                                    layer.msg("链接已复制", {
+                                        icon: 1
+                                    });
+                                });
+                                return trigger.getAttribute("data");
+                            }
+                        });
 
 
                         if (this_.type === 0) {

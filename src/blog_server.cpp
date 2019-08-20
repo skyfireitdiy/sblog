@@ -94,6 +94,9 @@ void blog_server::setup_server(const sf_http_server_config &server_conf) {
         });
     root_router->add_router(
         sf_static_router::make_instance(blog_config__.static_path));
+    root_router->add_router(
+        sf_static_router::make_instance(blog_config__.uploaded_file_path));
+
     root_router->add_router(sf_http_router::make_instance(
         "/"s,
         function([this](const sf_http_request &req, sf_http_response &res) {
@@ -424,6 +427,13 @@ void blog_server::setup_server(const sf_http_server_config &server_conf) {
         "/uploaded_file_list"s,
         function([this](const sf_http_request &req, sf_http_response &res) {
             uploaded_file_list(req, res);
+        }),
+        vector{{"GET"s}}));
+
+    admin_api_router->add_router(sf_http_router::make_instance(
+        "/heart_beat"s,
+        function([this](const sf_http_request &req, sf_http_response &res) {
+            heart_beat(req, res);
         }),
         vector{{"GET"s}}));
 
@@ -1105,6 +1115,9 @@ void blog_server::editor(const sf_http_request &req, sf_http_response &res) {
     data["title"] = "";
     data["auto_save_flag"] = false;
     data["timer"] = sf_json();
+    data["files"] = sf_json();
+
+    data["files"].convert_to_array();
 
     // 添加新文章
     if (type == 0) {
@@ -1464,10 +1477,21 @@ void blog_server::uploaded_file_list(const sf_http_request &req,
     ret["code"] = 0;
     ret["data"] = sf_json();
     ret["data"].convert_to_array();
-    for (auto &p :
-         fs::recursive_directory_iterator(blog_config__.uploaded_file_path)) {
+    auto file_path = blog_config__.uploaded_file_path;
+    auto prefix_len = file_path.size();
+
+    for (auto &p : fs::recursive_directory_iterator(file_path)) {
         if (!fs::is_directory(p.path())) {
-            ret["data"].append(sf_json(string(p.path())));
+            auto t = string(p.path()).substr(prefix_len);
+            sf_string_replace(t, "\\", "/");
+            ret["data"].append(sf_json(t));
         }
     }
+}
+
+void blog_server::heart_beat(const sf_http_request &req,
+                             sf_http_response &res) {
+    sf_json ret;
+    ret["code"] = 0;
+    res.set_json(ret);
 }
