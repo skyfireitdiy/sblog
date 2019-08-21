@@ -437,6 +437,13 @@ void blog_server::setup_server(const sf_http_server_config &server_conf) {
         }),
         vector{{"GET"s}}));
 
+    admin_api_router->add_router(sf_http_router::make_instance(
+        "/upload_file"s,
+        function([this](const sf_http_request &req, sf_http_response &res) {
+            upload_file(req, res);
+        }),
+        vector{{"POST"s}}));
+
     admin_router->add_router(admin_api_router);
 
     server__->add_router(root_router);
@@ -1494,4 +1501,48 @@ void blog_server::heart_beat(const sf_http_request &req,
     sf_json ret;
     ret["code"] = 0;
     res.set_json(ret);
+}
+
+void blog_server::upload_file(const sf_http_request &req,
+                              sf_http_response &res) {
+    sf_json ret;
+    sf_finally f([&res, &ret] { res.set_json(ret); });
+    if (!req.is_multipart_data()) {
+        ret["code"] = 1;
+        ret["msg"] = "param error";
+        return;
+    }
+    auto mul_ctx = req.multipart_data_context();
+    auto mul = mul_ctx.multipart;
+    for (auto &p : mul) {
+        auto h = p.header().header();
+        if (h.count("Content-Disposition") != 0) {
+            auto cd = h["Content-Disposition"];
+            sf_http_param_t param;
+            auto sp = sf_split_string(cd, ";");
+            for (auto hd : sp) {
+                hd = sf_string_trim(hd);
+                auto x = sf_split_string(hd, "=");
+                if (x.size() == 2 && x[1].size() > 1) {
+                    param[x[0]] = x[1].substr(1, x[1].size() - 2);
+                }
+            }
+            // TODO 此处应该需要一个转换安装文件名的函数
+            if (param.count("filename") != 0) {
+                auto new_file_name =
+                    fs::path(blog_config__.uploaded_file_path) /
+                    param["filename"];
+                if (fs::exists(new_file_name)) {
+                    new_file_name =
+                        fs::path(blog_config__.uploaded_file_path) /
+                        (sf_random::instance()->uuid_str() + param["filename"]);
+                }
+                std::error_code ec;
+                fs::copy(p.filename(), new_file_name, ec);
+            }
+        }
+        std::error_code ec;
+        fs::remove(p.filename(), ec);
+    }
+    ret["code"] = 0;
 }

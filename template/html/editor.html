@@ -55,6 +55,10 @@
                 <button @click="publish();" class="layui-btn layui-btn-green" type="button">发布</button>
                 <button type="button" @click="save_draft();" class="layui-btn layui-btn-normal">保存为草稿</button>
                 <input lay-ignore type="checkbox" v-model="auto_save_flag" @change="auto_save_draft();">自动保存</button>
+                <button type="button" class="layui-btn" id="choose_file">
+                    <i class="layui-icon">&#xe67c;</i>选择文件
+                </button>
+                <button type="button" class="layui-btn" id="upload">上传</button>
             </div>
         </form>
         <div class="layui-row" style="height:80%; margin:0;">
@@ -78,10 +82,10 @@
                         </thead>
                         <tbody>
                             <tr v-for="item in files">
-                                <td>{{item}}</td>
+                                <td class="copy_link" :data="item">{{item}}</td>
                                 <td>
-                                    <button class="copy_link layui-btn layui-btn-normal layui-btn-sm layui-btn-radius" :data="item">复制链接</button>
-                                    <a :href="item"><button class="layui-btn layui-btn-sm layui-btn-radius">下载</button></a>
+                                    <a :href="item"><button
+                                            class="layui-btn layui-btn-sm layui-btn-radius">下载</button></a>
                                 </td>
                             </tr>
                         </tbody>
@@ -364,11 +368,12 @@
 
                 init_data: function() {
                     let this_ = this;
-                    layui.use(["form", "element", "layer", "jquery"], function() {
+                    layui.use(["form", "element", "layer", "jquery", "upload"], function() {
                         let form = layui.form;
                         let $ = layui.jquery;
                         let layer = layui.layer;
                         let element = layui.element;
+                        let upload = layui.upload;
                         this_.converter = new showdown.Converter();
 
                         let draft_data = null;
@@ -467,7 +472,42 @@
                                         icon: 1
                                     });
                                 });
-                                return trigger.getAttribute("data");
+                                return window.location.protocol + "//" + window.location.host + trigger.getAttribute("data");
+                            }
+                        });
+
+
+                        upload.render({
+                            elem: "#choose_file",
+                            url: "/admin/api/upload_file",
+                            method: "POST",
+                            accept: "file",
+                            auto: false,
+                            bindAction: "#upload",
+                            multiple: true,
+                            drag: true,
+                            before: function() {
+                                layer.load();
+                            },
+                            done: function(res, index, upload) {
+                                layer.closeAll("loading");
+                                if (res.code !== 0) {
+                                    layer.msg(res.msg, {
+                                        icon: 0
+                                    });
+                                } else {
+                                    layer.msg("上传成功", {
+                                        icon: 1
+                                    });
+                                    this_.file_list();
+                                }
+                            },
+                            error: function(index, upload) {
+                                layer.closeAll("loading");
+                                layer.msg("上传失败", {
+                                    icon: 0
+                                });
+                                this_.file_list();
                             }
                         });
 
