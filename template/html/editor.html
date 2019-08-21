@@ -82,10 +82,12 @@
                         </thead>
                         <tbody>
                             <tr v-for="item in files">
-                                <td class="copy_link" :data="item">{{item}}</td>
+                                <td style="word-break: break-all; word-wrap:break-word;" class="copy_link" :data="item">{{item}}</td>
                                 <td>
-                                    <a :href="item"><button
-                                            class="layui-btn layui-btn-sm layui-btn-radius">下载</button></a>
+                                    <a :href="item">
+                                        <img src="/img/download.png">
+                                    </a>
+                                    <img src="/img/delete.png" @click="delete_file(item)">
                                 </td>
                             </tr>
                         </tbody>
@@ -145,13 +147,6 @@
                             });
                             return false;
                         }
-                        console.log({
-                            draft_id: this_.draft_id,
-                            blog_id: this_.blog_id,
-                            title: this_.title,
-                            content: this_.editor.getValue(),
-                            sub_group: this_.sub_group
-                        })
                         $.ajax({
                             url: "/admin/api/blog",
                             method: "POST",
@@ -175,10 +170,7 @@
                                 }
                             }
                         });
-
                     });
-
-
                 },
 
                 on_set_draft_data: function(index) {
@@ -365,6 +357,35 @@
                     });
                 },
 
+                delete_file: function(url) {
+                    let this_ = this;
+                    layui.use(["jquery", "layer"], function() {
+                        let $ = layui.jquery;
+                        let layer = layui.layer;
+                        layer.confirm("确认删除文件" + url + "吗？", function() {
+                            $.ajax({
+                                url: "/admin/api/file",
+                                method: "delete",
+                                data: {
+                                    path: url
+                                },
+                                success: function(res) {
+                                    if (res.code !== 0) {
+                                        layer.msg(res.msg, {
+                                            icon: 0
+                                        });
+                                    } else {
+                                        layer.msg("删除成功", {
+                                            icon: 1
+                                        });
+                                        this_.file_list();
+                                    }
+                                }
+                            });
+                        });
+                    });
+                },
+
 
                 init_data: function() {
                     let this_ = this;
@@ -472,7 +493,7 @@
                                         icon: 1
                                     });
                                 });
-                                return window.location.protocol + "//" + window.location.host + trigger.getAttribute("data");
+                                return trigger.getAttribute("data");
                             }
                         });
 
@@ -526,10 +547,10 @@
             mounted: function() {
                 let this_ = this;
                 on_set_draft_data = this.on_set_draft_data;
-                console.log(this.group_data);
+
                 let empty_flag = true;
                 for (let k in this.group_data) {
-                    console.log(this.group_data[k]);
+
                     if (this.group_data[k].sub_group.length !== 0) {
                         empty_flag = false;
                         break;

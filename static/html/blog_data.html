@@ -398,8 +398,8 @@
 
                     calc_labels: function(index) {
                         let ret = JSON.parse(JSON.stringify(this.labels));
-                        console.log("ret1", ret);
-                        console.log("labels", this.blog_data[index].labels);
+
+
                         for (let i = ret.length - 1; i >= 0; --i) {
                             let flag = false;
                             for (let k in this.blog_data[index].labels) {
@@ -412,7 +412,7 @@
                                 ret.splice(i, 1);
                             }
                         }
-                        console.log("ret2", ret);
+
                         return ret;
                     },
                     edit_blog: function(index) {

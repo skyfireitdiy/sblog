@@ -444,6 +444,13 @@ void blog_server::setup_server(const sf_http_server_config &server_conf) {
         }),
         vector{{"POST"s}}));
 
+    admin_api_router->add_router(sf_http_router::make_instance(
+        "/file"s,
+        function([this](const sf_http_request &req, sf_http_response &res) {
+            delete_file(req, res);
+        }),
+        vector{{"DELETE"s}}));
+
     admin_router->add_router(admin_api_router);
 
     server__->add_router(root_router);
@@ -1529,13 +1536,13 @@ void blog_server::upload_file(const sf_http_request &req,
             }
             // TODO 此处应该需要一个转换安装文件名的函数
             if (param.count("filename") != 0) {
+                auto safe_file_name = sf_safe_path(param["filename"]);
                 auto new_file_name =
-                    fs::path(blog_config__.uploaded_file_path) /
-                    param["filename"];
+                    fs::path(blog_config__.uploaded_file_path) / safe_file_name;
                 if (fs::exists(new_file_name)) {
                     new_file_name =
                         fs::path(blog_config__.uploaded_file_path) /
-                        (sf_random::instance()->uuid_str() + param["filename"]);
+                        (sf_random::instance()->uuid_str() + safe_file_name);
                 }
                 std::error_code ec;
                 fs::copy(p.filename(), new_file_name, ec);
@@ -1543,6 +1550,27 @@ void blog_server::upload_file(const sf_http_request &req,
         }
         std::error_code ec;
         fs::remove(p.filename(), ec);
+    }
+    ret["code"] = 0;
+}
+
+void blog_server::delete_file(const sf_http_request &req,
+                              sf_http_response &res) {
+    sf_json ret;
+    sf_finally f([&res, &ret] { res.set_json(ret); });
+    auto param = req.body_params();
+    if (!check_param(param, {"path"})) {
+        ret["code"] = 1;
+        ret["msg"] = "param error";
+        return;
+    }
+    auto path = sf_safe_path(param["path"]);
+    std::error_code ec;
+    fs::remove(fs::path(blog_config__.uploaded_file_path) / path, ec);
+    if (ec.value() != 0) {
+        ret["code"] = 1;
+        ret["msg"] = ec.message();
+        return;
     }
     ret["code"] = 0;
 }
