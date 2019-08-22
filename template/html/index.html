@@ -57,8 +57,8 @@
                 </ul>
             </div>
             <div style="height: 3%" class="layui-bg-black">
-                <img src="/img/list.png" width="20px" @click="show_blog_list()">
-                <div v-if="current_blog" style="text-align: center">
+                <img src="/img/list.png" width="20px" class="float_btn" @click="show_blog_list()">
+                <div v-if="current_blog" style="text-align: center; padding: 0; margin: 0">
                     标题： {{current_blog.title}} &nbsp;&nbsp; 发布时间：{{current_blog.publish_time}}&nbsp;&nbsp; 阅读数量： {{current_blog.watch_number}}&nbsp;&nbsp; 标签： <span v-for="lb in labels">
                         {{lb.label_name}}&nbsp;
                     </span>
