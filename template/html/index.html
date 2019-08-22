@@ -56,7 +56,7 @@
                     </li>
                 </ul>
             </div>
-            <div style="height: 3%" class="layui-bg-black">
+            <div style="height: 4%" class="layui-bg-black">
                 <img src="/img/list.png" width="20px" class="float_btn" @click="show_blog_list()">
                 <div v-if="current_blog" style="text-align: center; padding: 0; margin: 0">
                     标题： {{current_blog.title}} &nbsp;&nbsp; 发布时间：{{current_blog.publish_time}}&nbsp;&nbsp; 阅读数量： {{current_blog.watch_number}}&nbsp;&nbsp; 标签： <span v-for="lb in labels">
@@ -65,7 +65,7 @@
                     <img style="margin: 10px; border: thin black solid; border-radius: 3px;" height="20px;" id="share_btn" src="img/share.png">
                 </div>
             </div>
-            <div style="height: 97%; overflow:hidden;">
+            <div style="height: 96%; overflow:hidden;">
                 <iframe @load="on_content_load_finished();" id="html_content" src="/html/show_blog.html" class="v_h"></iframe>
             </div>
         </div>
