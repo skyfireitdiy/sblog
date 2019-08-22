@@ -33,14 +33,15 @@
                     <col>
                 </colgroup>
                 <thead>
-                    <td>标签&nbsp;&nbsp;<button class="layui-btn layui-btn-green layui-btn-sm layui-btn-radius" @click="add_label();">新增标签</button></td>
+                    <td>标签&nbsp;&nbsp;<img style="margin: 10px; border: thin black solid; border-radius: 3px;" src="/img/new.png" width="20px" @click="add_label();" title="新增标签"></td>
                     <td>操作</td>
                 </thead>
                 <tr v-for="label in label_info">
-                    <td>{{label.label_name}}</td>
+                    <td>{{label.label_name}}
+                    </td>
                     <td>
-                        <button class="layui-btn layui-btn-normal" @click="rename_label(label.id, label.label_name);">重命名</button>
-                        <button class="layui-btn layui-btn-danger" @click="delete_label(label.id, label.label_name)">删除</button>
+                        <img style="margin: 10px; border: thin black solid; border-radius: 3px;" src="/img/edit.png" width="20px" @click="rename_label(label.id, label.label_name);" title="重命名">
+                        <img style="margin: 10px; border: thin black solid; border-radius: 3px;" src="/img/delete.png" width="20px" @click="delete_label(label.id, label.label_name)" title="删除">
                     </td>
                 </tr>
             </table>

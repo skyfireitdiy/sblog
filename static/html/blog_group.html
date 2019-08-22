@@ -33,15 +33,13 @@
                     <col>
                 </colgroup>
                 <thead>
-                    <td>主分组&nbsp;&nbsp;<button class="layui-btn layui-btn-green layui-btn-sm layui-btn-radius" @click="add_big_group();">添加主分组</button></td>
-                    <td>操作</td>
+                    <td>主分组&nbsp;&nbsp;<img style="margin: 10px; border: thin black solid; border-radius: 3px;" src="/img/new.png" @click="add_big_group();" width=20px title="添加主分组"></td>
                     <td>子分组</td>
                 </thead>
                 <tr v-for="big_group in group_info">
-                    <td>{{big_group.group_name}}</td>
-                    <td>
-                        <button class="layui-btn layui-btn-normal" @click="rename_big_group(big_group.id, big_group.group_name);">重命名</button>
-                        <button class="layui-btn layui-btn-danger" v-if="big_group.sub_group.length === 0" @click="delete_big_group(big_group.id, big_group.group_name);">删除</button>
+                    <td>{{big_group.group_name}}
+                        <img style="margin: 10px; border: thin black solid; border-radius: 3px;" src="/img/edit.png" width="20px" @click="rename_big_group(big_group.id, big_group.group_name);" titlte="编辑主分组">
+                        <img style="margin: 10px; border: thin black solid; border-radius: 3px;" src="/img/delete.png" width="20px;" v-if="big_group.sub_group.length === 0" @click="delete_big_group(big_group.id, big_group.group_name);" title="删除主分组">
                     </td>
                     <td>
                         <table class="layui-table">
@@ -50,18 +48,18 @@
                                 <col>
                             </colgroup>
                             <thead>
-                                <td>分组名 &nbsp;&nbsp;<button class="layui-btn layui-btn-green layui-btn-sm layui-btn-radius" @click="add_sub_group(big_group.id, big_group.group_name);">添加子分组</button>
+                                <td>分组名 &nbsp;&nbsp;<img style="margin: 10px; border: thin black solid; border-radius: 3px;" src="/img/new.png" width="20px;" @click="add_sub_group(big_group.id, big_group.group_name);" title="添加子分组">
                                 </td>
                                 <td>博客数量</td>
-                                <td>操作</td>
                             </thead>
                             <tr v-for="sub_group in big_group.sub_group">
-                                <td>{{sub_group.group_name}}</td>
-                                <td>{{sub_group.blog_count}}</td>
                                 <td>
-                                    <button class="layui-btn layui-btn-normal" @click="rename_sub_group(big_group.id, big_group.group_name, sub_group.id, sub_group.group_name)">重命名</button>
-                                    <button class="layui-btn layui-btn-danger" v-if="sub_group.blog_count === 0" @click="delete_sub_group(big_group.id, big_group.group_name, sub_group.id, sub_group.group_name);">删除</button>
+                                    {{sub_group.group_name}}
+
+                                    <img style="margin: 10px; border: thin black solid; border-radius: 3px;" src="/img/edit.png" width="20px" @click="rename_sub_group(big_group.id, big_group.group_name, sub_group.id, sub_group.group_name)" title="编辑子分组">
+                                    <img style="margin: 10px; border: thin black solid; border-radius: 3px;" src="/img/delete.png" width="20px" v-if="sub_group.blog_count === 0" @click="delete_sub_group(big_group.id, big_group.group_name, sub_group.id, sub_group.group_name);" title="删除子分组">
                                 </td>
+                                <td>{{sub_group.blog_count}}</td>
                             </tr>
                         </table>
                     </td>

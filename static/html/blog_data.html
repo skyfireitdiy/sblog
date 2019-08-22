@@ -17,14 +17,14 @@
     <div id="app" v-cloak>
 
         <div>
-            <button class="layui-btn" @click="add_new_blog();">发布新文章</button>
-            <button class="layui-btn" @click="set_top_bat(true);">批量置顶</button>
-            <button class="layui-btn" @click="set_top_bat(false);">批量取消置顶</button>
-            <button class="layui-btn" @click="set_hide_bat(true);">批量隐藏</button>
-            <button class="layui-btn" @click="set_hide_bat(false);">批量取消隐藏</button>
-            <button class="layui-btn" @click="delete_blog_bat();">批量删除</button>
-            <button class="layui-btn" @click="update_blog_group_bat();">批量修改分类</button>
-            <button class="layui-btn" @click="add_blog_label_bat();">批量添加标签</button>
+            <img style="margin: 10px; border: thin black solid; border-radius: 3px;" width="32px" src="/img/new.png" title="编写新博客" @click="add_new_blog();">
+            <img style="margin: 10px; border: thin black solid; border-radius: 3px;" width="32px" src="/img/set_top.png" title="批量置顶" @click="set_top_bat(true);">
+            <img style="margin: 10px; border: thin black solid; border-radius: 3px;" width="32px" src="/img/unset_top.png" title="批量取消置顶" @click="set_top_bat(false);">
+            <img style="margin: 10px; border: thin black solid; border-radius: 3px;" width="32px" src="/img/hide.png" title="批量隐藏" @click="set_hide_bat(true);">
+            <img style="margin: 10px; border: thin black solid; border-radius: 3px;" width="32px" src="/img/show.png" title="批量取消隐藏" @click="set_hide_bat(false);">
+            <img style="margin: 10px; border: thin black solid; border-radius: 3px;" width="32px" src="/img/delete.png" title="批量删除" @click="delete_blog_bat();">
+            <img style="margin: 10px; border: thin black solid; border-radius: 3px;" width="32px" src="/img/group.png" title="批量修改分类" @click="update_blog_group_bat();">
+            <img style="margin: 10px; border: thin black solid; border-radius: 3px;" width="32px" src="/img/label.png" title="批量添加标签" @click="add_blog_label_bat();">
             <br><br>
             <table class="layui-table">
                 <colgroup>
@@ -59,7 +59,7 @@
                     </td>
                     <td>
                         {{art.big_group.group_name}} - {{art.sub_group.group_name}}
-                        <button class="layui-btn layui-btn-normal layui-btn-radius" @click=change_group(index);>修改</button>
+                        <img style="margin: 10px; border: thin black solid; border-radius: 3px;" width="20px" src="/img/group.png" title="修改" @click=change_group(index);>
                     </td>
 
                     <td style="text-align: left">
@@ -68,14 +68,14 @@
                             <button @click="delete_label(index, lab.id)" class="layui-btn layui-btn-sm layui-btn-radius">x</button>
                         </div>
                         <div v-show="calc_labels(index).length !== 0">
-                            <button class="layui-btn layui-btn-normal layui-btn-radius" @click="prepare_add_label(index);"> 增加标签 </button>
+                            <img style="margin: 10px; border: thin black solid; border-radius: 3px;" width="20px" src="/img/label.png" title="增加标签" @click="prepare_add_label(index);">
                         </div>
                     </td>
                     <td><input type="checkbox" class="layui-checkbox" @click="set_hide(index);" :checked="art.hide">
                     </td>
                     <td>
-                        <button class="layui-btn" @click="delete_blog(index, art.title);">删除</button>
-                        <button class="layui-btn" @click="edit_blog(index);">编辑</button>
+                        <img style="margin: 10px; border: thin black solid; border-radius: 3px;" title="删除" src="/img/delete.png" width="20px" @click="delete_blog(index, art.title);">
+                        <img style="margin: 10px; border: thin black solid; border-radius: 3px;" title="编辑" src="/img/edit.png" width="20px" @click="edit_blog(index);">
                     </td>
                 </tr>
             </table>

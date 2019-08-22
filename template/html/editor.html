@@ -52,13 +52,13 @@
                 </select>
             </div>
             <div class=layui-form-item>
-                <button @click="publish();" class="layui-btn layui-btn-green" type="button">发布</button>
-                <button type="button" @click="save_draft();" class="layui-btn layui-btn-normal">保存为草稿</button>
+
+
+                <img style="margin: 10px; border: thin black solid; border-radius: 3px;" src="/img/browse.png" width="32px" title="浏览文件" id="choose_file">
+                <img style="margin: 10px; border: thin black solid; border-radius: 3px;" src="/img/upload.png" id="upload" title="上传">
+                <img style="margin: 10px; border: thin black solid; border-radius: 3px;" src="/img/draft.png" width="32px" @click="save_draft();" title="保存为草稿">
+                <img style="margin: 10px; border: thin black solid; border-radius: 3px;" src="/img/publish.png" @click="publish();" width="32px" title="发布">
                 <input lay-ignore type="checkbox" v-model="auto_save_flag" @change="auto_save_draft();">自动保存</button>
-                <button type="button" class="layui-btn" id="choose_file">
-                    <i class="layui-icon">&#xe67c;</i>选择文件
-                </button>
-                <button type="button" class="layui-btn" id="upload">上传</button>
             </div>
         </form>
         <div class="layui-row" style="height:80%; margin:0;">
@@ -82,12 +82,14 @@
                         </thead>
                         <tbody>
                             <tr v-for="item in files">
-                                <td style="word-break: break-all; word-wrap:break-word;" class="copy_link" :data="item">{{item}}</td>
+                                <td style="word-break: break-all; word-wrap:break-word;">
+                                    <a :href="'/file'+item" target="_blank">{{item}}</a>
+                                </td>
                                 <td>
-                                    <a :href="item">
-                                        <img src="/img/download.png">
+                                    <a class="copy_link" :data="item">
+                                        <img style="margin: 10px; border: thin black solid; border-radius: 3px;" width="20px" src="/img/copy.png">
                                     </a>
-                                    <img src="/img/delete.png" @click="delete_file(item)">
+                                    <img style="margin: 10px; border: thin black solid; border-radius: 3px;" width=20px src="/img/delete.png" @click="delete_file(item)">
                                 </td>
                             </tr>
                         </tbody>
@@ -493,7 +495,7 @@
                                         icon: 1
                                     });
                                 });
-                                return trigger.getAttribute("data");
+                                return encodeURI("/file/" + trigger.getAttribute("data"));
                             }
                         });
 

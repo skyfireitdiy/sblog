@@ -94,8 +94,6 @@ void blog_server::setup_server(const sf_http_server_config &server_conf) {
         });
     root_router->add_router(
         sf_static_router::make_instance(blog_config__.static_path));
-    root_router->add_router(
-        sf_static_router::make_instance(blog_config__.uploaded_file_path));
 
     root_router->add_router(sf_http_router::make_instance(
         "/"s,
@@ -110,6 +108,16 @@ void blog_server::setup_server(const sf_http_server_config &server_conf) {
             read_blog(req, res);
         }),
         vector{{"GET"s}}));
+
+    auto file_router = sf_http_part_router::make_instance(
+        "/file"s, [this](const sf_http_request &req, sf_http_response &res) {
+            return true;
+        });
+
+    file_router->add_router(
+        sf_static_router::make_instance(blog_config__.uploaded_file_path));
+
+    root_router->add_router(file_router);
 
     auto admin_router = sf_http_part_router::make_instance(
         "/admin"s, [this](const sf_http_request &req, sf_http_response &res) {
@@ -1496,8 +1504,7 @@ void blog_server::uploaded_file_list(const sf_http_request &req,
 
     for (auto &p : fs::recursive_directory_iterator(file_path)) {
         if (!fs::is_directory(p.path())) {
-            auto t = string(p.path()).substr(prefix_len);
-            sf_string_replace(t, "\\", "/");
+            auto t = string(p.path().filename());
             ret["data"].append(sf_json(t));
         }
     }

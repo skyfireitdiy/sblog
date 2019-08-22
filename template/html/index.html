@@ -57,12 +57,12 @@
                 </ul>
             </div>
             <div style="height: 3%" class="layui-bg-black">
-                <button @click="show_blog_list()" class="layui-btn layui-btn-sm layui-btn-warm layui-btn-radius float_btn">+</button>
+                <img src="/img/list.png" width="20px" @click="show_blog_list()">
                 <div v-if="current_blog" style="text-align: center">
                     标题： {{current_blog.title}} &nbsp;&nbsp; 发布时间：{{current_blog.publish_time}}&nbsp;&nbsp; 阅读数量： {{current_blog.watch_number}}&nbsp;&nbsp; 标签： <span v-for="lb in labels">
                         {{lb.label_name}}&nbsp;
                     </span>
-                    <img height="20px;" id="share_btn" src="img/share.png">
+                    <img style="margin: 10px; border: thin black solid; border-radius: 3px;" height="20px;" id="share_btn" src="img/share.png">
                 </div>
             </div>
             <div style="height: 97%; overflow:hidden;">

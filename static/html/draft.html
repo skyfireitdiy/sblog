@@ -28,7 +28,7 @@
     <div id="app" v-cloak class="h_div">
         <div class="layui-row h_div">
             <div class="layui-col-md6 h_div">
-                <button class="layui-btn layui-btn-warm" @click="delete_all();">删除选中</button>
+                <img style="margin: 10px; border: thin black solid; border-radius: 3px;" src="/img/delete.png" width="32px" @click="delete_all();" title="删除选中">
                 <table class="layui-table">
                     <colgroup>
                         <col>
@@ -47,8 +47,8 @@
                             <td><input type="checkbox" v-model="checked_item" :value="draft.id"></td>
                             <td @click="show_blog(index);">{{draft.title}}</td>
                             <td>
-                                <button @click="delete_draft(draft.id, draft.title);" class="layui-btn layui-btn-warm">删除</button>
-                                <button @click="edit_draft(draft.id);" class="layui-btn layui-btn-warm">编辑</button>
+                                <img style="margin: 10px; border: thin black solid; border-radius: 3px;" src="/img/delete.png" width="32px" @click="delete_draft(draft.id, draft.title);" title="删除">
+                                <img style="margin: 10px; border: thin black solid; border-radius: 3px;" src="/img/edit.png" width="32px" @click="edit_draft(draft.id);" title="编辑">
                             </td>
                         </tr>
                     </tbody>
