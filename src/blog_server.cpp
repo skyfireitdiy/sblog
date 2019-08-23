@@ -827,6 +827,8 @@ void blog_server::blog_list(const sf_http_request &req, sf_http_response &res) {
     sf_json ret;
     sf_finally f([&res, &ret] { res.set_json(ret); });
     auto blogs = database__->all_blog();
+    sort(blogs.begin(), blogs.end(),
+         [](blog &bl, blog &br) { return bl.publish_time > br.publish_time; });
     auto blogs_json = to_json(blogs);
     for (int i = 0; i < blogs.size(); ++i) {
         auto sub_group = database__->sub_group(blogs[i].sub_group);
@@ -1233,7 +1235,11 @@ void blog_server::user_get_blog(const sf_http_request &req,
     auto sub_group =
         static_cast<int>(sf_string_to_long_double(param["sub_group"]));
     auto blogs = database__->top_blogs(sub_group);
+    sort(blogs.begin(), blogs.end(),
+         [](blog &bl, blog &br) { return bl.publish_time > br.publish_time; });
     auto data_normal = database__->normal_blogs(sub_group);
+    sort(data_normal.begin(), data_normal.end(),
+         [](blog &bl, blog &br) { return bl.publish_time > br.publish_time; });
     blogs.insert(blogs.end(), data_normal.begin(), data_normal.end());
     auto blogs_json = to_json(blogs);
     for (int i = 0; i < blogs.size(); ++i) {
@@ -1263,7 +1269,11 @@ void blog_server::user_get_all_blog(const sf_http_request &req,
     sf_json ret;
     sf_finally f([&res, &ret] { res.set_json(ret); });
     auto blogs = database__->top_blogs();
+    sort(blogs.begin(), blogs.end(),
+         [](blog &bl, blog &br) { return bl.publish_time > br.publish_time; });
     auto data_normal = database__->normal_blogs();
+    sort(data_normal.begin(), data_normal.end(),
+         [](blog &bl, blog &br) { return bl.publish_time > br.publish_time; });
     blogs.insert(blogs.end(), data_normal.begin(), data_normal.end());
     auto blogs_json = to_json(blogs);
     for (int i = 0; i < blogs.size(); ++i) {
