@@ -522,7 +522,7 @@ void blog_server::user_info(const sf_http_request &req, sf_http_response &res) {
     auto session = server__->session(session_id);
     sf_json ret;
     ret["code"] = 0;
-    ret["data"] = session["user"].clone();
+    ret["data"] = session["user"].deep_copy();
     ret["data"].remove("password");
     res.set_json(ret);
 }
