@@ -62,32 +62,14 @@ struct blog_label {
     int label_id;
 };
 
-struct user {
-    int id;
-    string username;
-    string password;
-};
-
-struct user_ext {
-    int id;
-    string truename;
-    string phone;
-    string email;
-    string qq;
-    string website;
-    string git;
-    string desc;
-    string icon;
-    int score;
-    int level;
-};
-
 struct comment {
     int id;
-    int type; // 0.评论文章 1.评论评论
-    int src_id; // 文章id或者评论id
+    string name;
+    int blog_id; // 文章id或者评论id
     string publish_time;
     string content;
+    string qq;
+    string email;
 };
 
 SF_JSONIFY(admin_user, id, name, password)
@@ -99,9 +81,7 @@ SF_JSONIFY(blog_big_group, id, group_name)
 SF_JSONIFY(blog_sub_group, id, big_group, group_name)
 SF_JSONIFY(label, id, label_name)
 SF_JSONIFY(blog_label, blog_id, label_id)
-SF_JSONIFY(comment, id, type, src_id, publish_time, content)
-SF_JSONIFY(user, id, username, password)
-SF_JSONIFY(user_ext, id, truename, phone, email, qq, website, git, desc, icon, score, level)
+SF_JSONIFY(comment, id, name, blog_id, publish_time, content, qq, email)
 
 inline auto init_user_storage(const string& path)
 {
@@ -145,7 +125,13 @@ inline auto init_user_storage(const string& path)
                 unique()),
             make_column("label_name", &label::label_name)),
         make_table("blog_label", make_column("blog_id", &blog_label::blog_id),
-            make_column("label_id", &blog_label::label_id)));
+            make_column("label_id", &blog_label::label_id)),
+        make_table("comment", make_column("id", &comment::id, autoincrement(), primary_key()),
+            make_column("name", &comment::name),
+            make_column("blog_id", &comment::blog_id),
+            make_column("publish_time", &comment::publish_time),
+            make_column("qq", &comment::qq),
+            make_column("email", &comment::email)));
 }
 
 string hash_password(const std::string& password);
@@ -259,6 +245,16 @@ public:
     vector<blog> top_blogs();
 
     vector<blog> normal_blogs();
+
+    void insert_comment(const comment& c);
+
+    void delete_comment(int id);
+
+    void delete_blogs_comment(int blog_id);
+
+    void update_comment(const comment& c);
+
+    vector<comment> get_comment(int blog_id);
 
     explicit database(const string& path);
 };
