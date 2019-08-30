@@ -292,7 +292,12 @@ void database::delete_blogs_comment(int blog_id)
 
 void database::update_comment(const comment& c) { storage__->update(c); }
 
-vector<comment> database::get_comment(int blog_id)
+vector<comment> database::get_blog_comment(int blog_id)
 {
     return storage__->get_all<comment>(where(c(&comment::blog_id) == blog_id));
+}
+
+shared_ptr<comment> database::get_comment(int comment_id)
+{
+    return storage__->get_pointer<comment>(comment_id);
 }

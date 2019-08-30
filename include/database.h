@@ -70,6 +70,7 @@ struct comment {
     string content;
     string qq;
     string email;
+    int audit;
 };
 
 SF_JSONIFY(admin_user, id, name, password)
@@ -81,7 +82,7 @@ SF_JSONIFY(blog_big_group, id, group_name)
 SF_JSONIFY(blog_sub_group, id, big_group, group_name)
 SF_JSONIFY(label, id, label_name)
 SF_JSONIFY(blog_label, blog_id, label_id)
-SF_JSONIFY(comment, id, name, blog_id, publish_time, content, qq, email)
+SF_JSONIFY(comment, id, name, blog_id, publish_time, content, qq, email, audit)
 
 inline auto init_user_storage(const string& path)
 {
@@ -254,7 +255,9 @@ public:
 
     void update_comment(const comment& c);
 
-    vector<comment> get_comment(int blog_id);
+    vector<comment> get_blog_comment(int blog_id);
+
+    shared_ptr<comment> get_comment(int comment_id);
 
     explicit database(const string& path);
 };

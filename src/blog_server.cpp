@@ -1626,3 +1626,133 @@ void blog_server::delete_file(const sf_http_request& req,
     }
     ret["code"] = 0;
 }
+
+void blog_server::add_comment(const sf_http_request& req, sf_http_response& res)
+{
+    sf_json ret;
+    sf_finally f([&res, &ret] { res.set_json(ret); });
+    auto param = req.body_params();
+    if (!check_param(param, { "name", "blog_id", "publish_time", "content", "qq", "email" })) {
+        ret["code"] = 1;
+        ret["msg"] = "param error";
+        return;
+    }
+    auto blog_id = static_cast<int>(sf_string_to_long_double(param["blog_id"]));
+    auto b = database__->get_blog(blog_id);
+    if (!b) {
+        ret["code"] = 2;
+        ret["msg"] = "blog not found";
+        return;
+    }
+    comment c {
+        -1,
+        param["name"],
+        blog_id,
+        param["publish_time"], param["content"], param["qq"], param["email"], 0
+    };
+    database__->insert_comment(c);
+    ret["code"] = 0;
+}
+
+void blog_server::delete_comment(const sf_http_request& req, sf_http_response& res)
+{
+    sf_json ret;
+    sf_finally f([&res, &ret] { res.set_json(ret); });
+    auto param = req.body_params();
+    if (!check_param(param, { "id" })) {
+        ret["code"] = 1;
+        ret["msg"] = "param error";
+        return;
+    }
+    auto id = static_cast<int>(sf_string_to_long_double(param["id"]));
+    if (!database__->get_comment(id)) {
+        ret["code"] = 2;
+        ret["msg"] = "comment not found";
+        return;
+    }
+    database__->delete_comment(id);
+    ret["code"] = 0;
+}
+
+void blog_server::audit_comment(const sf_http_request& req, sf_http_response& res)
+{
+    sf_json ret;
+    sf_finally f([&res, &ret]() { res.set_json(ret); });
+    auto param = req.body_params();
+    if (!check_param(param, { "id" })) {
+        ret["code"] = 1;
+        ret["msg"] = "Invalid parameter";
+        return;
+    }
+    auto id = static_cast<int>(sf_string_to_long_double(param["id"]));
+    auto c = database__->get_comment(id);
+    if (!c) {
+        ret["code"] = 2;
+        ret["msg"] = "comment not found";
+        return;
+    }
+    if (c->audit == 1) {
+        ret["code"] = 3;
+        ret["msg"] = "audit already audited";
+        return;
+    }
+    c->audit = 1;
+    database__->update_comment(*c);
+    ret["code"] = 0;
+}
+
+void blog_server::get_comment(const sf_http_request& req, sf_http_response& res)
+{
+    sf_json ret;
+    sf_finally f([&res, &ret] { res.set_json(ret); });
+    auto param = req.params();
+    if (!check_param(param, { "blog_id" })) {
+        ret["code"] = 1;
+        ret["msg"] = "param error";
+        return;
+    }
+    auto blog_id = static_cast<int>(sf_string_to_long_double(param["blog_id"]));
+    auto c = database__->get_blog_comment(blog_id);
+    ret["code"] = 0;
+    ret["data"] = to_json(c);
+}
+
+void blog_server::get_need_audit_comment(const sf_http_request& req, sf_http_response& res)
+{
+    sf_json ret;
+    sf_finally f([&res, &ret] { res.set_json(ret); });
+    auto param = req.params();
+    if (!check_param(param, { "blog_id" })) {
+        ret["code"] = 1;
+        ret["msg"] = "param error";
+        return;
+    }
+    auto blog_id = static_cast<int>(sf_string_to_long_double(param["blog_id"]));
+    auto c = database__->get_blog_comment(blog_id);
+    c.erase(remove_if(c.begin(), c.end(), [](auto& p) {
+        return p.audit == 1;
+    }),
+        c.end());
+    ret["code"] = 0;
+    ret["data"] = to_json(c);
+}
+
+void blog_server::get_audited_comment(const sf_http_request& req, sf_http_response& res)
+{
+    sf_json ret;
+    sf_finally f([&res, &ret] { res.set_json(ret); });
+    auto param = req.params();
+    if (!check_param(param, { "blog_id" })) {
+        ret["code"] = 1;
+        ret["msg"] = "param error";
+        return;
+    }
+    auto blog_id = static_cast<int>(sf_string_to_long_double(param["blog_id"]));
+    auto c = database__->get_blog_comment(blog_id);
+    c.erase(remove_if(c.begin(), c.end(), [](auto& p) {
+        return p.audit == 0;
+    }),
+        c.end());
+    ret["code"] = 0;
+    ret["data"] = to_json(c);
+}
