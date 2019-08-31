@@ -187,6 +187,20 @@ void blog_server::setup_server(const sf_http_server_config& server_conf)
         }),
         vector { { "GET"s } }));
 
+    api_router->add_router(sf_http_router::make_instance(
+        "/comment"s,
+        function([this](const sf_http_request& req, sf_http_response& res) {
+            add_comment(req, res);
+        }),
+        vector { { "POST"s } }));
+
+    api_router->add_router(sf_http_router::make_instance(
+        "/audited_comment"s,
+        function([this](const sf_http_request& req, sf_http_response& res) {
+            get_audited_comment(req, res);
+        }),
+        vector { { "GET"s } }));
+
     root_router->add_router(api_router);
 
     auto admin_api_router = sf_http_part_router::make_instance(
@@ -459,6 +473,34 @@ void blog_server::setup_server(const sf_http_server_config& server_conf)
             delete_file(req, res);
         }),
         vector { { "DELETE"s } }));
+
+    admin_api_router->add_router(sf_http_router::make_instance(
+        "/comment"s,
+        function([this](const sf_http_request& req, sf_http_response& res) {
+            delete_comment(req, res);
+        }),
+        vector { { "DELETE"s } }));
+
+    admin_api_router->add_router(sf_http_router::make_instance(
+        "/audit_comment"s,
+        function([this](const sf_http_request& req, sf_http_response& res) {
+            audit_comment(req, res);
+        }),
+        vector { { "POST"s } }));
+
+    admin_api_router->add_router(sf_http_router::make_instance(
+        "/comment"s,
+        function([this](const sf_http_request& req, sf_http_response& res) {
+            get_comment(req, res);
+        }),
+        vector { { "GET"s } }));
+
+    admin_api_router->add_router(sf_http_router::make_instance(
+        "/need_audit_comment"s,
+        function([this](const sf_http_request& req, sf_http_response& res) {
+            get_need_audit_comment(req, res);
+        }),
+        vector { { "GET"s } }));
 
     admin_router->add_router(admin_api_router);
 
@@ -1284,6 +1326,12 @@ void blog_server::user_get_blog(const sf_http_request& req,
         blogs_json[i]["big_group"] = to_json(*big_group);
         auto labels = database__->blog_labels(blogs[i].id);
         blogs_json[i]["labels"] = to_json(labels);
+
+        auto c = database__->get_blog_comment(blogs[i].id);
+        sort(c.begin(), c.end(), [](auto& a, auto& b) {
+            return a.publish_time > b.publish_time;
+        });
+        blogs_json[i]["comment"] = to_json(c);
     }
     ret["code"] = 0;
     ret["data"] = blogs_json;
