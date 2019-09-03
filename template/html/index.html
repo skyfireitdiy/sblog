@@ -99,6 +99,23 @@
             </table>
         </div>
 
+        <div hidden id="comment_list">
+            <div v-if="current_blog">
+                <div class="layui-collapse">
+                    <div v-for="comment in current_blog.comments" class="layui-colla-item">
+                        <h2 class="layui-colla-title">
+                            发布者: {{comment.name}} 发布时间：{{comment.publish_time}}
+                        </h2>
+                        <div class="layui-colla-content layui-show">
+                            <p>
+                                {{comment.content}}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
     <script src="https://www.layuicdn.com/layui/layui.js" charset="utf-8"></script>
     <script src="https://cdn.bootcss.com/showdown/1.9.0/showdown.min.js"></script>

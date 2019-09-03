@@ -1328,7 +1328,11 @@ void blog_server::user_get_blog(const sf_http_request& req,
         blogs_json[i]["labels"] = to_json(labels);
 
         auto c = database__->get_blog_comment(blogs[i].id);
-        sort(c.begin(), c.end(), [](auto& a, auto& b) {
+        c.erase(remove_if(c.begin(), c.end(), [](auto& p) {
+            return p.audit == 0;
+        }),
+            c.end());
+        sort(c.begin(), c.end(), [&](auto& a, auto& b) {
             return a.publish_time > b.publish_time;
         });
         blogs_json[i]["comment"] = to_json(c);
@@ -1367,6 +1371,15 @@ void blog_server::user_get_all_blog(const sf_http_request& req,
         blogs_json[i]["big_group"] = to_json(*big_group);
         auto labels = database__->blog_labels(blogs[i].id);
         blogs_json[i]["labels"] = to_json(labels);
+
+        auto c = database__->get_blog_comment(blogs[i].id);
+        c.erase(remove_if(c.begin(), c.end(), [](auto& p) {
+            return p.audit == 0;
+        }),
+            c.end());
+        sort(c.begin(), c.end(), [&](auto& a, auto& b) {
+            return a.publish_time > b.publish_time;
+        });
     }
     ret["code"] = 0;
     ret["data"] = blogs_json;
@@ -1761,6 +1774,9 @@ void blog_server::get_comment(const sf_http_request& req, sf_http_response& res)
     }
     auto blog_id = static_cast<int>(sf_string_to_long_double(param["blog_id"]));
     auto c = database__->get_blog_comment(blog_id);
+    sort(c.begin(), c.end(), [&](auto& a, auto& b) {
+        return a.publish_time > b.publish_time;
+    });
     ret["code"] = 0;
     ret["data"] = to_json(c);
 }
@@ -1781,6 +1797,9 @@ void blog_server::get_need_audit_comment(const sf_http_request& req, sf_http_res
         return p.audit == 1;
     }),
         c.end());
+    sort(c.begin(), c.end(), [&](auto& a, auto& b) {
+        return a.publish_time > b.publish_time;
+    });
     ret["code"] = 0;
     ret["data"] = to_json(c);
 }
@@ -1801,6 +1820,9 @@ void blog_server::get_audited_comment(const sf_http_request& req, sf_http_respon
         return p.audit == 0;
     }),
         c.end());
+    sort(c.begin(), c.end(), [&](auto& a, auto& b) {
+        return a.publish_time > b.publish_time;
+    });
     ret["code"] = 0;
     ret["data"] = to_json(c);
 }
