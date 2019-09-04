@@ -58,6 +58,7 @@
             </div>
             <div style="height: 4%" class="layui-bg-black">
                 <img src="/img/list.png" width="20px" class="float_btn" @click="show_blog_list()">
+                <img src="/img/comment.png" width="20px" class="float_btn" style="margin-left:30px;" @click="show_comment()">
                 <div v-if="current_blog" style="text-align: center; padding: 0; margin: 0">
                     标题： {{current_blog.title}} &nbsp;&nbsp; 发布时间：{{current_blog.publish_time}}&nbsp;&nbsp; 阅读数量： {{current_blog.watch_number}}&nbsp;&nbsp; 标签： <span v-for="lb in labels">
                         {{lb.label_name}}&nbsp;
@@ -101,6 +102,31 @@
 
         <div hidden id="comment_list">
             <div v-if="current_blog">
+                <div class="layui-form">
+                    <textarea placeholder="请输入评论" v-model="comment.content" class="layui-textarea">
+                    </textarea>
+                    <div class="layui-form-item layui-inline">
+                        <label class="layui-form-label">姓名：</label>
+                        <div class="layui-input-block">
+                            <input type="text" class="layui-input" v-model="comment.name" placeholder="请输入姓名">
+                        </div>
+                    </div>
+                    <div class="layui-form-item layui-inline">
+                        <label class="layui-form-label">QQ：</label>
+                        <div class="layui-input-block">
+                            <input type="text" class="layui-input" v-model="comment.qq" placeholder="请输入QQ">
+                        </div>
+                    </div>
+                    <div class="layui-form-item layui-inline">
+                        <label class="layui-form-label">Email：</label>
+                        <div class="layui-input-block">
+                            <input type="text" class="layui-input" v-model="comment.email" placeholder="请输入Email">
+                        </div>
+                    </div>
+                    <div class="layui-form-item layui-inline">
+                        <button class="layui-btn layui-btn-normal" type="button" @click="publish_comment();">发表</button>
+                    </div>
+                </div>
                 <div class="layui-collapse">
                     <div v-for="comment in current_blog.comments" class="layui-colla-item">
                         <h2 class="layui-colla-title">
@@ -137,9 +163,46 @@
                 labels: [],
                 converter: null,
                 type: << type >> ,
-                blog: << blog >>
+                blog: << blog >> ,
+                comment: {
+                    name: "",
+                    content: "",
+                    qq: "",
+                    email: ""
+                }
             },
             methods: {
+                publish_comment: function() {
+                    let this_ = this;
+                    layui.use(["jquery", "layer"], function() {
+                        let $ = layui.jquery;
+                        let layer = layui.layer;
+                        layer.confirm("确认发表？您的评论在管理员审核后可显示", function() {
+                            $.ajax({
+                                url: "/api/comment",
+                                method: "POST",
+                                data: {
+                                    blog_id: this_.current_blog.id,
+                                    name: this_.comment.name,
+                                    content: this_.comment.content,
+                                    qq: this_.comment.qq,
+                                    email: this_.comment.email
+                                },
+                                success: function(res) {
+                                    if (res.code !== 0) {
+                                        layer.msg(res.msg, {
+                                            icon: 0
+                                        });
+                                    } else {
+                                        layer.msg("发表成功", {
+                                            icon: 1
+                                        });
+                                    }
+                                }
+                            });
+                        });
+                    });
+                },
                 read_blog: function(blog) {
                     let this_ = this;
                     layui.use(["layer", "jquery"], function() {
@@ -253,6 +316,24 @@
                         });
                     });
                 },
+                show_comment: function() {
+                    layui.use(["layer", "jquery"], function() {
+                        let $ = layui.jquery;
+                        let layer = layui.layer;
+                        let this_ = this;
+
+                        layer.open({
+                            type: 1,
+                            content: $("#comment_list"),
+                            area: ["80%", "100%"],
+                            closeBtn: 0,
+                            shade: 0.2,
+                            shadeClose: 1,
+                            anim: 1,
+                            title: "评论列表"
+                        });
+                    });
+                },
 
                 init_group_info: function() {
                     let this_ = this;
@@ -270,10 +351,8 @@
                                 } else {
                                     this_.group_info = res.data;
                                     Vue.nextTick(() => {
-                                        layui.use(["element", "layer", "jquery"], function() {
-                                            let layer = layui.layer;
+                                        layui.use(["element"], function() {
                                             let element = layui.element;
-                                            let $ = layui.jquery;
                                             element.init();
                                         });
                                     });

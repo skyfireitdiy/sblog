@@ -1693,7 +1693,7 @@ void blog_server::add_comment(const sf_http_request& req, sf_http_response& res)
     sf_json ret;
     sf_finally f([&res, &ret] { res.set_json(ret); });
     auto param = req.body_params();
-    if (!check_param(param, { "name", "blog_id", "publish_time", "content", "qq", "email" })) {
+    if (!check_param(param, { "name", "blog_id", "content", "qq", "email" })) {
         ret["code"] = 1;
         ret["msg"] = "param error";
         return;
@@ -1709,7 +1709,7 @@ void blog_server::add_comment(const sf_http_request& req, sf_http_response& res)
         -1,
         param["name"],
         blog_id,
-        param["publish_time"], param["content"], param["qq"], param["email"], 0
+        sf_make_time_str(), param["content"], param["qq"], param["email"], 0
     };
     database__->insert_comment(c);
     ret["code"] = 0;
