@@ -65,6 +65,9 @@
                         <a @click="blog_data_manage();">博文管理</a>
                     </li>
                     <li class="layui-nav-item layui-nav-itemed">
+                        <a @click="comment_manage();">评论管理</a>
+                    </li>
+                    <li class="layui-nav-item layui-nav-itemed">
                         <a @click="draft_data_manage();">草稿箱管理</a>
                     </li>
                 </ul>
@@ -97,6 +100,7 @@
                         blog_label: "/admin/html/blog_label.html",
                         blog_data: "/admin/html/blog_data.html",
                         user_base: "/admin/html/user_base.html",
+                        comment: "/admin/html/comment.html",
                         safe: "/admin/html/safe.html",
                         draft: "/admin/html/draft.html",
                     },
@@ -136,6 +140,11 @@
                     blog_data_manage: function() {
                         this.data_manage();
                         this.sub_group = "blog_data";
+                        this.refresh_iframe();
+                    },
+                    comment_manage: function() {
+                        this.data_manage();
+                        this.sub_group = "comment";
                         this.refresh_iframe();
                     },
                     draft_data_manage: function() {
