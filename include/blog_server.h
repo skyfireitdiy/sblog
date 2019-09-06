@@ -147,7 +147,7 @@ private:
 
     void get_comment(const sf_http_request& req, sf_http_response& res);
 
-    void get_need_audit_comment(const sf_http_request& req, sf_http_response& res);
+    void user_get_comment(const sf_http_request& req, sf_http_response& res);
 
     void get_audited_comment(const sf_http_request& req, sf_http_response& res);
 

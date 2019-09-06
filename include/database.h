@@ -131,8 +131,10 @@ inline auto init_user_storage(const string& path)
             make_column("name", &comment::name),
             make_column("blog_id", &comment::blog_id),
             make_column("publish_time", &comment::publish_time),
+            make_column("content", &comment::content),
             make_column("qq", &comment::qq),
-            make_column("email", &comment::email)));
+            make_column("email", &comment::email),
+            make_column("audit", &comment::audit)));
 }
 
 string hash_password(const std::string& password);
@@ -256,6 +258,8 @@ public:
     void update_comment(const comment& c);
 
     vector<comment> get_blog_comment(int blog_id);
+
+    vector<comment> get_comment();
 
     shared_ptr<comment> get_comment(int comment_id);
 

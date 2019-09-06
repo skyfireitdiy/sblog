@@ -495,13 +495,6 @@ void blog_server::setup_server(const sf_http_server_config& server_conf)
         }),
         vector { { "GET"s } }));
 
-    admin_api_router->add_router(sf_http_router::make_instance(
-        "/need_audit_comment"s,
-        function([this](const sf_http_request& req, sf_http_response& res) {
-            get_need_audit_comment(req, res);
-        }),
-        vector { { "GET"s } }));
-
     admin_router->add_router(admin_api_router);
 
     server__->add_router(root_router);
@@ -1380,6 +1373,7 @@ void blog_server::user_get_all_blog(const sf_http_request& req,
         sort(c.begin(), c.end(), [&](auto& a, auto& b) {
             return a.publish_time > b.publish_time;
         });
+        blogs_json[i]["comment"] = to_json(c);
     }
     ret["code"] = 0;
     ret["data"] = blogs_json;
@@ -1766,37 +1760,7 @@ void blog_server::get_comment(const sf_http_request& req, sf_http_response& res)
 {
     sf_json ret;
     sf_finally f([&res, &ret] { res.set_json(ret); });
-    auto param = req.params();
-    if (!check_param(param, { "blog_id" })) {
-        ret["code"] = 1;
-        ret["msg"] = "param error";
-        return;
-    }
-    auto blog_id = static_cast<int>(sf_string_to_long_double(param["blog_id"]));
-    auto c = database__->get_blog_comment(blog_id);
-    sort(c.begin(), c.end(), [&](auto& a, auto& b) {
-        return a.publish_time > b.publish_time;
-    });
-    ret["code"] = 0;
-    ret["data"] = to_json(c);
-}
-
-void blog_server::get_need_audit_comment(const sf_http_request& req, sf_http_response& res)
-{
-    sf_json ret;
-    sf_finally f([&res, &ret] { res.set_json(ret); });
-    auto param = req.params();
-    if (!check_param(param, { "blog_id" })) {
-        ret["code"] = 1;
-        ret["msg"] = "param error";
-        return;
-    }
-    auto blog_id = static_cast<int>(sf_string_to_long_double(param["blog_id"]));
-    auto c = database__->get_blog_comment(blog_id);
-    c.erase(remove_if(c.begin(), c.end(), [](auto& p) {
-        return p.audit == 1;
-    }),
-        c.end());
+    auto c = database__->get_comment();
     sort(c.begin(), c.end(), [&](auto& a, auto& b) {
         return a.publish_time > b.publish_time;
     });

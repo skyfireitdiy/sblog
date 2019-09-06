@@ -2,7 +2,6 @@
 <html lang="en">
 
 <head>
-    <title></title>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="stylesheet" type="text/css" href="https://www.layuicdn.com/layui/css/layui.css" />
@@ -88,7 +87,8 @@
                 </thead>
                 <tbody>
                     <tr v-for="blog in blogs" @click="read_blog(blog);">
-                        <td><img v-show="blog.top" height="20px;" src="/img/top.png">&nbsp;&nbsp;&nbsp;{{blog.title}}</td>
+                        <td><img v-show="blog.top" height="20px;" src="/img/top.png">&nbsp;&nbsp;&nbsp;{{blog.title}}
+                        </td>
                         <td>{{blog.publish_time}}</td>
                         <td>{{blog.watch_number}}</td>
                         <td>{{blog.big_group.group_name}} - {{blog.sub_group.group_name}}</td>
@@ -124,11 +124,11 @@
                         </div>
                     </div>
                     <div class="layui-form-item layui-inline">
-                        <button class="layui-btn layui-btn-normal" type="button" @click="publish_comment();">发表</button>
+                        <button class="layui-btn layui-btn-normal" type="button" @click="publish_comment();">发表</button> QQ 和 Email不会显示在评论区，请放心填写
                     </div>
                 </div>
                 <div class="layui-collapse">
-                    <div v-for="comment in current_blog.comments" class="layui-colla-item">
+                    <div v-for="comment in current_blog.comment" class="layui-colla-item">
                         <h2 class="layui-colla-title">
                             发布者: {{comment.name}} 发布时间：{{comment.publish_time}}
                         </h2>
@@ -197,6 +197,7 @@
                                         layer.msg("发表成功", {
                                             icon: 1
                                         });
+                                        this_.comment.content = "";
                                     }
                                 }
                             });
@@ -205,7 +206,8 @@
                 },
                 read_blog: function(blog) {
                     let this_ = this;
-                    layui.use(["layer", "jquery"], function() {
+                    layui.use(["layer", "jquery", "element"], function() {
+                        let element = layui.element;
                         let layer = layui.layer;
                         let $ = layui.jquery;
                         layer.closeAll();
@@ -242,6 +244,11 @@
                                 }
                             }
                         });
+                        Vue.nextTick(
+                            () => {
+                                element.init();
+                            }
+                        );
                     });
                 },
                 change_big_group: function(index) {
