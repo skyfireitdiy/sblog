@@ -1,576 +1,699 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
+  <head>
     <title></title>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" type="text/css" href="https://www.layuicdn.com/layui/css/layui.css">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="https://www.layuicdn.com/layui/css/layui.css"
+    />
     <style>
-        [v-cloak] {
-            display: none;
-        }
+      [v-cloak] {
+        display: none;
+      }
     </style>
-</head>
+  </head>
 
-<body>
+  <body>
     <div id="app" v-cloak>
+      <div>
+        <img
+          style="margin: 10px; border: thin black solid; border-radius: 3px;"
+          width="32px"
+          src="/img/new.png"
+          title="编写新博客"
+          @click="add_new_blog();"
+        />
+        <img
+          style="margin: 10px; border: thin black solid; border-radius: 3px;"
+          width="32px"
+          src="/img/set_top.png"
+          title="批量置顶"
+          @click="set_top_bat(true);"
+        />
+        <img
+          style="margin: 10px; border: thin black solid; border-radius: 3px;"
+          width="32px"
+          src="/img/unset_top.png"
+          title="批量取消置顶"
+          @click="set_top_bat(false);"
+        />
+        <img
+          style="margin: 10px; border: thin black solid; border-radius: 3px;"
+          width="32px"
+          src="/img/hide.png"
+          title="批量隐藏"
+          @click="set_hide_bat(true);"
+        />
+        <img
+          style="margin: 10px; border: thin black solid; border-radius: 3px;"
+          width="32px"
+          src="/img/show.png"
+          title="批量取消隐藏"
+          @click="set_hide_bat(false);"
+        />
+        <img
+          style="margin: 10px; border: thin black solid; border-radius: 3px;"
+          width="32px"
+          src="/img/delete.png"
+          title="批量删除"
+          @click="delete_blog_bat();"
+        />
+        <img
+          style="margin: 10px; border: thin black solid; border-radius: 3px;"
+          width="32px"
+          src="/img/group.png"
+          title="批量修改分类"
+          @click="update_blog_group_bat();"
+        />
+        <img
+          style="margin: 10px; border: thin black solid; border-radius: 3px;"
+          width="32px"
+          src="/img/label.png"
+          title="批量添加标签"
+          @click="add_blog_label_bat();"
+        />
+        <br /><br />
+        <table class="layui-table">
+          <colgroup>
+            <col />
+            <col />
+            <col />
+            <col />
+            <col />
+            <col />
+            <col />
+            <col />
+            <col />
+          </colgroup>
+          <thead>
+            <td>
+              <input
+                type="checkbox"
+                v-model="select_all_flag"
+                @change="on_select_all();"
+                class="laytable-cell-checkbox"
+              />
+              选中
+            </td>
+            <td>标题</td>
+            <td>发布时间</td>
+            <td>阅读数</td>
+            <td>置顶</td>
+            <td>分类</td>
+            <td>标签</td>
+            <td>隐藏</td>
+            <td>操作</td>
+          </thead>
+          <tr v-for="(art, index) in blog_data">
+            <td>
+              <input type="checkbox" :value="art.id" v-model="checked_item" />
+            </td>
+            <td>{{art.title}}</td>
+            <td>{{art.publish_time}}</td>
+            <td>{{art.watch_number}}</td>
+            <td>
+              <input
+                type="checkbox"
+                class="layui-checkbox"
+                @click="set_top(index);"
+                :checked="art.top"
+              />
+            </td>
+            <td>
+              {{art.big_group.group_name}} - {{art.sub_group.group_name}}
+              <img
+                style="margin: 10px; border: thin black solid; border-radius: 3px;"
+                width="20px"
+                src="/img/group.png"
+                title="修改"
+                @click="change_group(index);"
+              />
+            </td>
 
-        <div>
-            <img style="margin: 10px; border: thin black solid; border-radius: 3px;" width="32px" src="/img/new.png" title="编写新博客" @click="add_new_blog();">
-            <img style="margin: 10px; border: thin black solid; border-radius: 3px;" width="32px" src="/img/set_top.png" title="批量置顶" @click="set_top_bat(true);">
-            <img style="margin: 10px; border: thin black solid; border-radius: 3px;" width="32px" src="/img/unset_top.png" title="批量取消置顶" @click="set_top_bat(false);">
-            <img style="margin: 10px; border: thin black solid; border-radius: 3px;" width="32px" src="/img/hide.png" title="批量隐藏" @click="set_hide_bat(true);">
-            <img style="margin: 10px; border: thin black solid; border-radius: 3px;" width="32px" src="/img/show.png" title="批量取消隐藏" @click="set_hide_bat(false);">
-            <img style="margin: 10px; border: thin black solid; border-radius: 3px;" width="32px" src="/img/delete.png" title="批量删除" @click="delete_blog_bat();">
-            <img style="margin: 10px; border: thin black solid; border-radius: 3px;" width="32px" src="/img/group.png" title="批量修改分类" @click="update_blog_group_bat();">
-            <img style="margin: 10px; border: thin black solid; border-radius: 3px;" width="32px" src="/img/label.png" title="批量添加标签" @click="add_blog_label_bat();">
-            <br><br>
-            <table class="layui-table">
-                <colgroup>
-                    <col>
-                    <col>
-                    <col>
-                    <col>
-                    <col>
-                    <col>
-                    <col>
-                    <col>
-                    <col>
-                </colgroup>
-                <thead>
-                    <td><input type="checkbox" v-model="select_all_flag" @change="on_select_all();" class="laytable-cell-checkbox"> 选中</td>
-                    <td>标题</td>
-                    <td>发布时间</td>
-                    <td>阅读数</td>
-                    <td>置顶</td>
-                    <td>分类</td>
-                    <td>标签</td>
-                    <td>隐藏</td>
-                    <td>操作</td>
-                </thead>
-                <tr v-for="(art, index) in blog_data">
-                    <td><input type="checkbox" :value="art.id" v-model="checked_item"></td>
-                    <td>{{art.title}}</td>
-                    <td>{{art.publish_time}}</td>
-                    <td>{{art.watch_number}}</td>
-                    <td>
-                        <input type="checkbox" class="layui-checkbox" @click="set_top(index);" :checked="art.top">
-                    </td>
-                    <td>
-                        {{art.big_group.group_name}} - {{art.sub_group.group_name}}
-                        <img style="margin: 10px; border: thin black solid; border-radius: 3px;" width="20px" src="/img/group.png" title="修改" @click=change_group(index);>
-                    </td>
-
-                    <td style="text-align: left">
-                        <div v-for="lab in art.labels" style="margin-right: 3px;  border: burlywood thick solid; float: left; background-color: burlywood; border-radius: 5px;">
-                            {{lab.label_name}}
-                            <button @click="delete_label(index, lab.id)" class="layui-btn layui-btn-sm layui-btn-radius">x</button>
-                        </div>
-                        <div v-show="calc_labels(index).length !== 0">
-                            <img style="margin: 10px; border: thin black solid; border-radius: 3px;" width="20px" src="/img/label.png" title="增加标签" @click="prepare_add_label(index);">
-                        </div>
-                    </td>
-                    <td><input type="checkbox" class="layui-checkbox" @click="set_hide(index);" :checked="art.hide">
-                    </td>
-                    <td>
-                        <img style="margin: 10px; border: thin black solid; border-radius: 3px;" title="删除" src="/img/delete.png" width="20px" @click="delete_blog(index, art.title);">
-                        <img style="margin: 10px; border: thin black solid; border-radius: 3px;" title="编辑" src="/img/edit.png" width="20px" @click="edit_blog(index);">
-                    </td>
-                </tr>
-            </table>
+            <td style="text-align: left">
+              <div
+                v-for="lab in art.labels"
+                style="margin-right: 3px;  border: burlywood thick solid; float: left; background-color: burlywood; border-radius: 5px;"
+              >
+                {{lab.label_name}}
+                <button
+                  @click="delete_label(index, lab.id)"
+                  class="layui-btn layui-btn-sm layui-btn-radius"
+                >
+                  x
+                </button>
+              </div>
+              <div v-show="calc_labels(index).length !== 0">
+                <img
+                  style="margin: 10px; border: thin black solid; border-radius: 3px;"
+                  width="20px"
+                  src="/img/label.png"
+                  title="增加标签"
+                  @click="prepare_add_label(index);"
+                />
+              </div>
+            </td>
+            <td>
+              <input
+                type="checkbox"
+                class="layui-checkbox"
+                @click="set_hide(index);"
+                :checked="art.hide"
+              />
+            </td>
+            <td>
+              <img
+                style="margin: 10px; border: thin black solid; border-radius: 3px;"
+                title="删除"
+                src="/img/delete.png"
+                width="20px"
+                @click="delete_blog(index, art.title);"
+              />
+              <img
+                style="margin: 10px; border: thin black solid; border-radius: 3px;"
+                title="编辑"
+                src="/img/edit.png"
+                width="20px"
+                @click="edit_blog(index);"
+              />
+              <img
+                style="margin: 10px; border: thin black solid; border-radius: 3px;"
+                title="export"
+                src="/img/export.png"
+                width="20px"
+                @click="export_md(index);"
+              />
+            </td>
+          </tr>
+        </table>
+      </div>
+      <div id="label_show" hidden>
+        <div v-for="label in want_labels">
+          <input
+            type="checkbox"
+            :value="label.id"
+            v-model="selected_labels"
+          />{{label.label_name}}
         </div>
-        <div id="label_show" hidden>
-            <div v-for="label in want_labels">
-                <input type="checkbox" :value="label.id" v-model="selected_labels">{{label.label_name}}
-            </div>
-        </div>
-        <div id="group_show" hidden>
-            主分组
-            <select v-model="big_group_index">
-                <option v-for="(item,index) in group_info" :value="index">{{item.group_name}}</option>
-            </select> 子分组
-            <select v-model="sub_group_index" v-if="group_info.length !== 0">
-                <option v-for="(item, index) in group_info[big_group_index].sub_group" :value="index">
-                    {{item.group_name}}
-                </option>
-            </select>
-        </div>
+      </div>
+      <div id="group_show" hidden>
+        主分组
+        <select v-model="big_group_index">
+          <option v-for="(item,index) in group_info" :value="index"
+            >{{item.group_name}}</option
+          >
+        </select>
+        子分组
+        <select v-model="sub_group_index" v-if="group_info.length !== 0">
+          <option
+            v-for="(item, index) in group_info[big_group_index].sub_group"
+            :value="index"
+          >
+            {{item.group_name}}
+          </option>
+        </select>
+      </div>
     </div>
-
 
     <script src="https://www.layuicdn.com/layui/layui.js"></script>
     <script src="https://cdn.bootcss.com/vue/2.6.10/vue.min.js"></script>
     <script>
-        layui.use(["element", "layer", "jquery"], function() {
-            let layer = layui.layer;
-            let element = layui.element;
-            let $ = layui.jquery;
+      layui.use(["element", "layer", "jquery"], function() {
+          let layer = layui.layer;
+          let element = layui.element;
+          let $ = layui.jquery;
 
-            let app = new Vue({
-                el: "#app",
-                data: {
-                    blog_data: [],
-                    checked_item: [],
-                    select_all_flag: false,
-                    labels: [],
-                    want_labels: [],
-                    selected_labels: [],
-                    group_info: [],
-                    big_group_index: 0,
-                    sub_group_index: 0,
-                },
-                methods: {
-
-                    delete_blog_bat: function() {
+          let app = new Vue({
+              el: "#app",
+              data: {
+                  blog_data: [],
+                  checked_item: [],
+                  select_all_flag: false,
+                  labels: [],
+                  want_labels: [],
+                  selected_labels: [],
+                  group_info: [],
+                  big_group_index: 0,
+                  sub_group_index: 0,
+              },
+              methods: {
+                  export_md: function(index){
                         let this_ = this;
-                        if (this_.checked_item.length === 0) {
-                            layer.msg("请选择要操作的对象");
-                            return;
-                        }
-                        layer.confirm("确认将选中的博文删除吗?", function() {
-                            $.ajax({
-                                url: "/admin/api/blog_bat",
-                                method: "DELETE",
-                                data: JSON.stringify(this_.checked_item),
-                                success: function(res) {
-                                    if (res.code !== 0) {
-                                        layer.msg(res.msg, {
-                                            icon: 0
-                                        });
-                                    } else {
-                                        layer.msg("删除成功", {
-                                            icon: 1
-                                        });
-                                        this_.init_blog_data();
-                                    }
-                                }
-                            });
-                        });
-                    },
+                        let new_url = window.location.protocol + "//" + window.location.host + "/admin/download?id=" + this_.blog_data[index].id;
+                        window.open(new_url);
+                  },
 
-                    set_top_bat: function(value) {
-                        let this_ = this;
-                        if (this_.checked_item.length === 0) {
-                            layer.msg("请选择要操作的对象");
-                            return;
-                        }
-                        layer.confirm("确认将选中的博文" + (value ? "" : "取消") + "置顶吗?", function() {
-                            $.ajax({
-                                url: "/admin/api/top_bat",
-                                method: "PUT",
-                                data: JSON.stringify({
-                                    blogs: this_.checked_item,
-                                    value: value
-                                }),
-                                success: function(res) {
-                                    if (res.code !== 0) {
-                                        layer.msg(res.msg, {
-                                            icon: 0
-                                        });
-                                    } else {
-                                        layer.msg("操作成功", {
-                                            icon: 1
-                                        });
-                                        this_.init_blog_data();
-                                    }
-                                }
-                            });
-                        });
-                    },
+                  delete_blog_bat: function() {
+                      let this_ = this;
+                      if (this_.checked_item.length === 0) {
+                          layer.msg("请选择要操作的对象");
+                          return;
+                      }
+                      layer.confirm("确认将选中的博文删除吗?", function() {
+                          $.ajax({
+                              url: "/admin/api/blog_bat",
+                              method: "DELETE",
+                              data: JSON.stringify(this_.checked_item),
+                              success: function(res) {
+                                  if (res.code !== 0) {
+                                      layer.msg(res.msg, {
+                                          icon: 0
+                                      });
+                                  } else {
+                                      layer.msg("删除成功", {
+                                          icon: 1
+                                      });
+                                      this_.init_blog_data();
+                                  }
+                              }
+                          });
+                      });
+                  },
 
-                    set_hide_bat: function(value) {
-                        let this_ = this;
-                        if (this_.checked_item.length === 0) {
-                            layer.msg("请选择要操作的对象");
-                            return;
-                        }
-                        layer.confirm("确认将选中的博文" + (value ? "" : "取消") + "隐藏吗?", function() {
-                            $.ajax({
-                                url: "/admin/api/hide_bat",
-                                method: "PUT",
-                                data: JSON.stringify({
-                                    blogs: this_.checked_item,
-                                    value: value
-                                }),
-                                success: function(res) {
-                                    if (res.code !== 0) {
-                                        layer.msg(res.msg, {
-                                            icon: 0
-                                        });
-                                    } else {
-                                        layer.msg("操作成功", {
-                                            icon: 1
-                                        });
-                                        this_.init_blog_data();
-                                    }
-                                }
-                            });
-                        });
-                    },
+                  set_top_bat: function(value) {
+                      let this_ = this;
+                      if (this_.checked_item.length === 0) {
+                          layer.msg("请选择要操作的对象");
+                          return;
+                      }
+                      layer.confirm("确认将选中的博文" + (value ? "" : "取消") + "置顶吗?", function() {
+                          $.ajax({
+                              url: "/admin/api/top_bat",
+                              method: "PUT",
+                              data: JSON.stringify({
+                                  blogs: this_.checked_item,
+                                  value: value
+                              }),
+                              success: function(res) {
+                                  if (res.code !== 0) {
+                                      layer.msg(res.msg, {
+                                          icon: 0
+                                      });
+                                  } else {
+                                      layer.msg("操作成功", {
+                                          icon: 1
+                                      });
+                                      this_.init_blog_data();
+                                  }
+                              }
+                          });
+                      });
+                  },
 
-                    change_group: function(index) {
-                        let this_ = this;
-                        this_.big_group_index = 0;
-                        this_.sub_group_index = 0;
-                        let id = layer.open({
-                            type: 1,
-                            content: $("#group_show"),
-                            btn: ["确认", "取消"],
-                            yes: function() {
-                                $.ajax({
-                                    url: "/admin/api/blog_group",
-                                    method: "PUT",
-                                    data: {
-                                        blog_id: this_.blog_data[index].id,
-                                        sub_group: this_.group_info[this_.big_group_index].sub_group[this_.sub_group_index].id
-                                    },
-                                    success: function(res) {
-                                        if (res.code !== 0) {
-                                            layer.msg(res.msg, {
-                                                icon: 0
-                                            });
-                                        } else {
-                                            layer.msg("修改分组成功", {
-                                                icon: 1
-                                            });
-                                            this_.init_blog_data();
-                                        }
-                                    }
-                                });
-                                layer.close(id);
-                            }
-                        });
-                    },
+                  set_hide_bat: function(value) {
+                      let this_ = this;
+                      if (this_.checked_item.length === 0) {
+                          layer.msg("请选择要操作的对象");
+                          return;
+                      }
+                      layer.confirm("确认将选中的博文" + (value ? "" : "取消") + "隐藏吗?", function() {
+                          $.ajax({
+                              url: "/admin/api/hide_bat",
+                              method: "PUT",
+                              data: JSON.stringify({
+                                  blogs: this_.checked_item,
+                                  value: value
+                              }),
+                              success: function(res) {
+                                  if (res.code !== 0) {
+                                      layer.msg(res.msg, {
+                                          icon: 0
+                                      });
+                                  } else {
+                                      layer.msg("操作成功", {
+                                          icon: 1
+                                      });
+                                      this_.init_blog_data();
+                                  }
+                              }
+                          });
+                      });
+                  },
 
-                    update_blog_group_bat: function() {
-                        let this_ = this;
-                        this_.big_group_index = 0;
-                        this_.sub_group_index = 0;
-                        let id = layer.open({
-                            type: 1,
-                            content: $("#group_show"),
-                            btn: ["确认", "取消"],
-                            yes: function() {
-                                $.ajax({
-                                    url: "/admin/api/blog_group_bat",
-                                    method: "PUT",
-                                    data: JSON.stringify({
-                                        blogs: this_.checked_item,
-                                        sub_group: this_.group_info[this_.big_group_index].sub_group[this_.sub_group_index].id
-                                    }),
-                                    success: function(res) {
-                                        if (res.code !== 0) {
-                                            layer.msg(res.msg, {
-                                                icon: 0
-                                            });
-                                        } else {
-                                            layer.msg("批量修改分组成功", {
-                                                icon: 1
-                                            });
-                                            this_.init_blog_data();
-                                        }
-                                    }
-                                });
-                                layer.close(id);
-                            }
-                        });
-                    },
+                  change_group: function(index) {
+                      let this_ = this;
+                      this_.big_group_index = 0;
+                      this_.sub_group_index = 0;
+                      let id = layer.open({
+                          type: 1,
+                          content: $("#group_show"),
+                          btn: ["确认", "取消"],
+                          yes: function() {
+                              $.ajax({
+                                  url: "/admin/api/blog_group",
+                                  method: "PUT",
+                                  data: {
+                                      blog_id: this_.blog_data[index].id,
+                                      sub_group: this_.group_info[this_.big_group_index].sub_group[this_.sub_group_index].id
+                                  },
+                                  success: function(res) {
+                                      if (res.code !== 0) {
+                                          layer.msg(res.msg, {
+                                              icon: 0
+                                          });
+                                      } else {
+                                          layer.msg("修改分组成功", {
+                                              icon: 1
+                                          });
+                                          this_.init_blog_data();
+                                      }
+                                  }
+                              });
+                              layer.close(id);
+                          }
+                      });
+                  },
 
-                    delete_label: function(index, id) {
-                        let this_ = this;
-                        $.ajax({
-                            url: "/admin/api/blog_label",
-                            method: "DELETE",
-                            data: {
-                                blog_id: this_.blog_data[index].id,
-                                label_id: id
-                            },
-                            success: function(res) {
-                                if (res.code !== 0) {
-                                    layer.msg(res.msg, {
-                                        icon: 0
-                                    });
-                                } else {
-                                    for (let k in this_.blog_data[index].labels) {
-                                        if (this_.blog_data[index].labels[k].id === id) {
-                                            Vue.delete(this_.blog_data[index].labels, k);
-                                            break;
-                                        }
-                                    }
-                                    layer.msg("删除成功", {
-                                        icon: 1
-                                    });
+                  update_blog_group_bat: function() {
+                      let this_ = this;
+                      this_.big_group_index = 0;
+                      this_.sub_group_index = 0;
+                      let id = layer.open({
+                          type: 1,
+                          content: $("#group_show"),
+                          btn: ["确认", "取消"],
+                          yes: function() {
+                              $.ajax({
+                                  url: "/admin/api/blog_group_bat",
+                                  method: "PUT",
+                                  data: JSON.stringify({
+                                      blogs: this_.checked_item,
+                                      sub_group: this_.group_info[this_.big_group_index].sub_group[this_.sub_group_index].id
+                                  }),
+                                  success: function(res) {
+                                      if (res.code !== 0) {
+                                          layer.msg(res.msg, {
+                                              icon: 0
+                                          });
+                                      } else {
+                                          layer.msg("批量修改分组成功", {
+                                              icon: 1
+                                          });
+                                          this_.init_blog_data();
+                                      }
+                                  }
+                              });
+                              layer.close(id);
+                          }
+                      });
+                  },
 
-                                }
-                            }
-                        });
-                    },
+                  delete_label: function(index, id) {
+                      let this_ = this;
+                      $.ajax({
+                          url: "/admin/api/blog_label",
+                          method: "DELETE",
+                          data: {
+                              blog_id: this_.blog_data[index].id,
+                              label_id: id
+                          },
+                          success: function(res) {
+                              if (res.code !== 0) {
+                                  layer.msg(res.msg, {
+                                      icon: 0
+                                  });
+                              } else {
+                                  for (let k in this_.blog_data[index].labels) {
+                                      if (this_.blog_data[index].labels[k].id === id) {
+                                          Vue.delete(this_.blog_data[index].labels, k);
+                                          break;
+                                      }
+                                  }
+                                  layer.msg("删除成功", {
+                                      icon: 1
+                                  });
 
-                    prepare_add_label: function(index) {
-                        let this_ = this;
-                        this.selected_labels = []
-                        this.want_labels = this.calc_labels(index);
-                        let id = layer.open({
-                            type: 1,
-                            content: $("#label_show"),
-                            btn: ["添加", "取消"],
-                            yes: function() {
-                                this_.add_label(index);
-                                layer.close(id);
-                            }
-                        });
-                    },
+                              }
+                          }
+                      });
+                  },
 
-                    add_label: function(index) {
-                        let this_ = this;
-                        if (this_.selected_labels.length === 0) {
-                            layer.msg("请先选择标签", {
-                                icon: 0
-                            });
-                            return;
-                        }
-                        $.ajax({
-                            url: "/admin/api/blog_label",
-                            method: "POST",
-                            data: JSON.stringify({
-                                blog_id: this_.blog_data[index].id,
-                                label_ids: this_.selected_labels
-                            }),
-                            success: function(res) {
-                                if (res.code !== 0) {
-                                    layer.msg(res.msg, {
-                                        icon: 0
-                                    });
-                                } else {
-                                    layer.msg("增加标签成功", {
-                                        icon: 1
-                                    });
-                                    this_.init_blog_data();
-                                }
-                            }
-                        });
-                    },
+                  prepare_add_label: function(index) {
+                      let this_ = this;
+                      this.selected_labels = []
+                      this.want_labels = this.calc_labels(index);
+                      let id = layer.open({
+                          type: 1,
+                          content: $("#label_show"),
+                          btn: ["添加", "取消"],
+                          yes: function() {
+                              this_.add_label(index);
+                              layer.close(id);
+                          }
+                      });
+                  },
 
-                    add_blog_label_bat: function() {
-                        let this_ = this;
-                        if (this_.checked_item.length === 0) {
-                            layer.msg("请选择要操作的对象");
-                            return;
-                        }
-                        this.selected_labels = []
-                        this.want_labels = this_.labels;
-                        let id = layer.open({
-                            type: 1,
-                            content: $("#label_show"),
-                            btn: ["添加", "取消"],
-                            yes: function() {
-                                if (this_.selected_labels.length === 0) {
-                                    layer.msg("请先选择标签", {
-                                        icon: 0
-                                    });
-                                    return;
-                                }
-                                layer.close(id);
-                                $.ajax({
-                                    url: "/admin/api/blog_label_bat",
-                                    method: "POST",
-                                    data: JSON.stringify({
-                                        blogs: this_.checked_item,
-                                        labels: this_.selected_labels
-                                    }),
-                                    success: function(res) {
-                                        if (res.code !== 0) {
-                                            layer.msg(res.msg, {
-                                                icon: 0
-                                            });
-                                        } else {
-                                            layer.msg("操作成功", {
-                                                icon: 1
-                                            });
-                                            this_.init_blog_data();
-                                        }
-                                    }
-                                });
-                            }
-                        });
-                    },
+                  add_label: function(index) {
+                      let this_ = this;
+                      if (this_.selected_labels.length === 0) {
+                          layer.msg("请先选择标签", {
+                              icon: 0
+                          });
+                          return;
+                      }
+                      $.ajax({
+                          url: "/admin/api/blog_label",
+                          method: "POST",
+                          data: JSON.stringify({
+                              blog_id: this_.blog_data[index].id,
+                              label_ids: this_.selected_labels
+                          }),
+                          success: function(res) {
+                              if (res.code !== 0) {
+                                  layer.msg(res.msg, {
+                                      icon: 0
+                                  });
+                              } else {
+                                  layer.msg("增加标签成功", {
+                                      icon: 1
+                                  });
+                                  this_.init_blog_data();
+                              }
+                          }
+                      });
+                  },
 
-                    calc_labels: function(index) {
-                        let ret = JSON.parse(JSON.stringify(this.labels));
+                  add_blog_label_bat: function() {
+                      let this_ = this;
+                      if (this_.checked_item.length === 0) {
+                          layer.msg("请选择要操作的对象");
+                          return;
+                      }
+                      this.selected_labels = []
+                      this.want_labels = this_.labels;
+                      let id = layer.open({
+                          type: 1,
+                          content: $("#label_show"),
+                          btn: ["添加", "取消"],
+                          yes: function() {
+                              if (this_.selected_labels.length === 0) {
+                                  layer.msg("请先选择标签", {
+                                      icon: 0
+                                  });
+                                  return;
+                              }
+                              layer.close(id);
+                              $.ajax({
+                                  url: "/admin/api/blog_label_bat",
+                                  method: "POST",
+                                  data: JSON.stringify({
+                                      blogs: this_.checked_item,
+                                      labels: this_.selected_labels
+                                  }),
+                                  success: function(res) {
+                                      if (res.code !== 0) {
+                                          layer.msg(res.msg, {
+                                              icon: 0
+                                          });
+                                      } else {
+                                          layer.msg("操作成功", {
+                                              icon: 1
+                                          });
+                                          this_.init_blog_data();
+                                      }
+                                  }
+                              });
+                          }
+                      });
+                  },
+
+                  calc_labels: function(index) {
+                      let ret = JSON.parse(JSON.stringify(this.labels));
 
 
-                        for (let i = ret.length - 1; i >= 0; --i) {
-                            let flag = false;
-                            for (let k in this.blog_data[index].labels) {
-                                if (this.blog_data[index].labels[k].id === ret[i].id) {
-                                    flag = true;
-                                    break;
-                                }
-                            }
-                            if (flag) {
-                                ret.splice(i, 1);
-                            }
-                        }
+                      for (let i = ret.length - 1; i >= 0; --i) {
+                          let flag = false;
+                          for (let k in this.blog_data[index].labels) {
+                              if (this.blog_data[index].labels[k].id === ret[i].id) {
+                                  flag = true;
+                                  break;
+                              }
+                          }
+                          if (flag) {
+                              ret.splice(i, 1);
+                          }
+                      }
 
-                        return ret;
-                    },
-                    edit_blog: function(index) {
-                        window.location.href = "/admin/api/editor?type=2&blog_id=" + this.blog_data[index].id;
-                    },
-                    delete_blog: function(index, title) {
-                        let this_ = this;
+                      return ret;
+                  },
+                  edit_blog: function(index) {
+                      window.location.href = "/admin/api/editor?type=2&blog_id=" + this.blog_data[index].id;
+                  },
+                  delete_blog: function(index, title) {
+                      let this_ = this;
 
-                        layer.confirm("确认删除文章\"" + title + "\"?<br><b>注意：此操作不可撤销！</b>", function() {
-                            $.ajax({
-                                url: "/admin/api/blog",
-                                method: "DELETE",
-                                data: {
-                                    id: this_.blog_data[index].id
-                                },
-                                success: function(res) {
-                                    if (res.code !== 0) {
-                                        layer.msg(res.msg, {
-                                            icon: 0
-                                        });
-                                        return false;
-                                    } else {
-                                        layer.msg("删除成功", {
-                                            icon: 1
-                                        });
-                                        Vue.delete(this_.blog_data, index);
-                                        return true;
-                                    }
-                                }
-                            });
-                        });
-                    },
-                    set_top: function(index) {
-                        let this_ = this;
-                        let new_value = 1 - this_.blog_data[index].top;
-                        $.ajax({
-                            url: "/admin/api/top",
-                            method: "PUT",
-                            data: {
-                                id: this_.blog_data[index].id,
-                                value: new_value
-                            },
-                            success: function(res) {
-                                if (res.code !== 0) {
-                                    layer.msg(res.msg, {
-                                        icon: 0
-                                    });
-                                    return false;
-                                } else {
-                                    layer.msg("操作成功", {
-                                        icon: 1
-                                    });
-                                    Vue.set(this_.blog_data[index], "top", new_value);
-                                    return true;
-                                }
-                            }
-                        });
-                    },
-                    set_hide: function(index) {
-                        let this_ = this;
-                        let new_value = 1 - this_.blog_data[index].hide;
-                        $.ajax({
-                            url: "/admin/api/hide",
-                            method: "PUT",
-                            data: {
-                                id: this_.blog_data[index].id,
-                                value: new_value
-                            },
-                            success: function(res) {
-                                if (res.code !== 0) {
-                                    layer.msg(res.msg, {
-                                        icon: 0
-                                    });
-                                    return false;
-                                } else {
-                                    layer.msg("操作成功", {
-                                        icon: 1
-                                    });
-                                    Vue.set(this_.blog_data[index], "hide", new_value);
-                                    return true;
-                                }
-                            }
-                        });
-                    },
-                    add_new_blog: function() {
-                        window.location.href = "/admin/api/editor?type=0";
-                    },
+                      layer.confirm("确认删除文章\"" + title + "\"?<br><b>注意：此操作不可撤销！</b>", function() {
+                          $.ajax({
+                              url: "/admin/api/blog",
+                              method: "DELETE",
+                              data: {
+                                  id: this_.blog_data[index].id
+                              },
+                              success: function(res) {
+                                  if (res.code !== 0) {
+                                      layer.msg(res.msg, {
+                                          icon: 0
+                                      });
+                                      return false;
+                                  } else {
+                                      layer.msg("删除成功", {
+                                          icon: 1
+                                      });
+                                      Vue.delete(this_.blog_data, index);
+                                      return true;
+                                  }
+                              }
+                          });
+                      });
+                  },
+                  set_top: function(index) {
+                      let this_ = this;
+                      let new_value = 1 - this_.blog_data[index].top;
+                      $.ajax({
+                          url: "/admin/api/top",
+                          method: "PUT",
+                          data: {
+                              id: this_.blog_data[index].id,
+                              value: new_value
+                          },
+                          success: function(res) {
+                              if (res.code !== 0) {
+                                  layer.msg(res.msg, {
+                                      icon: 0
+                                  });
+                                  return false;
+                              } else {
+                                  layer.msg("操作成功", {
+                                      icon: 1
+                                  });
+                                  Vue.set(this_.blog_data[index], "top", new_value);
+                                  return true;
+                              }
+                          }
+                      });
+                  },
+                  set_hide: function(index) {
+                      let this_ = this;
+                      let new_value = 1 - this_.blog_data[index].hide;
+                      $.ajax({
+                          url: "/admin/api/hide",
+                          method: "PUT",
+                          data: {
+                              id: this_.blog_data[index].id,
+                              value: new_value
+                          },
+                          success: function(res) {
+                              if (res.code !== 0) {
+                                  layer.msg(res.msg, {
+                                      icon: 0
+                                  });
+                                  return false;
+                              } else {
+                                  layer.msg("操作成功", {
+                                      icon: 1
+                                  });
+                                  Vue.set(this_.blog_data[index], "hide", new_value);
+                                  return true;
+                              }
+                          }
+                      });
+                  },
+                  add_new_blog: function() {
+                      window.location.href = "/admin/api/editor?type=0";
+                  },
 
-                    on_select_all: function() {
-                        this.checked_item = []
-                        if (this.select_all_flag) {
-                            for (let k in this.blog_data) {
-                                this.checked_item.push(this.blog_data[k].id);
-                            }
-                        }
-                    },
-                    init_blog_data: function() {
-                        let this_ = this;
-                        $.ajax({
-                            url: "/admin/api/blog_list",
-                            method: "GET",
-                            success: function(res) {
-                                if (res.code !== 0) {
-                                    layer.msg(res.msg, {
-                                        icon: 0
-                                    });
-                                } else {
-                                    this_.blog_data = res.data;
-                                }
-                            }
-                        });
-                    },
-                    init_label_data: function() {
-                        let this_ = this;
-                        $.ajax({
-                            url: "/admin/api/label",
-                            method: "GET",
-                            success: function(res) {
-                                if (res.code !== 0) {
-                                    layer.msg(res.msg, {
-                                        icon: 0
-                                    });
-                                } else {
-                                    this_.labels = res.data;
-                                }
-                            }
-                        });
-                    },
-                    init_group_info: function() {
-                        let this_ = this;
-                        $.ajax({
-                            url: "/api/group_info",
-                            method: "GET",
-                            success: function(res) {
-                                if (res.code !== 0) {
-                                    layer.msg(res.msg, {
-                                        icon: 0
-                                    });
-                                } else {
-                                    for (let i = res.data.length - 1; i >= 0; --i) {
-                                        if (res.data[i].sub_group.length === 0) {
-                                            res.data.splice(i, 1);
-                                        }
-                                    }
-                                    this_.group_info = res.data;
-                                }
-                            }
-                        });
-                    }
-                },
-                mounted: function() {
-                    this.init_label_data();
-                    this.init_blog_data();
-                    this.init_group_info();
-                }
-            });
-        });
+                  on_select_all: function() {
+                      this.checked_item = []
+                      if (this.select_all_flag) {
+                          for (let k in this.blog_data) {
+                              this.checked_item.push(this.blog_data[k].id);
+                          }
+                      }
+                  },
+                  init_blog_data: function() {
+                      let this_ = this;
+                      $.ajax({
+                          url: "/admin/api/blog_list",
+                          method: "GET",
+                          success: function(res) {
+                              if (res.code !== 0) {
+                                  layer.msg(res.msg, {
+                                      icon: 0
+                                  });
+                              } else {
+                                  this_.blog_data = res.data;
+                              }
+                          }
+                      });
+                  },
+                  init_label_data: function() {
+                      let this_ = this;
+                      $.ajax({
+                          url: "/admin/api/label",
+                          method: "GET",
+                          success: function(res) {
+                              if (res.code !== 0) {
+                                  layer.msg(res.msg, {
+                                      icon: 0
+                                  });
+                              } else {
+                                  this_.labels = res.data;
+                              }
+                          }
+                      });
+                  },
+                  init_group_info: function() {
+                      let this_ = this;
+                      $.ajax({
+                          url: "/api/group_info",
+                          method: "GET",
+                          success: function(res) {
+                              if (res.code !== 0) {
+                                  layer.msg(res.msg, {
+                                      icon: 0
+                                  });
+                              } else {
+                                  for (let i = res.data.length - 1; i >= 0; --i) {
+                                      if (res.data[i].sub_group.length === 0) {
+                                          res.data.splice(i, 1);
+                                      }
+                                  }
+                                  this_.group_info = res.data;
+                              }
+                          }
+                      });
+                  }
+              },
+              mounted: function() {
+                  this.init_label_data();
+                  this.init_blog_data();
+                  this.init_group_info();
+              }
+          });
+      });
     </script>
-</body>
-
+  </body>
 </html>
