@@ -3,6 +3,7 @@
 #include "blog_config.h"
 #include "core/sf_stdc++.h"
 #include "database.h"
+#include "network/sf_http_content_type.h"
 #include "network/sf_http_part_router.hpp"
 #include "network/sf_websocket_router.hpp"
 #include "tools/sf_finally.hpp"
@@ -493,6 +494,11 @@ void blog_server::setup_server(const sf_http_server_config& server_conf)
         function([this](const sf_http_request& req, sf_http_response& res) {
             get_comment(req, res);
         }),
+        vector { { "GET"s } }));
+
+    admin_api_router->add_router(sf_http_router::make_instance("/download/(\\d+)/.*md", function([this](const sf_http_request& req, sf_http_response& res, string, string id) {
+        download_md(req, res, id);
+    }),
         vector { { "GET"s } }));
 
     admin_router->add_router(admin_api_router);
@@ -1789,4 +1795,19 @@ void blog_server::get_audited_comment(const sf_http_request& req, sf_http_respon
     });
     ret["code"] = 0;
     ret["data"] = to_json(c);
+}
+
+void blog_server::download_md(const sf_http_request& req, sf_http_response& res, string id)
+{
+    sf_json ret;
+    auto blog_id = static_cast<int>(sf_string_to_long_double(id));
+    auto blog_content = database__->get_blog_content(blog_id);
+    if (!blog_content) {
+        ret["code"] = false;
+        ret["msg"] = "blog not found";
+        res.set_json(ret);
+        return;
+    }
+    res.set_body(to_byte_array(blog_content->content));
+    res.set_content_type(sf_http_content_type["md"]);
 }

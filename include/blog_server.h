@@ -151,6 +151,8 @@ private:
 
     void get_audited_comment(const sf_http_request& req, sf_http_response& res);
 
+    void download_md(const sf_http_request& req, sf_http_response& res, string id);
+
 public:
     explicit blog_server(const std::string& config_file_path);
 
