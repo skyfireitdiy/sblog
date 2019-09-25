@@ -147,6 +147,10 @@
     <script src="https://cdn.bootcss.com/showdown/1.9.0/showdown.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/clipboard@2/dist/clipboard.min.js"></script>
     <script type="text/javascript" src="https://cdn.bootcss.com/vue/2.6.10/vue.min.js"></script>
+
+    <script src="https://cdn.bootcss.com/showdown/1.9.0/showdown.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/highlight.min.js"></script>
+    <script src="/js/tools.js"></script>
     <script>
         let app = new Vue({
             el: "#app",
@@ -397,23 +401,7 @@
             },
             mounted: function() {
                 let this_ = this;
-                this.converter = new showdown.Converter();
-                this.converter.setOption("omitExtraWLInCodeBlocks", true);
-                this.converter.setOption("ghCompatibleHeaderId", true);
-                this.converter.setOption("prefixHeaderId", true);
-                this.converter.setOption("headerLevelStart", 1);
-                this.converter.setOption("parseImgDimensions", true);
-                this.converter.setOption("literalMidWordUnderscores", true);
-                this.converter.setOption("tables", true);
-                this.converter.setOption("tablesHeaderId", true);
-                this.converter.setOption("ghCodeBlocks", true);
-                this.converter.setOption("tasklists", true);
-                this.converter.setOption("smartIndentationFix", true);
-                this.converter.setOption("simpleLineBreaks", true);
-                this.converter.setOption("requireSpaceBeforeHeadingText", true);
-                this.converter.setOption("openLinksInNewWindow", true);
-                this.converter.setOption("backslashEscapesHTMLTags", true);
-                this.converter.setOption("emoji", true);
+                this.converter = markdown_converter();
                 this.init_group_info();
                 this.init_blog_info();
 
