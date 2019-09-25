@@ -35,7 +35,7 @@
     <title>{{ blog_info.title }}</title>
 
 
-    <ul class="layui-nav">
+    <ul class="layui-nav" style="height: 6%">
         <li class="layui-nav-item" v-for="(bg, index) in group_info">
             <a @click="change_big_group(index);">{{ bg.group_name }}</a>
             <dl class="layui-nav-child" v-if="group_info.length !== 0">
@@ -50,23 +50,26 @@
         </li>
 
         <li class="layui-nav-item">
-            <img src="/img/list.png" width="20px"  @click="show_blog_list()">
-            <img src="/img/comment.png" width="20px"  style="margin-left:30px;"
+            <img v-show="blogs.length" src="/img/list.png" width="20px"  @click="show_blog_list()">
+            <img v-show="current_blog" src="/img/comment.png" width="20px"  style="margin-left:30px;"
                  @click="show_comment()">
         </li>
     </ul>
 
     <div v-if="current_blog" style="height: 4%" class="layui-bg-black">
         <div style="text-align: center; padding: 0; margin: 0">
+            <a href="/">
+                <img src="/img/home.png" title="返回首页" style="margin: 10px; border: thin black solid; border-radius: 3px;" height="20px;"  >
+            </a>
             标题： {{current_blog.title}} &nbsp;&nbsp; 发布时间：{{current_blog.publish_time}}&nbsp;&nbsp; 阅读数量：
             {{current_blog.watch_number}}&nbsp;&nbsp; 标签： <span v-for="lb in labels">
                         {{lb.label_name}}&nbsp;
                     </span>
-            <img style="margin: 10px; border: thin black solid; border-radius: 3px;" height="20px;" id="share_btn"
+            <img style="margin: 10px; border: thin black solid; border-radius: 3px;" height="20px;" title="分享链接" id="share_btn"
                  src="img/share.png">
         </div>
     </div>
-    <div style="height: 96%; overflow:hidden;">
+    <div style="height: 90%; overflow:hidden;">
         <iframe @load="on_content_load_finished();" id="html_content" src="/html/show_blog.html"
                 class="v_h"></iframe>
     </div>
