@@ -6,6 +6,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" type="text/css" href="https://www.layuicdn.com/layui/css/layui.css">
+    <link rel="stylesheet"
+          href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/styles/default.min.css">
     <style>
         [v-cloak] {
             display: none;
@@ -66,6 +68,9 @@
     <script src="https://www.layuicdn.com/layui/layui.js" charset="utf-8"></script>
     <script type="text/javascript" src="https://cdn.bootcss.com/vue/2.6.10/vue.js"></script>
     <script src="https://cdn.bootcss.com/showdown/1.9.0/showdown.min.js"></script>
+    <script src="https://cdn.bootcss.com/showdown/1.9.0/showdown.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/highlight.min.js"></script>
+    <script src="/js/tools.js"></script>
     <script>
         layui.use(["form", "element", "layer", "jquery"], function() {
             let form = layui.form;
@@ -73,23 +78,7 @@
             let layer = layui.layer;
             let element = layui.element;
 
-            let converter = new showdown.Converter();
-            converter.setOption("omitExtraWLInCodeBlocks", true);
-            converter.setOption("ghCompatibleHeaderId", true);
-            converter.setOption("prefixHeaderId", true);
-            converter.setOption("headerLevelStart", 1);
-            converter.setOption("parseImgDimensions", true);
-            converter.setOption("literalMidWordUnderscores", true);
-            converter.setOption("tables", true);
-            converter.setOption("tablesHeaderId", true);
-            converter.setOption("ghCodeBlocks", true);
-            converter.setOption("tasklists", true);
-            converter.setOption("smartIndentationFix", true);
-            converter.setOption("simpleLineBreaks", true);
-            converter.setOption("requireSpaceBeforeHeadingText", true);
-            converter.setOption("openLinksInNewWindow", true);
-            converter.setOption("backslashEscapesHTMLTags", true);
-            converter.setOption("emoji", true);
+            let converter = markdown_converter();
 
             form.render();
 

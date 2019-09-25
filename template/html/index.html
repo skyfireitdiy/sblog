@@ -145,129 +145,122 @@
         </div>
     </div>
 
-</div>
-<script src="https://www.layuicdn.com/layui/layui.js" charset="utf-8"></script>
-<script src="https://cdn.bootcss.com/showdown/1.9.0/showdown.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/clipboard@2/dist/clipboard.min.js"></script>
-<script type="text/javascript" src="https://cdn.bootcss.com/vue/2.6.10/vue.min.js"></script>
-<script>
-    let app = new Vue({
-        el: "#app",
-        data: {
-            blog_info: {
-                title: "",
-                desc: ""
+    </div>
+    <script src="https://www.layuicdn.com/layui/layui.js" charset="utf-8"></script>
+    <script src="https://cdn.bootcss.com/showdown/1.9.0/showdown.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/clipboard@2/dist/clipboard.min.js"></script>
+    <script type="text/javascript" src="https://cdn.bootcss.com/vue/2.6.10/vue.min.js"></script>
+
+    <script src="https://cdn.bootcss.com/showdown/1.9.0/showdown.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/highlight.min.js"></script>
+    <script src="/js/tools.js"></script>
+    <script>
+        let app = new Vue({
+            el: "#app",
+            data: {
+                blog_info: {
+                    title: "",
+                    desc: ""
+                },
+                group_info: [],
+                big_group_index: 0,
+                sub_group_index: 0,
+                blogs: [],
+                current_blog: null,
+                labels: [],
+                converter: null,
+                type: << type >> ,
+                blog: << blog >> ,
+                comment: {
+                    name: "",
+                    content: "",
+                    qq: "",
+                    email: ""
+                }
             },
-            group_info: [],
-            big_group_index: 0,
-            sub_group_index: 0,
-            blogs: [],
-            current_blog: null,
-            labels: [],
-            converter: null,
-            type: << type >>,
-        blog: << blog >>,
-        comment
-    :
-    {
-        name: "",
-            content
-    :
-        "",
-            qq
-    :
-        "",
-            email
-    :
-        ""
-    }
-    },
-    methods: {
-        publish_comment: function () {
-            let this_ = this;
-            layui.use(["jquery", "layer"], function () {
-                let $ = layui.jquery;
-                let layer = layui.layer;
-                layer.confirm("确认发表？您的评论在管理员审核后可显示", function () {
-                    $.ajax({
-                        url: "/api/comment",
-                        method: "POST",
-                        data: {
-                            blog_id: this_.current_blog.id,
-                            name: this_.comment.name,
-                            content: this_.comment.content,
-                            qq: this_.comment.qq,
-                            email: this_.comment.email
-                        },
-                        success: function (res) {
-                            if (res.code !== 0) {
-                                layer.msg(res.msg, {
-                                    icon: 0
-                                });
-                            } else {
-                                layer.msg("发表成功", {
-                                    icon: 1
-                                });
-                                this_.comment.content = "";
-                            }
-                        }
+            methods: {
+                publish_comment: function() {
+                    let this_ = this;
+                    layui.use(["jquery", "layer"], function() {
+                        let $ = layui.jquery;
+                        let layer = layui.layer;
+                        layer.confirm("确认发表？您的评论在管理员审核后可显示", function() {
+                            $.ajax({
+                                url: "/api/comment",
+                                method: "POST",
+                                data: {
+                                    blog_id: this_.current_blog.id,
+                                    name: this_.comment.name,
+                                    content: this_.comment.content,
+                                    qq: this_.comment.qq,
+                                    email: this_.comment.email
+                                },
+                                success: function(res) {
+                                    if (res.code !== 0) {
+                                        layer.msg(res.msg, {
+                                            icon: 0
+                                        });
+                                    } else {
+                                        layer.msg("发表成功", {
+                                            icon: 1
+                                        });
+                                        this_.comment.content = "";
+                                    }
+                                }
+                            });
+                        });
                     });
-                });
-            });
-        }
-    ,
-        read_blog: function (blog) {
-            let this_ = this;
-            layui.use(["layer", "jquery", "element"], function () {
-                let element = layui.element;
-                let layer = layui.layer;
-                let $ = layui.jquery;
-                layer.closeAll();
-                this_.current_blog = blog;
-                $.ajax({
-                    url: "/api/blog_labels",
-                    method: "GET",
-                    data: {
-                        blog_id: blog.id,
-                    },
-                    success: function (res) {
-                        if (res.code !== 0) {
-                            layer.msg(res.msg, {
-                                icon: 0
-                            });
-                        } else {
-                            this_.labels = res.data;
-                        }
-                    }
-                });
-                $.ajax({
-                    url: "/api/blog_content",
-                    method: "GET",
-                    data: {
-                        blog_id: blog.id
-                    },
-                    success: function (res) {
-                        if (res.code !== 0) {
-                            layer.msg(res.msg, {
-                                icon: 0
-                            });
-                        } else {
-                            $(document.getElementById('html_content').contentWindow.document.body).html(this_.converter.makeHtml(res.data.content));
-                        }
-                    }
-                });
-                Vue.nextTick(
-                    () => {
-                        element.init();
-                    }
-                );
-            });
-        }
-    ,
-        change_big_group: function (index) {
-            this.big_group_index = index;
-        }
-    ,
+                },
+                read_blog: function(blog) {
+                    let this_ = this;
+                    layui.use(["layer", "jquery", "element"], function() {
+                        let element = layui.element;
+                        let layer = layui.layer;
+                        let $ = layui.jquery;
+                        layer.closeAll();
+                        this_.current_blog = blog;
+                        $.ajax({
+                            url: "/api/blog_labels",
+                            method: "GET",
+                            data: {
+                                blog_id: blog.id,
+                            },
+                            success: function(res) {
+                                if (res.code !== 0) {
+                                    layer.msg(res.msg, {
+                                        icon: 0
+                                    });
+                                } else {
+                                    this_.labels = res.data;
+                                }
+                            }
+                        });
+                        $.ajax({
+                            url: "/api/blog_content",
+                            method: "GET",
+                            data: {
+                                blog_id: blog.id
+                            },
+                            success: function(res) {
+                                if (res.code !== 0) {
+                                    layer.msg(res.msg, {
+                                        icon: 0
+                                    });
+                                } else {
+                                    $(document.getElementById('html_content').contentWindow.document.body).html(this_.converter.makeHtml(res.data.content));
+                                }
+                            }
+                        });
+                        Vue.nextTick(
+                            () => {
+                                element.init();
+                            }
+                        );
+                    });
+                },
+                change_big_group: function(index) {
+                    this.big_group_index = index;
+                },
 
         get_blog: function (id) {
             let this_ = this;
@@ -360,100 +353,80 @@
         }
     ,
 
-        init_group_info: function () {
-            let this_ = this;
-            layui.use(["jquery", "layer"], function () {
-                let $ = layui.jquery;
-                let layer = layui.layer;
-                $.ajax({
-                    url: "/api/group_info",
-                    method: "GET",
-                    success: function (res) {
-                        if (res.code !== 0) {
-                            layer.msg(res.msg, {
-                                icon: 0
-                            });
-                        } else {
-                            this_.group_info = res.data;
-                            Vue.nextTick(() => {
-                                layui.use(["element"], function () {
-                                    let element = layui.element;
-                                    element.init();
-                                });
-                            });
-                        }
-                    }
-                });
-            });
-        }
-    ,
-        init_blog_info: function () {
-            let this_ = this;
-            layui.use(["jquery", "layer"], function () {
-                let $ = layui.jquery;
-                let layer = layui.layer;
-                $.ajax({
-                    url: "/api/blog_info",
-                    method: "GET",
-                    success: function (res) {
-                        if (res.code !== 0) {
-                            layer.msg(res.msg, {
-                                icon: 0
-                            });
-                        } else {
-                            this_.blog_info = res.data;
-                            $(document.getElementById('html_content').contentWindow.document.body).html(res.data.desc);
-                        }
-                    }
-                });
-            });
-        }
-    ,
-        on_content_load_finished: function () {
-            if (this.type === 1) {
-                this.read_blog(this.blog);
-            }
-        }
-    }
-    ,
-    mounted: function () {
-        let this_ = this;
-        this.converter = new showdown.Converter();
-        this.converter.setOption("omitExtraWLInCodeBlocks", true);
-        this.converter.setOption("ghCompatibleHeaderId", true);
-        this.converter.setOption("prefixHeaderId", true);
-        this.converter.setOption("headerLevelStart", 1);
-        this.converter.setOption("parseImgDimensions", true);
-        this.converter.setOption("literalMidWordUnderscores", true);
-        this.converter.setOption("tables", true);
-        this.converter.setOption("tablesHeaderId", true);
-        this.converter.setOption("ghCodeBlocks", true);
-        this.converter.setOption("tasklists", true);
-        this.converter.setOption("smartIndentationFix", true);
-        this.converter.setOption("simpleLineBreaks", true);
-        this.converter.setOption("requireSpaceBeforeHeadingText", true);
-        this.converter.setOption("openLinksInNewWindow", true);
-        this.converter.setOption("backslashEscapesHTMLTags", true);
-        this.converter.setOption("emoji", true);
-        this.init_group_info();
-        this.init_blog_info();
-
-        let clip = new ClipboardJS("#share_btn", {
-            text: function () {
-                let data = window.location.protocol + "//" + window.location.host + "/blog?blog=" + this_.current_blog.id;
-                layui.use(["layer"], function () {
-                    let layer = layui.layer;
-                    layer.msg(data + "<br>链接已复制", {
-                        icon: 1
+                init_group_info: function() {
+                    let this_ = this;
+                    layui.use(["jquery", "layer"], function() {
+                        let $ = layui.jquery;
+                        let layer = layui.layer;
+                        $.ajax({
+                            url: "/api/group_info",
+                            method: "GET",
+                            success: function(res) {
+                                if (res.code !== 0) {
+                                    layer.msg(res.msg, {
+                                        icon: 0
+                                    });
+                                } else {
+                                    this_.group_info = res.data;
+                                    Vue.nextTick(() => {
+                                        layui.use(["element"], function() {
+                                            let element = layui.element;
+                                            element.init();
+                                        });
+                                    });
+                                }
+                            }
+                        });
                     });
+                },
+                init_blog_info: function() {
+                    let this_ = this;
+                    layui.use(["jquery", "layer"], function() {
+                        let $ = layui.jquery;
+                        let layer = layui.layer;
+                        $.ajax({
+                            url: "/api/blog_info",
+                            method: "GET",
+                            success: function(res) {
+                                if (res.code !== 0) {
+                                    layer.msg(res.msg, {
+                                        icon: 0
+                                    });
+                                } else {
+                                    this_.blog_info = res.data;
+                                    $(document.getElementById('html_content').contentWindow.document.body).html(res.data.desc);
+                                }
+                            }
+                        });
+                    });
+                },
+                on_content_load_finished: function() {
+                    if (this.type === 1) {
+                        this.read_blog(this.blog);
+                    }
+                }
+            },
+            mounted: function() {
+                let this_ = this;
+                this.converter = markdown_converter();
+                this.init_group_info();
+                this.init_blog_info();
+
+                let clip = new ClipboardJS("#share_btn", {
+                    text: function() {
+                        let data = window.location.protocol + "//" + window.location.host + "/blog?blog=" + this_.current_blog.id;
+                        layui.use(["layer"], function() {
+                            let layer = layui.layer;
+                            layer.msg(data + "<br>链接已复制", {
+                                icon: 1
+                            });
+                        });
+                        return data;
+                    }
                 });
-                return data;
             }
         });
-    }
-    })
-    ;
-</script>
+    </script>
 </body>
 
 </html>
