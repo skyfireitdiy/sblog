@@ -34,7 +34,7 @@ mv docker-compose.yml.example docker-compose.yml        # docker-compose 配置
 ./run_in_docker.sh
 ```
 
-浏览器访问[http://localhost:8080/admin](http://localhost:8080/admin)进入后台管理页面
+浏览器访问[http://localhost:8080/admin](http://localhost:8080/admin)进入后台管理页面(默认用户名：admin 密码：123456)
 
 访问[http://localhost:8080](http://localhost:8080)进入首页
 
