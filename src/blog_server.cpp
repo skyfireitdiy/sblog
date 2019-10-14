@@ -1307,34 +1307,13 @@ void blog_server::user_get_blog(const sf_http_request& req,
     sort(data_normal.begin(), data_normal.end(),
         [](blog& bl, blog& br) { return bl.publish_time > br.publish_time; });
     blogs.insert(blogs.end(), data_normal.begin(), data_normal.end());
-    auto blogs_json = to_json(blogs);
+    auto blogs_json = sf_json();
+    blogs_json.convert_to_array();
     for (int i = 0; i < blogs.size(); ++i) {
-        auto sub_group = database__->sub_group(blogs[i].sub_group);
-        if (sub_group == nullptr) {
-            ret["code"] = 2;
-            ret["msg"] = "server error";
-            return;
+        auto tmp_ret = gen_blog_info(blogs[i]);
+        if (!tmp_ret.is_null()) {
+            blogs_json.append(tmp_ret);
         }
-        blogs_json[i]["sub_group"] = to_json(*sub_group);
-        auto big_group = database__->big_group(sub_group->big_group);
-        if (big_group == nullptr) {
-            ret["code"] = 3;
-            ret["msg"] = "server error";
-            return;
-        }
-        blogs_json[i]["big_group"] = to_json(*big_group);
-        auto labels = database__->blog_labels(blogs[i].id);
-        blogs_json[i]["labels"] = to_json(labels);
-
-        auto c = database__->get_blog_comment(blogs[i].id);
-        c.erase(remove_if(c.begin(), c.end(), [](auto& p) {
-            return p.audit == 0;
-        }),
-            c.end());
-        sort(c.begin(), c.end(), [&](auto& a, auto& b) {
-            return a.publish_time > b.publish_time;
-        });
-        blogs_json[i]["comment"] = to_json(c);
     }
     ret["code"] = 0;
     ret["data"] = blogs_json;
@@ -1352,34 +1331,13 @@ void blog_server::user_get_all_blog(const sf_http_request& req,
     sort(data_normal.begin(), data_normal.end(),
         [](blog& bl, blog& br) { return bl.publish_time > br.publish_time; });
     blogs.insert(blogs.end(), data_normal.begin(), data_normal.end());
-    auto blogs_json = to_json(blogs);
+    auto blogs_json = sf_json(); //to_json(blogs);
+    blogs_json.convert_to_array();
     for (int i = 0; i < blogs.size(); ++i) {
-        auto sub_group = database__->sub_group(blogs[i].sub_group);
-        if (sub_group == nullptr) {
-            ret["code"] = 1;
-            ret["msg"] = "server error";
-            return;
+        auto tmp_ret = gen_blog_info(blogs[i]);
+        if (!tmp_ret.is_null()) {
+            blogs_json.append(tmp_ret);
         }
-        blogs_json[i]["sub_group"] = to_json(*sub_group);
-        auto big_group = database__->big_group(sub_group->big_group);
-        if (big_group == nullptr) {
-            ret["code"] = 2;
-            ret["msg"] = "server error";
-            return;
-        }
-        blogs_json[i]["big_group"] = to_json(*big_group);
-        auto labels = database__->blog_labels(blogs[i].id);
-        blogs_json[i]["labels"] = to_json(labels);
-
-        auto c = database__->get_blog_comment(blogs[i].id);
-        c.erase(remove_if(c.begin(), c.end(), [](auto& p) {
-            return p.audit == 0;
-        }),
-            c.end());
-        sort(c.begin(), c.end(), [&](auto& a, auto& b) {
-            return a.publish_time > b.publish_time;
-        });
-        blogs_json[i]["comment"] = to_json(c);
     }
     ret["code"] = 0;
     ret["data"] = blogs_json;
@@ -1592,9 +1550,41 @@ void blog_server::read_blog(const sf_http_request& req, sf_http_response& res)
         if (!data) {
             ret["type"] = 0;
         } else {
-            ret["blog"] = to_json(*data);
+            ret["blog"] = gen_blog_info(*data);
+            if (ret["blog"].is_null()) {
+                ret["type"] = 0;
+            }
         }
     }
+}
+
+sf_json blog_server::gen_blog_info(const blog& data)
+{
+    sf_json ret = to_json(data);
+    auto sub_group = database__->sub_group(data.sub_group);
+
+    if (sub_group == nullptr) {
+        return sf_json();
+    }
+    ret["sub_group"] = to_json(*sub_group);
+    auto big_group = database__->big_group(sub_group->big_group);
+    if (big_group == nullptr) {
+        return sf_json();
+    }
+    ret["big_group"] = to_json(*big_group);
+    auto labels = database__->blog_labels(data.id);
+    ret["labels"] = to_json(labels);
+
+    auto c = database__->get_blog_comment(data.id);
+    c.erase(remove_if(c.begin(), c.end(), [](auto& p) {
+        return p.audit == 0;
+    }),
+        c.end());
+    sort(c.begin(), c.end(), [&](auto& a, auto& b) {
+        return a.publish_time > b.publish_time;
+    });
+    ret["comment"] = to_json(c);
+    return ret;
 }
 
 void blog_server::uploaded_file_list(const sf_http_request& req,

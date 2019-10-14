@@ -36,6 +36,8 @@ private:
         return true;
     }
 
+    sf_json gen_blog_info(const blog& data);
+
     void admin_root(const sf_http_request& req, sf_http_response& res);
 
     void admin_login(const sf_http_request& req, sf_http_response& res);
