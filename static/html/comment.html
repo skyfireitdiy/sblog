@@ -36,29 +36,26 @@
             </thead>
             <tbody>
                 <tr v-for="comment in comments" v-if="!comment.audit">
-                    <td>{{comment.blog_id}}</td>
+                    <td><a :href="'/blog?blog='+comment.blog_id" target="_blank">{{comment.blog_title}}</a></td>
                     <td>{{comment.name}}</td>
                     <td>{{comment.qq}}</td>
                     <td>{{comment.email}}</td>
                     <td>{{comment.publish_time}}</td>
                     <td>{{comment.content}}</td>
                     <td>
-                        <img style="margin: 10px; border: thin black solid; border-radius: 3px;" width="20px"
-                            src="/img/audit.png" @click="audit_comment(comment.id);" title="审核" />
-                        <img style="margin: 10px; border: thin black solid; border-radius: 3px;" width="20px"
-                            @click="delete_comment(comment.id);" src="/img/delete.png" title="删除" />
+                        <img style="margin: 10px; border: thin black solid; border-radius: 3px;" width="20px" src="/img/audit.png" @click="audit_comment(comment.id);" title="审核" />
+                        <img style="margin: 10px; border: thin black solid; border-radius: 3px;" width="20px" @click="delete_comment(comment.id);" src="/img/delete.png" title="删除" />
                     </td>
                 </tr>
                 <tr v-for="comment in comments" v-if="comment.audit">
-                    <td>{{comment.blog_id}}</td>
+                    <td><a :href="'/blog?blog='+comment.blog_id" target="_blank">{{comment.blog_title}}</a></td>
                     <td>{{comment.name}}</td>
                     <td>{{comment.qq}}</td>
                     <td>{{comment.email}}</td>
                     <td>{{comment.publish_time}}</td>
                     <td>{{comment.content}}</td>
                     <td>
-                        <img style="margin: 10px; border: thin black solid; border-radius: 3px;" width="20px"
-                            @click="delete_comment(comment.id);" src="/img/delete.png" title="删除" />
+                        <img style="margin: 10px; border: thin black solid; border-radius: 3px;" width="20px" @click="delete_comment(comment.id);" src="/img/delete.png" title="删除" />
                     </td>
                 </tr>
             </tbody>
@@ -68,7 +65,7 @@
     <script src="https://www.layuicdn.com/layui/layui.js"></script>
     <script src="https://cdn.bootcss.com/vue/2.6.10/vue.min.js"></script>
     <script>
-        layui.use(["element", "layer", "jquery"], function () {
+        layui.use(["element", "layer", "jquery"], function() {
             let layer = layui.layer;
             let element = layui.element;
             let $ = layui.jquery;
@@ -78,12 +75,12 @@
                     comments: []
                 },
                 methods: {
-                    get_comments: function () {
+                    get_comments: function() {
                         let this_ = this;
                         $.ajax({
                             url: "/admin/api/comment",
                             method: "GET",
-                            success: function (res) {
+                            success: function(res) {
                                 if (res.code !== 0) {
                                     layer.msg(res.msg, {
                                         icon: 0
@@ -94,7 +91,7 @@
                             }
                         });
                     },
-                    audit_comment: function (id) {
+                    audit_comment: function(id) {
                         let this_ = this;
                         $.ajax({
                             url: "/admin/api/audit_comment",
@@ -102,7 +99,7 @@
                             data: {
                                 id: id
                             },
-                            success: function (res) {
+                            success: function(res) {
                                 if (res.code !== 0) {
                                     layer.msg(res.msg, {
                                         icon: 0
@@ -116,16 +113,16 @@
                             }
                         });
                     },
-                    delete_comment: function (id) {
+                    delete_comment: function(id) {
                         let this_ = this;
-                        layer.confirm("确认删除指定的评论？", function () {
+                        layer.confirm("确认删除指定的评论？", function() {
                             $.ajax({
                                 url: "/admin/api/comment",
                                 method: "DELETE",
                                 data: {
                                     id: id
                                 },
-                                success: function (res) {
+                                success: function(res) {
                                     if (res.code !== 0) {
                                         layer.msg(res.msg, {
                                             icon: 0
@@ -141,7 +138,7 @@
                         });
                     }
                 },
-                mounted: function () {
+                mounted: function() {
                     this.get_comments();
                 }
             });

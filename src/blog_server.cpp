@@ -1772,6 +1772,12 @@ void blog_server::get_comment(const sf_http_request& req, sf_http_response& res)
     });
     ret["code"] = 0;
     ret["data"] = to_json(c);
+    for (int i = 0; i < ret["data"].size(); ++i) {
+        auto blog = database__->get_blog(ret["data"][i]["blog_id"]);
+        if (blog) {
+            ret["data"][i]["blog_title"] = blog->title;
+        }
+    }
 }
 
 void blog_server::get_audited_comment(const sf_http_request& req, sf_http_response& res)
