@@ -54,7 +54,7 @@
                     <td>
                         <input type="checkbox" :value="art.id" v-model="checked_item" />
                     </td>
-                    <td>{{art.title}}</td>
+                    <td><a :href="'/blog?blog='+art.blog_id" target="_blank">{{art.title}</a>}</td>
                     <td>{{art.publish_time}}</td>
                     <td>{{art.watch_number}}</td>
                     <td>
@@ -111,7 +111,7 @@
         </select>
         </div>
     </div>
-    
+
     <script src="https://www.layuicdn.com/layui/layui.js"></script>
     <script src="https://cdn.bootcss.com/vue/2.6.10/vue.min.js"></script>
     <script>
