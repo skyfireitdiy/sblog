@@ -183,6 +183,7 @@ void database::delete_blog(int blog_id)
     storage__->remove<blog>(blog_id);
     storage__->remove_all<blog_label>(
         where(c(&blog_label::blog_id) == blog_id));
+    storage__->remove_all<comment>(where(c(&comment::blog_id) == blog_id));
     storage__->remove<blog_content>(blog_id);
 }
 
@@ -195,7 +196,7 @@ shared_ptr<blog> database::get_blog(int id)
 
 void database::insert_blog_content(const blog_content& bc)
 {
-    storage__->insert(bc);
+    storage__->replace(bc);
 }
 
 void database::delete_blog_content(int blog_id)
