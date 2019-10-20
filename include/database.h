@@ -28,6 +28,7 @@ struct blog {
     int top;
     int sub_group;
     int hide;
+    int blog_type; // 0. markdown  1. org
 };
 
 struct draft {
@@ -65,7 +66,7 @@ struct blog_label {
 struct comment {
     int id;
     string name;
-    int blog_id; // 文章id或者评论id
+    int blog_id; // 文章id
     string publish_time;
     string content;
     string qq;
@@ -75,7 +76,7 @@ struct comment {
 
 SF_JSONIFY(admin_user, id, name, password)
 SF_JSONIFY(blog_info, title, desc)
-SF_JSONIFY(blog, id, title, publish_time, watch_number, top, sub_group, hide)
+SF_JSONIFY(blog, id, title, publish_time, watch_number, top, sub_group, hide, blog_type)
 SF_JSONIFY(draft, id, title, content)
 SF_JSONIFY(blog_content, id, content)
 SF_JSONIFY(blog_big_group, id, group_name)
@@ -103,7 +104,8 @@ inline auto init_user_storage(const string& path)
             make_column("watch_number", &blog::watch_number),
             make_column("top", &blog::top),
             make_column("sub_group", &blog::sub_group),
-            make_column("hide", &blog::hide)),
+            make_column("hide", &blog::hide),
+            make_column("blog_type", &blog::blog_type)),
         make_table("draft",
             make_column("id", &draft::id, autoincrement(), primary_key(),
                 unique()),

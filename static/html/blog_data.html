@@ -36,6 +36,7 @@
                     <col />
                     <col />
                     <col />
+                    <col />
                 </colgroup>
                 <thead>
                     <td>
@@ -48,6 +49,7 @@
                     <td>分类</td>
                     <td>标签</td>
                     <td>隐藏</td>
+                    <td>类型</td>
                     <td>操作</td>
                 </thead>
                 <tr v-for="(art, index) in blog_data">
@@ -78,6 +80,9 @@
                     </td>
                     <td>
                         <input type="checkbox" class="layui-checkbox" @click="set_hide(index);" :checked="art.hide" />
+                    </td>
+                    <td>
+                        {{art.blog_type == 0? "Markdown" : "Org"}}
                     </td>
                     <td>
                         <img style="margin: 10px; border: thin black solid; border-radius: 3px;" title="删除" src="/img/delete.png" width="20px" @click="delete_blog(index, art.title);" />
