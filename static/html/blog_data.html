@@ -115,6 +115,12 @@
           </option>
         </select>
         </div>
+
+        <div id="choose_blog_type" hidden>
+            <input type=radio value=0 v-model="blog_type" />Markdown<br />
+            <input type=radio value=1 v-model="blog_type" />Org
+        </div>
+
     </div>
 
     <script src="https://www.layuicdn.com/layui/layui.js"></script>
@@ -137,6 +143,7 @@
                     group_info: [],
                     big_group_index: 0,
                     sub_group_index: 0,
+                    blog_type: 0,
                 },
                 methods: {
                     delete_blog_bat: function() {
@@ -515,7 +522,17 @@
                         });
                     },
                     add_new_blog: function() {
-                        window.location.href = "/admin/api/editor?type=0";
+                        let this_ = this;
+                        let id = layer.open({
+                            type: 1,
+                            content: $("#choose_blog_type"),
+                            btn: ["确认", "取消"],
+                            yes: function() {
+                                window.location.href = "/admin/api/editor?type=0&blog_type=" + this_.blog_type;
+                                layer.close(id);
+                            }
+                        });
+                        // window.location.href = "/admin/api/editor?type=0"; 
                     },
 
                     on_select_all: function() {
