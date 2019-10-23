@@ -35,6 +35,7 @@ struct draft {
     int id;
     string title;
     string content;
+    int blog_type;
 };
 
 struct blog_content {
@@ -77,7 +78,7 @@ struct comment {
 SF_JSONIFY(admin_user, id, name, password)
 SF_JSONIFY(blog_info, title, desc)
 SF_JSONIFY(blog, id, title, publish_time, watch_number, top, sub_group, hide, blog_type)
-SF_JSONIFY(draft, id, title, content)
+SF_JSONIFY(draft, id, title, content, blog_type)
 SF_JSONIFY(blog_content, id, content)
 SF_JSONIFY(blog_big_group, id, group_name)
 SF_JSONIFY(blog_sub_group, id, big_group, group_name)
@@ -110,7 +111,8 @@ inline auto init_user_storage(const string& path)
             make_column("id", &draft::id, autoincrement(), primary_key(),
                 unique()),
             make_column("title", &draft::title),
-            make_column("content", &draft::content)),
+            make_column("content", &draft::content),
+            make_column("blog_type", &draft::blog_type)),
         make_table("blog_content",
             make_column("id", &blog_content::id, primary_key()),
             make_column("content", &blog_content::content)),

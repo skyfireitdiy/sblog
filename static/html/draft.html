@@ -6,8 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" type="text/css" href="https://www.layuicdn.com/layui/css/layui.css">
-    <link rel="stylesheet"
-          href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/styles/default.min.css">
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/styles/default.min.css">
     <style>
         [v-cloak] {
             display: none;
@@ -70,6 +69,7 @@
     <script src="https://cdn.bootcss.com/showdown/1.9.0/showdown.min.js"></script>
     <script src="https://cdn.bootcss.com/showdown/1.9.0/showdown.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/highlight.min.js"></script>
+    <script src="/js/org.js"></script>
     <script src="/js/tools.js"></script>
     <script>
         layui.use(["form", "element", "layer", "jquery"], function() {
@@ -78,8 +78,6 @@
             let layer = layui.layer;
             let element = layui.element;
 
-            let converter = markdown_converter();
-
             form.render();
 
             let app = new Vue({
@@ -87,7 +85,9 @@
                 data: {
                     draft_list: [],
                     check_all_state: false,
-                    checked_item: []
+                    checked_item: [],
+                    markdown_converter: null,
+                    org_mode_converter: null,
                 },
                 methods: {
                     check_all: function() {
@@ -130,7 +130,11 @@
                         });
                     },
                     show_blog: function(index) {
-                        $(document.getElementById('html_content').contentWindow.document.body).html(converter.makeHtml(this.draft_list[index].content));
+                        if (this.draft_list[index].blog_type === 0) {
+                            $(document.getElementById('html_content').contentWindow.document.body).html(this.markdown_converter.makeHtml(this.draft_list[index].content));
+                        } else if (this.draft_list[index].blog_type === 1) {
+                            $(document.getElementById('html_content').contentWindow.document.body).html(this.org_mode_converter.makeHtml(this.draft_list[index].content));
+                        }
                     },
                     delete_draft: function(id, title) {
                         let this_ = this;
@@ -175,6 +179,8 @@
                     }
                 },
                 mounted: function() {
+                    this.markdown_converter = markdown_converter();
+                    this.org_mode_converter = org_mode_converter();
                     this.init_draft_list();
                 }
             });

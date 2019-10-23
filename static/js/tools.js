@@ -1,32 +1,50 @@
-let markdown_converter = function () {
-    converter = new showdown.Converter({
-        extensions: function () {
+let org_mode_converter = function() {
+    let converter = new Org.Parser();
+    converter.makeHtml = function(text) {
+        try {
+            let doc = converter.parse(text);
+            let htmlDoc = doc.convert(Org.ConverterHTML, {
+                headerOffset: 1,
+                exportFromLineNumber: false,
+                suppressSubScriptHandling: false,
+                suppressAutoLink: false
+            });
+            return htmlDoc.toString();
+        } catch (e) {
+            console.log(e);
+            return "";
+        }
+    }
+    return converter;
+}
+
+let markdown_converter = function() {
+    let converter = new showdown.Converter({
+        extensions: function() {
             function htmlunencode(text) {
                 return (
                     text
-                        .replace(/&amp;/g, '&')
-                        .replace(/&lt;/g, '<')
-                        .replace(/&gt;/g, '>')
+                    .replace(/&amp;/g, '&')
+                    .replace(/&lt;/g, '<')
+                    .replace(/&gt;/g, '>')
                 );
             }
 
-            return [
-                {
-                    type: 'output',
-                    filter: function (text, converter, options) {
-                        // use new shodown's regexp engine to conditionally parse codeblocks
-                        var left = '<pre><code\\b[^>]*>',
-                            right = '</code></pre>',
-                            flags = 'g',
-                            replacement = function (wholeMatch, match, left, right) {
-                                // unescape match to prevent double escaping
-                                match = htmlunencode(match);
-                                return left + hljs.highlightAuto(match).value + right;
-                            };
-                        return showdown.helper.replaceRecursiveRegExp(text, replacement, left, right, flags);
-                    }
+            return [{
+                type: 'output',
+                filter: function(text, converter, options) {
+                    // use new shodown's regexp engine to conditionally parse codeblocks
+                    var left = '<pre><code\\b[^>]*>',
+                        right = '</code></pre>',
+                        flags = 'g',
+                        replacement = function(wholeMatch, match, left, right) {
+                            // unescape match to prevent double escaping
+                            match = htmlunencode(match);
+                            return left + hljs.highlightAuto(match).value + right;
+                        };
+                    return showdown.helper.replaceRecursiveRegExp(text, replacement, left, right, flags);
                 }
-            ];
+            }];
         }()
     });
 
@@ -49,7 +67,8 @@ let markdown_converter = function () {
     return converter;
 };
 
-let markdown_editor = function (elem_name) {
+
+let make_editor = function(elem_name, lang_type) {
     ace.require("ace/ext/language_tools");
     editor = ace.edit(elem_name);
 
@@ -91,8 +110,7 @@ let markdown_editor = function (elem_name) {
         scrollPastEnd: true,
         fixedWidthGutter: true,
         theme: "ace/theme/clouds",
-
-        mode: "ace/mode/markdown",
+        mode: "ace/mode/" + lang_type,
         dragEnabled: true,
         newLineMode: "auto",
         foldStyle: "markbeginend",
@@ -101,4 +119,14 @@ let markdown_editor = function (elem_name) {
         useElasticTabstops: true
     });
     return editor;
+}
+
+
+let markdown_editor = function(elem_name) {
+    return make_editor(elem_name, "markdown");
 };
+
+
+let org_mode_editor = function(elem_name) {
+    return make_editor(elem_name, "plain_text");
+}

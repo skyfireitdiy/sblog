@@ -9,22 +9,22 @@
         [v-cloak] {
             display: none;
         }
-
+        
         html,
         body {
             height: 100%;
             background: #292421;
         }
-
+        
         iframe {
             border: none;
         }
-
+        
         .v_h {
             height: 100%;
             width: 100%;
         }
-
+        
         a {
             cursor: pointer;
         }
@@ -58,22 +58,18 @@
         <div v-if="current_blog" style="height: 40px" class="layui-bg-black">
             <div style="text-align: center; padding: 0; margin: 0">
                 <a href="/">
-                    <img src="/img/home.png" title="返回首页"
-                        style="margin: 10px; border: thin black solid; border-radius: 3px;" height="20px;">
+                    <img src="/img/home.png" title="返回首页" style="margin: 10px; border: thin black solid; border-radius: 3px;" height="20px;">
                 </a>
-                标题： {{current_blog.title}} &nbsp;&nbsp; 发布时间：{{current_blog.publish_time}}&nbsp;&nbsp; 阅读数量：
-                {{current_blog.watch_number}}&nbsp;&nbsp; 标签： <span v-for="lb in labels">
+                标题： {{current_blog.title}} &nbsp;&nbsp; 发布时间：{{current_blog.publish_time}}&nbsp;&nbsp; 阅读数量： {{current_blog.watch_number}}&nbsp;&nbsp; 标签： <span v-for="lb in labels">
                     {{lb.label_name}}&nbsp;
                 </span>
-                <img style="margin: 10px; border: thin black solid; border-radius: 3px;" height="20px;" title="分享链接"
-                    id="share_btn" src="img/share.png">
+                <img style="margin: 10px; border: thin black solid; border-radius: 3px;" height="20px;" title="分享链接" id="share_btn" src="img/share.png">
                 <span v-show="current_blog" @click="show_comment()"><img src="/img/comment.png" width="20px"
                         style="margin-left:30px;">&lt-评论入口</span>
             </div>
         </div>
         <div style="width: 100%; position:absolute; top: 100px; bottom: 0; left:0;">
-            <iframe @load="on_content_load_finished();" style="overflow: hidden" id="html_content"
-                src="/html/show_blog.html" class="v_h"></iframe>
+            <iframe @load="on_content_load_finished();" style="overflow: hidden" id="html_content" src="/html/show_blog.html" class="v_h"></iframe>
         </div>
 
 
@@ -131,8 +127,7 @@
                         </div>
                     </div>
                     <div class="layui-form-item layui-inline">
-                        <button class="layui-btn layui-btn-normal" type="button" @click="publish_comment();">发表</button>
-                        QQ 和 Email不会显示在评论区，请放心填写
+                        <button class="layui-btn layui-btn-normal" type="button" @click="publish_comment();">发表</button> QQ 和 Email不会显示在评论区，请放心填写
                     </div>
                 </div>
                 <div class="layui-collapse">
@@ -158,6 +153,7 @@
 
     <script src="https://cdn.bootcss.com/showdown/1.9.0/showdown.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/highlight.min.js"></script>
+    <script src="/js/org.js"></script>
     <script src="/js/tools.js"></script>
     <script>
         let app = new Vue({
@@ -173,7 +169,8 @@
                 blogs: [],
                 current_blog: null,
                 labels: [],
-                converter: null,
+                markdown_converter: null,
+                org_mode_converter: null,
                 type: << type >> ,
                 blog: << blog >> ,
                 comment: {
@@ -184,12 +181,12 @@
                 }
             },
             methods: {
-                publish_comment: function () {
+                publish_comment: function() {
                     let this_ = this;
-                    layui.use(["jquery", "layer"], function () {
+                    layui.use(["jquery", "layer"], function() {
                         let $ = layui.jquery;
                         let layer = layui.layer;
-                        layer.confirm("确认发表？您的评论在管理员审核后可显示", function () {
+                        layer.confirm("确认发表？您的评论在管理员审核后可显示", function() {
                             $.ajax({
                                 url: "/api/comment",
                                 method: "POST",
@@ -200,7 +197,7 @@
                                     qq: this_.comment.qq,
                                     email: this_.comment.email
                                 },
-                                success: function (res) {
+                                success: function(res) {
                                     if (res.code !== 0) {
                                         layer.msg(res.msg, {
                                             icon: 0
@@ -216,9 +213,9 @@
                         });
                     });
                 },
-                read_blog: function (blog) {
+                read_blog: function(blog) {
                     let this_ = this;
-                    layui.use(["layer", "jquery", "element"], function () {
+                    layui.use(["layer", "jquery", "element"], function() {
                         let element = layui.element;
                         let layer = layui.layer;
                         let $ = layui.jquery;
@@ -230,7 +227,7 @@
                             data: {
                                 blog_id: blog.id,
                             },
-                            success: function (res) {
+                            success: function(res) {
                                 if (res.code !== 0) {
                                     layer.msg(res.msg, {
                                         icon: 0
@@ -246,13 +243,17 @@
                             data: {
                                 blog_id: blog.id
                             },
-                            success: function (res) {
+                            success: function(res) {
                                 if (res.code !== 0) {
                                     layer.msg(res.msg, {
                                         icon: 0
                                     });
                                 } else {
-                                    $(document.getElementById('html_content').contentWindow.document.body).html(this_.converter.makeHtml(res.data.content));
+                                    if (blog.blog_type === 0) {
+                                        $(document.getElementById('html_content').contentWindow.document.body).html(this_.markdown_converter.makeHtml(res.data.content));
+                                    } else {
+                                        $(document.getElementById('html_content').contentWindow.document.body).html(this_.org_mode_converter.makeHtml(res.data.content));
+                                    }
                                 }
                             }
                         });
@@ -263,13 +264,13 @@
                         );
                     });
                 },
-                change_big_group: function (index) {
+                change_big_group: function(index) {
                     this.big_group_index = index;
                 },
 
-                get_blog: function (id) {
+                get_blog: function(id) {
                     let this_ = this;
-                    layui.use(["jquery", "layer"], function () {
+                    layui.use(["jquery", "layer"], function() {
                         let $ = layui.jquery;
                         let layer = layui.layer;
                         $.ajax({
@@ -278,7 +279,7 @@
                             data: {
                                 sub_group: id
                             },
-                            success: function (res) {
+                            success: function(res) {
                                 if (res.code !== 0) {
                                     layer.msg(res.msg, {
                                         icon: 0
@@ -290,19 +291,18 @@
                             }
                         });
                     });
-                }
-                ,
+                },
 
 
-                all_blog: function () {
+                all_blog: function() {
                     let this_ = this;
-                    layui.use(["jquery", "layer"], function () {
+                    layui.use(["jquery", "layer"], function() {
                         let $ = layui.jquery;
                         let layer = layui.layer;
                         $.ajax({
                             url: "/api/blog_all",
                             method: "GET",
-                            success: function (res) {
+                            success: function(res) {
                                 if (res.code !== 0) {
                                     layer.msg(res.msg, {
                                         icon: 0
@@ -314,12 +314,11 @@
                             }
                         });
                     });
-                }
-                ,
+                },
 
 
-                show_blog_list: function () {
-                    layui.use(["layer", "jquery"], function () {
+                show_blog_list: function() {
+                    layui.use(["layer", "jquery"], function() {
                         let $ = layui.jquery;
                         let layer = layui.layer;
                         let this_ = this;
@@ -336,10 +335,9 @@
                             title: "文章列表"
                         });
                     });
-                }
-                ,
-                show_comment: function () {
-                    layui.use(["layer", "jquery"], function () {
+                },
+                show_comment: function() {
+                    layui.use(["layer", "jquery"], function() {
                         let $ = layui.jquery;
                         let layer = layui.layer;
                         let this_ = this;
@@ -355,18 +353,17 @@
                             title: "评论列表"
                         });
                     });
-                }
-                ,
+                },
 
-                init_group_info: function () {
+                init_group_info: function() {
                     let this_ = this;
-                    layui.use(["jquery", "layer"], function () {
+                    layui.use(["jquery", "layer"], function() {
                         let $ = layui.jquery;
                         let layer = layui.layer;
                         $.ajax({
                             url: "/api/group_info",
                             method: "GET",
-                            success: function (res) {
+                            success: function(res) {
                                 if (res.code !== 0) {
                                     layer.msg(res.msg, {
                                         icon: 0
@@ -374,7 +371,7 @@
                                 } else {
                                     this_.group_info = res.data;
                                     Vue.nextTick(() => {
-                                        layui.use(["element"], function () {
+                                        layui.use(["element"], function() {
                                             let element = layui.element;
                                             element.init();
                                         });
@@ -384,15 +381,15 @@
                         });
                     });
                 },
-                init_blog_info: function () {
+                init_blog_info: function() {
                     let this_ = this;
-                    layui.use(["jquery", "layer"], function () {
+                    layui.use(["jquery", "layer"], function() {
                         let $ = layui.jquery;
                         let layer = layui.layer;
                         $.ajax({
                             url: "/api/blog_info",
                             method: "GET",
-                            success: function (res) {
+                            success: function(res) {
                                 if (res.code !== 0) {
                                     layer.msg(res.msg, {
                                         icon: 0
@@ -405,22 +402,23 @@
                         });
                     });
                 },
-                on_content_load_finished: function () {
+                on_content_load_finished: function() {
                     if (this.type === 1) {
                         this.read_blog(this.blog);
                     }
                 }
             },
-            mounted: function () {
+            mounted: function() {
                 let this_ = this;
-                this.converter = markdown_converter();
+                this.markdown_converter = markdown_converter();
+                this.org_mode_converter = org_mode_converter();
                 this.init_group_info();
                 this.init_blog_info();
 
                 let clip = new ClipboardJS("#share_btn", {
-                    text: function () {
+                    text: function() {
                         let data = window.location.protocol + "//" + window.location.host + "/blog?blog=" + this_.current_blog.id;
-                        layui.use(["layer"], function () {
+                        layui.use(["layer"], function() {
                             let layer = layui.layer;
                             layer.msg(data + "<br>链接已复制", {
                                 icon: 1

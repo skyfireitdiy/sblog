@@ -1,0 +1,10 @@
+*.log
+build/*
+.idea/*
+.projectile
+.vscode
+blog_server
+cmake-build-*
+config.json
+db/*
+file/*

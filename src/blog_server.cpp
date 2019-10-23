@@ -925,13 +925,14 @@ void blog_server::update_draft(const sf_http_request& req,
     sf_json ret;
     sf_finally f([&res, &ret] { res.set_json(ret); });
     auto param = req.body_params();
-    if (!check_param(param, { "id", "title", "content" })) {
+    if (!check_param(param, { "id", "title", "content", "blog_type" })) {
         ret["code"] = 1;
         ret["msg"] = "param error";
         return;
     }
     auto draft_id = static_cast<int>(sf_string_to_long_double(param["id"]));
-    draft df { draft_id, param["title"], param["content"] };
+    auto blog_type = static_cast<int>(sf_string_to_long_double(param["blog_type"]));
+    draft df { draft_id, param["title"], param["content"], blog_type };
     ret["code"] = 0;
     if (df.id == -1) {
         ret["data"] = database__->insert_draft(df);
@@ -981,7 +982,7 @@ void blog_server::add_blog(const sf_http_request& req, sf_http_response& res)
     sf_finally f([&res, &ret] { res.set_json(ret); });
     auto param = req.body_params();
     if (!check_param(
-            param, { "blog_id", "draft_id", "sub_group", "title", "content" })) {
+            param, { "blog_id", "draft_id", "sub_group", "title", "content", "blog_type" })) {
         ret["code"] = 1;
         ret["msg"] = "param error";
         return;
@@ -989,10 +990,11 @@ void blog_server::add_blog(const sf_http_request& req, sf_http_response& res)
     auto blog_id = static_cast<int>(sf_string_to_long_double(param["blog_id"]));
     auto draft_id = static_cast<int>(sf_string_to_long_double(param["draft_id"]));
     auto sub_group = static_cast<int>(sf_string_to_long_double(param["sub_group"]));
+    auto blog_type = static_cast<int>(sf_string_to_long_double(param["blog_type"]));
     ret["code"] = 0;
     if (blog_id == -1) {
         blog b { blog_id, param["title"], sf_make_time_str(), 0, false,
-            sub_group, false };
+            sub_group, false, blog_type };
         blog_id = database__->insert_blog(b);
         blog_content bc { blog_id, param["content"] };
         database__->insert_blog_content(bc);
@@ -1195,10 +1197,15 @@ void blog_server::editor(const sf_http_request& req, sf_http_response& res)
     }
 
     auto type = static_cast<int>(sf_string_to_long_double(param["type"]));
+    auto blog_type = 0;
+    if (param.count("blog_type") != 0) {
+        blog_type = static_cast<int>(sf_string_to_long_double(param["blog_type"]));
+    }
 
     data["group_data"] = group_info();
     data["big_group_index"] = 0;
     data["sub_group"] = -1;
+    data["blog_type"] = blog_type;
     data["converter"] = sf_json();
     data["editor"] = sf_json();
     data["blog_id"] = -1;
@@ -1217,28 +1224,29 @@ void blog_server::editor(const sf_http_request& req, sf_http_response& res)
     } else if (type == 1) { // 编辑草稿
         if (!check_param(param, { "draft_id" })) {
             ok = false;
-            res.set_status(401);
+            res.set_status(403);
             return;
         }
         data["draft_id"] = static_cast<int>(sf_string_to_long_double(param["draft_id"]));
         return;
-    } else if (type == 2) {
+    } else if (type == 2) { // 编辑已有文章
         if (!check_param(param, { "blog_id" })) {
             ok = false;
-            res.set_status(401);
+            res.set_status(403);
             return;
         }
         auto blog_id = static_cast<int>(sf_string_to_long_double(param["blog_id"]));
         auto blog_data = database__->get_blog(blog_id);
         if (!blog_data) {
             ok = false;
-            res.set_status(401);
+            res.set_status(403);
             return;
         }
+        data["blog_type"] = blog_data->blog_type;
         auto sub_group = database__->sub_group(blog_data->sub_group);
         if (!sub_group) {
             ok = false;
-            res.set_status(401);
+            res.set_status(403);
             return;
         }
         auto big_groups = database__->all_big_group();
@@ -1253,7 +1261,7 @@ void blog_server::editor(const sf_http_request& req, sf_http_response& res)
 
         if (!flag) {
             ok = false;
-            res.set_status(401);
+            res.set_status(403);
             return;
         }
 
