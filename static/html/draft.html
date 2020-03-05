@@ -11,14 +11,14 @@
         [v-cloak] {
             display: none;
         }
-        
+
         html,
         body {
             height: 100%;
             padding: 0;
             margin: 0;
         }
-        
+
         .h_div {
             height: 100%;
         }
@@ -29,7 +29,8 @@
     <div id="app" v-cloak class="h_div">
         <div class="layui-row h_div">
             <div class="layui-col-md6 h_div">
-                <img style="margin: 10px; border: thin black solid; border-radius: 3px;" src="/img/delete.png" width="32px" @click="delete_all();" title="删除选中">
+                <img style="margin: 10px; border: thin black solid; border-radius: 3px;" src="/img/delete.png"
+                    width="32px" @click="delete_all();" title="删除选中">
                 <table class="layui-table">
                     <colgroup>
                         <col>
@@ -38,7 +39,8 @@
                     </colgroup>
                     <thead>
                         <td>
-                            <input @change="check_all();" v-model="check_all_state" type="checkbox" class="layui-form-checkbox">全选</input>
+                            <input @change="check_all();" v-model="check_all_state" type="checkbox"
+                                class="layui-form-checkbox">全选</input>
                         </td>
                         <td>标题</td>
                         <td>操作</td>
@@ -48,8 +50,11 @@
                             <td><input type="checkbox" v-model="checked_item" :value="draft.id"></td>
                             <td @click="show_blog(index);">{{draft.title}}</td>
                             <td>
-                                <img style="margin: 10px; border: thin black solid; border-radius: 3px;" src="/img/delete.png" width="32px" @click="delete_draft(draft.id, draft.title);" title="删除">
-                                <img style="margin: 10px; border: thin black solid; border-radius: 3px;" src="/img/edit.png" width="32px" @click="edit_draft(draft.id);" title="编辑">
+                                <img style="margin: 10px; border: thin black solid; border-radius: 3px;"
+                                    src="/img/delete.png" width="32px" @click="delete_draft(draft.id, draft.title);"
+                                    title="删除">
+                                <img style="margin: 10px; border: thin black solid; border-radius: 3px;"
+                                    src="/img/edit.png" width="32px" @click="edit_draft(draft.id);" title="编辑">
                             </td>
                         </tr>
                     </tbody>
@@ -67,13 +72,12 @@
     <script src="https://www.layuicdn.com/layui/layui.js" charset="utf-8"></script>
     <script type="text/javascript" src="https://cdn.bootcss.com/vue/2.6.10/vue.js"></script>
     <script src="https://cdn.bootcss.com/showdown/1.9.0/showdown.min.js"></script>
-    <script src="https://cdn.bootcss.com/showdown/1.9.0/showdown.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/highlight.min.js"></script>
     <script src="/js/org.js"></script>
     <script src="/js/viz.js"></script>
     <script src="/js/tools.js"></script>
     <script>
-        layui.use(["form", "element", "layer", "jquery"], function() {
+        layui.use(["form", "element", "layer", "jquery"], function () {
             let form = layui.form;
             let $ = layui.jquery;
             let layer = layui.layer;
@@ -91,7 +95,7 @@
                     org_mode_converter: null,
                 },
                 methods: {
-                    check_all: function() {
+                    check_all: function () {
                         this.checked_item = [];
                         if (this.check_all_state) {
                             for (let k in this.draft_list) {
@@ -99,10 +103,10 @@
                             }
                         }
                     },
-                    edit_draft: function(id) {
+                    edit_draft: function (id) {
                         window.location.href = "/admin/api/editor?type=1&draft_id=" + id;
                     },
-                    delete_all: function() {
+                    delete_all: function () {
                         if (this.checked_item.length === 0) {
                             layer.msg("请选择要操作的对象", {
                                 icon: 1
@@ -115,7 +119,7 @@
                                 url: "/admin/api/draft_list",
                                 method: "DELETE",
                                 data: JSON.stringify(this.checked_item),
-                                success: function(res) {
+                                success: function (res) {
                                     if (res.code !== 0) {
                                         layer.msg(res.msg, {
                                             icon: 0
@@ -130,23 +134,23 @@
                             });
                         });
                     },
-                    show_blog: function(index) {
+                    show_blog: function (index) {
                         if (this.draft_list[index].blog_type === 0) {
                             $(document.getElementById('html_content').contentWindow.document.body).html(this.markdown_converter.makeHtml(this.draft_list[index].content));
                         } else if (this.draft_list[index].blog_type === 1) {
                             $(document.getElementById('html_content').contentWindow.document.body).html(this.org_mode_converter.makeHtml(this.draft_list[index].content));
                         }
                     },
-                    delete_draft: function(id, title) {
+                    delete_draft: function (id, title) {
                         let this_ = this;
-                        layer.confirm("确认删除草稿\"" + title + "\"?", function() {
+                        layer.confirm("确认删除草稿\"" + title + "\"?", function () {
                             $.ajax({
                                 url: "/admin/api/draft",
                                 method: "DELETE",
                                 data: {
                                     id: id,
                                 },
-                                success: function(res) {
+                                success: function (res) {
                                     if (res.code !== 0) {
                                         layer.msg(res.msg, {
                                             icon: 0
@@ -161,12 +165,12 @@
                             });
                         });
                     },
-                    init_draft_list: function() {
+                    init_draft_list: function () {
                         let this_ = this;
                         $.ajax({
                             url: "/admin/api/draft_list",
                             method: "GET",
-                            success: function(res) {
+                            success: function (res) {
                                 console.log(res);
                                 if (res.code !== 0) {
                                     layer.msg(res.msg, {
@@ -179,7 +183,7 @@
                         });
                     }
                 },
-                mounted: function() {
+                mounted: function () {
                     this.markdown_converter = markdown_converter();
                     this.org_mode_converter = org_mode_converter();
                     this.init_draft_list();
