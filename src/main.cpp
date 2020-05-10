@@ -1,6 +1,6 @@
 #include "blog_server.h"
-#include "tools/sf_logger.hpp"
-#include "tools/sf_utils.hpp"
+#include <sf_logger>
+#include <sf_utils>
 
 using namespace skyfire;
 

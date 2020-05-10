@@ -1,6 +1,6 @@
 #include "database.h"
 #include "digestpp.hpp"
-#include "tools/sf_logger.hpp"
+#include <sf_logger>
 
 database::database(const string& path)
 {

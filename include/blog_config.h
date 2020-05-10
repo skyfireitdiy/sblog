@@ -1,6 +1,6 @@
 #pragma once
 
-#include "tools/sf_json.hpp"
+#include <sf_json>
 
 using namespace skyfire;
 using namespace std;

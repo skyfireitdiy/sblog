@@ -1,8 +1,8 @@
 #pragma once
 
 #include "sqlite_orm.h"
-#include "tools/sf_json.hpp"
-#include "tools/sf_single_instance.hpp"
+#include <sf_json>
+#include <sf_single_instance>
 #include <string>
 
 using namespace std;

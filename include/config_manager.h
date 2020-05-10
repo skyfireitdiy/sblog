@@ -1,7 +1,7 @@
 #pragma once
 
-#include "tools/sf_json.hpp"
-#include "tools/sf_utils.hpp"
+#include <sf_json>
+#include <sf_utils>
 
 using namespace skyfire;
 

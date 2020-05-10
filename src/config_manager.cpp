@@ -4,7 +4,7 @@
 
 #include "config_manager.h"
 #include <fstream>
-#include "tools/sf_utils.h"
+#include <sf_utils>
 
 using namespace skyfire;
 

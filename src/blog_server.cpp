@@ -1,13 +1,12 @@
 
 #include "blog_server.h"
 #include "blog_config.h"
-#include "core/sf_stdc++.h"
+#include <sf_stdc++>
 #include "database.h"
-#include "network/sf_http_content_type.h"
-#include "network/sf_http_part_router.hpp"
-#include "network/sf_websocket_router.hpp"
-#include "tools/sf_finally.hpp"
-#include "tools/sf_logger.hpp"
+#include <sf_http_part_router>
+#include <sf_websocket_router>
+#include <sf_finally>
+#include <sf_logger>
 
 using namespace skyfire;
 using namespace std;
