@@ -1,3 +1,4 @@
+#define SF_DEBUG
 #include "blog_server.h"
 #include <sf_logger>
 #include <sf_utils>
