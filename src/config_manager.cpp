@@ -1,7 +1,6 @@
 //
 // Created by skyfire on 19-8-5.
 //
-#define SF_DEBUG
 #include "config_manager.h"
 #include <fstream>
 #include <sf_utils>

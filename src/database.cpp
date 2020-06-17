@@ -1,4 +1,4 @@
-#define SF_DEBUG
+
 #include "database.h"
 #include "digestpp.hpp"
 #include <sf_logger>
