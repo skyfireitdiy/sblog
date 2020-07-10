@@ -13,7 +13,7 @@
         html,
         body {
             height: 100%;
-            background: #292421;
+            background: #fff;
         }
         
         iframe {
@@ -34,9 +34,7 @@
 <body>
     <div id="app" class="v_h" v-cloak>
         <title>{{ blog_info.title }}</title>
-
-
-        <ul class="layui-nav" style="height: 60px">
+        <ul class="layui-nav layui-bg-blue" style="height: 60px">
             <li class="layui-nav-item" v-for="(bg, index) in group_info">
                 <a @click="change_big_group(index);">{{ bg.group_name }}</a>
                 <dl class="layui-nav-child" v-if="group_info.length !== 0">
@@ -55,7 +53,7 @@
             </li>
         </ul>
 
-        <div v-if="current_blog" style="height: 40px" class="layui-bg-black">
+        <div v-if="current_blog" style="height: 40px" class="layui-bg-white">
             <div style="text-align: center; padding: 0; margin: 0">
                 <a href="/">
                     <img src="/img/home.png" title="返回首页" style="margin: 10px; border: thin black solid; border-radius: 3px;" height="20px;">
