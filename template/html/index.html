@@ -34,7 +34,7 @@
 <body>
     <div id="app" class="v_h" v-cloak>
         <title>{{ blog_info.title }}</title>
-        <ul class="layui-nav layui-bg-blue" style="height: 60px">
+        <ul class="layui-nav layui-bg-blue">
             <li class="layui-nav-item" v-for="(bg, index) in group_info">
                 <a @click="change_big_group(index);">{{ bg.group_name }}</a>
                 <dl class="layui-nav-child" v-if="group_info.length !== 0">
@@ -249,8 +249,10 @@
                                     });
                                 } else {
                                     if (blog.blog_type === 0) {
+                                        document.getElementById("html_content").contentDocument.scrollingElement.scrollTo(0, 0);
                                         $(document.getElementById('html_content').contentWindow.document.body).html(this_.markdown_converter.makeHtml(res.data.content));
                                     } else {
+                                        document.getElementById("html_content").contentDocument.scrollingElement.scrollTo(0, 0);
                                         $(document.getElementById('html_content').contentWindow.document.body).html(this_.org_mode_converter.makeHtml(res.data.content));
                                     }
                                 }
@@ -395,6 +397,7 @@
                                     });
                                 } else {
                                     this_.blog_info = res.data;
+                                    document.getElementById("html_content").contentDocument.scrollingElement.scrollTo(0, 0);
                                     $(document.getElementById('html_content').contentWindow.document.body).html(res.data.desc);
                                 }
                             }
