@@ -213,6 +213,7 @@ table {
 td,
 th {
     padding: 0;
+    border: thin solid black;
 }
 
 
