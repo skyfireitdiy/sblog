@@ -1547,6 +1547,7 @@ void blog_server::read_blog(const sf_http_request& req, sf_http_response& res)
     sf_http_param_t param = req.params();
     ret["type"] = 0;
     ret["blog"] = sf_json();
+    ret["blog"].convert_to_object();
     sf_info(ret);
     sf_json(to_json(param));
     if (param.count("blog") != 0) {
