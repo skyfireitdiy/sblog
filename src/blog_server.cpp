@@ -19,20 +19,20 @@ blog_server::blog_server(const std::string& config_file_path)
 
     config__ = config_manager::make_instance(config_file_path);
     if (!config__->inited()) {
-        sf_error("config file load error", config_file_path);
+        error("config file load error", config_file_path);
         assert(false);
     }
 
     auto server_json_config = config__->value("server"s);
 
     if (server_json_config.is_null()) {
-        sf_error("server config error");
+        error("server config error");
         assert(false);
     }
 
     auto blog_json_config = config__->value("blog"s);
     if (blog_json_config.is_null()) {
-        sf_error("blog config error");
+        error("blog config error");
         assert(false);
     }
 
@@ -42,10 +42,10 @@ blog_server::blog_server(const std::string& config_file_path)
     if (database__->check_user_empty()) {
         auto default_user_json = config__->value("default_user"s);
         if (default_user_json.is_null()) {
-            sf_error("default_user config error");
+            error("default_user config error");
             assert(false);
         }
-        sf_info("user empty, create default user:", default_user_json);
+        info("user empty, create default user:", default_user_json);
         admin_user user;
         from_json(default_user_json, user);
         user.id = -1;
@@ -56,16 +56,16 @@ blog_server::blog_server(const std::string& config_file_path)
     if (database__->check_blog_info_empty()) {
         auto blog_info_json = config__->value("blog_info"s);
         if (blog_info_json.is_null()) {
-            sf_error("blog info config error");
+            error("blog info config error");
             assert(false);
         }
-        sf_info("blog_info empty, create default user:", blog_info_json);
+        info("blog_info empty, create default user:", blog_info_json);
         blog_info info;
         from_json(blog_info_json, info);
         database__->insert_blog_info(info);
     }
 
-    sf_http_server_config server_conf;
+    http_server_config server_conf;
     from_json(server_json_config, server_conf);
 
     if (server_conf.port == 0) {
@@ -84,417 +84,417 @@ blog_server::blog_server(const std::string& config_file_path)
     setup_server(server_conf);
 }
 
-void blog_server::setup_server(const sf_http_server_config& server_conf)
+void blog_server::setup_server(const http_server_config& server_conf)
 {
-    server__ = sf_http_server::make_instance(server_conf);
+    server__ = http_server::make_instance(server_conf);
 
-    auto root_router = sf_http_part_router::make_instance(
-        "/"s, [this](const sf_http_request& req, sf_http_response& res) {
+    auto root_router = http_part_router::make_instance(
+        "/"s, [this](const http_request& req, http_response& res) {
             return true;
         });
     root_router->add_router(
-        sf_static_router::make_instance(blog_config__.static_path));
+        static_router::make_instance(blog_config__.static_path));
 
-    root_router->add_router(sf_http_router::make_instance(
+    root_router->add_router(http_router::make_instance(
         "/"s,
-        function([this](const sf_http_request& req, sf_http_response& res) {
+        function([this](const http_request& req, http_response& res) {
             res.redirect("/blog");
         }),
         vector { { "GET"s } }));
 
-    root_router->add_router(sf_http_router::make_instance(
+    root_router->add_router(http_router::make_instance(
         "/blog"s,
-        function([this](const sf_http_request& req, sf_http_response& res) {
+        function([this](const http_request& req, http_response& res) {
             read_blog(req, res);
         }),
         vector { { "GET"s } }));
 
-    auto file_router = sf_http_part_router::make_instance(
-        "/file"s, [this](const sf_http_request& req, sf_http_response& res) {
+    auto file_router = http_part_router::make_instance(
+        "/file"s, [this](const http_request& req, http_response& res) {
             return true;
         });
 
     file_router->add_router(
-        sf_static_router::make_instance(blog_config__.uploaded_file_path));
+        static_router::make_instance(blog_config__.uploaded_file_path));
 
     root_router->add_router(file_router);
 
-    auto admin_router = sf_http_part_router::make_instance(
-        "/admin"s, [this](const sf_http_request& req, sf_http_response& res) {
+    auto admin_router = http_part_router::make_instance(
+        "/admin"s, [this](const http_request& req, http_response& res) {
             return admin_check(req, res);
         });
     admin_router->add_router(
-        sf_static_router::make_instance(blog_config__.static_path));
+        static_router::make_instance(blog_config__.static_path));
 
-    admin_router->add_router(sf_http_router::make_instance(
+    admin_router->add_router(http_router::make_instance(
         "/"s,
-        function([this](const sf_http_request& req, sf_http_response& res) {
+        function([this](const http_request& req, http_response& res) {
             admin_root(req, res);
         })));
 
     root_router->add_router(admin_router);
 
-    auto api_router = sf_http_part_router::make_instance(
-        "/api"s, [this](const sf_http_request& req, sf_http_response& res) {
+    auto api_router = http_part_router::make_instance(
+        "/api"s, [this](const http_request& req, http_response& res) {
             return true;
         });
-    api_router->add_router(sf_http_router::make_instance(
+    api_router->add_router(http_router::make_instance(
         "/login"s,
-        function([this](const sf_http_request& req, sf_http_response& res) {
+        function([this](const http_request& req, http_response& res) {
             admin_login(req, res);
         })));
 
-    api_router->add_router(sf_http_router::make_instance(
+    api_router->add_router(http_router::make_instance(
         "/group_info"s,
-        function([this](const sf_http_request& req, sf_http_response& res) {
+        function([this](const http_request& req, http_response& res) {
             group_info(req, res);
         }),
         vector { { "GET"s } }));
 
-    api_router->add_router(sf_http_router::make_instance(
+    api_router->add_router(http_router::make_instance(
         "/blog"s,
-        function([this](const sf_http_request& req, sf_http_response& res) {
+        function([this](const http_request& req, http_response& res) {
             user_get_blog(req, res);
         }),
         vector { { "GET"s } }));
 
-    api_router->add_router(sf_http_router::make_instance(
+    api_router->add_router(http_router::make_instance(
         "/blog_content"s,
-        function([this](const sf_http_request& req, sf_http_response& res) {
+        function([this](const http_request& req, http_response& res) {
             user_get_content(req, res);
         }),
         vector { { "GET"s } }));
 
-    api_router->add_router(sf_http_router::make_instance(
+    api_router->add_router(http_router::make_instance(
         "/blog_labels"s,
-        function([this](const sf_http_request& req, sf_http_response& res) {
+        function([this](const http_request& req, http_response& res) {
             user_get_label(req, res);
         }),
         vector { { "GET"s } }));
 
-    api_router->add_router(sf_http_router::make_instance(
+    api_router->add_router(http_router::make_instance(
         "/blog_info"s,
-        function([this](const sf_http_request& req, sf_http_response& res) {
+        function([this](const http_request& req, http_response& res) {
             get_blog_info(req, res);
         }),
         vector { { "GET"s } }));
 
-    api_router->add_router(sf_http_router::make_instance(
+    api_router->add_router(http_router::make_instance(
         "/blog_all"s,
-        function([this](const sf_http_request& req, sf_http_response& res) {
+        function([this](const http_request& req, http_response& res) {
             user_get_all_blog(req, res);
         }),
         vector { { "GET"s } }));
 
-    api_router->add_router(sf_http_router::make_instance(
+    api_router->add_router(http_router::make_instance(
         "/comment"s,
-        function([this](const sf_http_request& req, sf_http_response& res) {
+        function([this](const http_request& req, http_response& res) {
             add_comment(req, res);
         }),
         vector { { "POST"s } }));
 
-    api_router->add_router(sf_http_router::make_instance(
+    api_router->add_router(http_router::make_instance(
         "/audited_comment"s,
-        function([this](const sf_http_request& req, sf_http_response& res) {
+        function([this](const http_request& req, http_response& res) {
             get_audited_comment(req, res);
         }),
         vector { { "GET"s } }));
 
     root_router->add_router(api_router);
 
-    auto admin_api_router = sf_http_part_router::make_instance(
-        "/api"s, [this](const sf_http_request& req, sf_http_response& res) {
+    auto admin_api_router = http_part_router::make_instance(
+        "/api"s, [this](const http_request& req, http_response& res) {
             return true;
         });
 
-    admin_api_router->add_router(sf_http_router::make_instance(
+    admin_api_router->add_router(http_router::make_instance(
         "/user_info"s,
-        function([this](const sf_http_request& req, sf_http_response& res) {
+        function([this](const http_request& req, http_response& res) {
             user_info(req, res);
         }),
         vector { { "GET"s } }));
 
-    admin_api_router->add_router(sf_http_router::make_instance(
+    admin_api_router->add_router(http_router::make_instance(
         "/base_info"s,
-        function([this](const sf_http_request& req, sf_http_response& res) {
+        function([this](const http_request& req, http_response& res) {
             set_base_info(req, res);
         }),
         vector { { "POST"s } }));
 
-    admin_api_router->add_router(sf_http_router::make_instance(
+    admin_api_router->add_router(http_router::make_instance(
         "/change_password"s,
-        function([this](const sf_http_request& req, sf_http_response& res) {
+        function([this](const http_request& req, http_response& res) {
             change_password(req, res);
         }),
         vector { { "POST"s } }));
 
-    admin_api_router->add_router(sf_http_router::make_instance(
+    admin_api_router->add_router(http_router::make_instance(
         "/logout"s,
-        function([this](const sf_http_request& req, sf_http_response& res) {
+        function([this](const http_request& req, http_response& res) {
             logout(req, res);
         }),
         vector { { "*"s } }));
 
-    admin_api_router->add_router(sf_http_router::make_instance(
+    admin_api_router->add_router(http_router::make_instance(
         "/big_group"s,
-        function([this](const sf_http_request& req, sf_http_response& res) {
+        function([this](const http_request& req, http_response& res) {
             add_big_group(req, res);
         }),
         vector { { "POST"s } }));
 
-    admin_api_router->add_router(sf_http_router::make_instance(
+    admin_api_router->add_router(http_router::make_instance(
         "/sub_group"s,
-        function([this](const sf_http_request& req, sf_http_response& res) {
+        function([this](const http_request& req, http_response& res) {
             add_sub_group(req, res);
         }),
         vector { { "POST"s } }));
 
-    admin_api_router->add_router(sf_http_router::make_instance(
+    admin_api_router->add_router(http_router::make_instance(
         "/big_group"s,
-        function([this](const sf_http_request& req, sf_http_response& res) {
+        function([this](const http_request& req, http_response& res) {
             rename_big_group(req, res);
         }),
         vector { { "PUT"s } }));
 
-    admin_api_router->add_router(sf_http_router::make_instance(
+    admin_api_router->add_router(http_router::make_instance(
         "/sub_group"s,
-        function([this](const sf_http_request& req, sf_http_response& res) {
+        function([this](const http_request& req, http_response& res) {
             rename_sub_group(req, res);
         }),
         vector { { "PUT"s } }));
 
-    admin_api_router->add_router(sf_http_router::make_instance(
+    admin_api_router->add_router(http_router::make_instance(
         "/big_group"s,
-        function([this](const sf_http_request& req, sf_http_response& res) {
+        function([this](const http_request& req, http_response& res) {
             delete_big_group(req, res);
         }),
         vector { { "DELETE"s } }));
 
-    admin_api_router->add_router(sf_http_router::make_instance(
+    admin_api_router->add_router(http_router::make_instance(
         "/sub_group"s,
-        function([this](const sf_http_request& req, sf_http_response& res) {
+        function([this](const http_request& req, http_response& res) {
             delete_sub_group(req, res);
         }),
         vector { { "DELETE"s } }));
 
-    admin_api_router->add_router(sf_http_router::make_instance(
+    admin_api_router->add_router(http_router::make_instance(
         "/label"s,
-        function([this](const sf_http_request& req, sf_http_response& res) {
+        function([this](const http_request& req, http_response& res) {
             get_label(req, res);
         }),
         vector { { "GET"s } }));
 
-    admin_api_router->add_router(sf_http_router::make_instance(
+    admin_api_router->add_router(http_router::make_instance(
         "/label"s,
-        function([this](const sf_http_request& req, sf_http_response& res) {
+        function([this](const http_request& req, http_response& res) {
             delete_label(req, res);
         }),
         vector { { "DELETE"s } }));
 
-    admin_api_router->add_router(sf_http_router::make_instance(
+    admin_api_router->add_router(http_router::make_instance(
         "/label"s,
-        function([this](const sf_http_request& req, sf_http_response& res) {
+        function([this](const http_request& req, http_response& res) {
             rename_label(req, res);
         }),
         vector { { "PUT"s } }));
 
-    admin_api_router->add_router(sf_http_router::make_instance(
+    admin_api_router->add_router(http_router::make_instance(
         "/label"s,
-        function([this](const sf_http_request& req, sf_http_response& res) {
+        function([this](const http_request& req, http_response& res) {
             add_label(req, res);
         }),
         vector { { "POST"s } }));
 
-    admin_api_router->add_router(sf_http_router::make_instance(
+    admin_api_router->add_router(http_router::make_instance(
         "/blog_list"s,
-        function([this](const sf_http_request& req, sf_http_response& res) {
+        function([this](const http_request& req, http_response& res) {
             blog_list(req, res);
         }),
         vector { { "GET"s } }));
 
-    admin_api_router->add_router(sf_http_router::make_instance(
+    admin_api_router->add_router(http_router::make_instance(
         "/draft"s,
-        function([this](const sf_http_request& req, sf_http_response& res) {
+        function([this](const http_request& req, http_response& res) {
             update_draft(req, res);
         }),
         vector { { "PUT"s } }));
 
-    admin_api_router->add_router(sf_http_router::make_instance(
+    admin_api_router->add_router(http_router::make_instance(
         "/draft"s,
-        function([this](const sf_http_request& req, sf_http_response& res) {
+        function([this](const http_request& req, http_response& res) {
             delete_draft(req, res);
         }),
         vector { { "DELETE"s } }));
 
-    admin_api_router->add_router(sf_http_router::make_instance(
+    admin_api_router->add_router(http_router::make_instance(
         "/draft_list"s,
-        function([this](const sf_http_request& req, sf_http_response& res) {
+        function([this](const http_request& req, http_response& res) {
             draft_list(req, res);
         }),
         vector { { "GET"s } }));
 
-    admin_api_router->add_router(sf_http_router::make_instance(
+    admin_api_router->add_router(http_router::make_instance(
         "/draft_list"s,
-        function([this](const sf_http_request& req, sf_http_response& res) {
+        function([this](const http_request& req, http_response& res) {
             delete_draft_list(req, res);
         }),
         vector { { "DELETE"s } }));
 
-    admin_api_router->add_router(sf_http_router::make_instance(
+    admin_api_router->add_router(http_router::make_instance(
         "/blog"s,
-        function([this](const sf_http_request& req, sf_http_response& res) {
+        function([this](const http_request& req, http_response& res) {
             add_blog(req, res);
         }),
         vector { { "POST"s } }));
 
-    admin_api_router->add_router(sf_http_router::make_instance(
+    admin_api_router->add_router(http_router::make_instance(
         "/editor"s,
-        function([this](const sf_http_request& req, sf_http_response& res) {
+        function([this](const http_request& req, http_response& res) {
             editor(req, res);
         }),
         vector { { "GET"s } }));
 
-    admin_api_router->add_router(sf_http_router::make_instance(
+    admin_api_router->add_router(http_router::make_instance(
         "/draft"s,
-        function([this](const sf_http_request& req, sf_http_response& res) {
+        function([this](const http_request& req, http_response& res) {
             get_draft(req, res);
         }),
         vector { { "GET"s } }));
 
-    admin_api_router->add_router(sf_http_router::make_instance(
+    admin_api_router->add_router(http_router::make_instance(
         "/top"s,
-        function([this](const sf_http_request& req, sf_http_response& res) {
+        function([this](const http_request& req, http_response& res) {
             set_top(req, res);
         }),
         vector { { "PUT"s } }));
 
-    admin_api_router->add_router(sf_http_router::make_instance(
+    admin_api_router->add_router(http_router::make_instance(
         "/hide"s,
-        function([this](const sf_http_request& req, sf_http_response& res) {
+        function([this](const http_request& req, http_response& res) {
             set_hide(req, res);
         }),
         vector { { "PUT"s } }));
 
-    admin_api_router->add_router(sf_http_router::make_instance(
+    admin_api_router->add_router(http_router::make_instance(
         "/blog"s,
-        function([this](const sf_http_request& req, sf_http_response& res) {
+        function([this](const http_request& req, http_response& res) {
             delete_blog(req, res);
         }),
         vector { { "DELETE"s } }));
 
-    admin_api_router->add_router(sf_http_router::make_instance(
+    admin_api_router->add_router(http_router::make_instance(
         "/blog_content"s,
-        function([this](const sf_http_request& req, sf_http_response& res) {
+        function([this](const http_request& req, http_response& res) {
             get_blog_content(req, res);
         }),
         vector { { "GET"s } }));
 
-    admin_api_router->add_router(sf_http_router::make_instance(
+    admin_api_router->add_router(http_router::make_instance(
         "/blog_label"s,
-        function([this](const sf_http_request& req, sf_http_response& res) {
+        function([this](const http_request& req, http_response& res) {
             add_blog_label(req, res);
         }),
         vector { { "POST"s } }));
 
-    admin_api_router->add_router(sf_http_router::make_instance(
+    admin_api_router->add_router(http_router::make_instance(
         "/blog_label"s,
-        function([this](const sf_http_request& req, sf_http_response& res) {
+        function([this](const http_request& req, http_response& res) {
             delete_blog_label(req, res);
         }),
         vector { { "DELETE"s } }));
 
-    admin_api_router->add_router(sf_http_router::make_instance(
+    admin_api_router->add_router(http_router::make_instance(
         "/blog_group"s,
-        function([this](const sf_http_request& req, sf_http_response& res) {
+        function([this](const http_request& req, http_response& res) {
             update_blog_group(req, res);
         }),
         vector { { "PUT"s } }));
 
-    admin_api_router->add_router(sf_http_router::make_instance(
+    admin_api_router->add_router(http_router::make_instance(
         "/top_bat"s,
-        function([this](const sf_http_request& req, sf_http_response& res) {
+        function([this](const http_request& req, http_response& res) {
             set_top_bat(req, res);
         }),
         vector { { "PUT"s } }));
 
-    admin_api_router->add_router(sf_http_router::make_instance(
+    admin_api_router->add_router(http_router::make_instance(
         "/hide_bat"s,
-        function([this](const sf_http_request& req, sf_http_response& res) {
+        function([this](const http_request& req, http_response& res) {
             set_hide_bat(req, res);
         }),
         vector { { "PUT"s } }));
 
-    admin_api_router->add_router(sf_http_router::make_instance(
+    admin_api_router->add_router(http_router::make_instance(
         "/blog_bat"s,
-        function([this](const sf_http_request& req, sf_http_response& res) {
+        function([this](const http_request& req, http_response& res) {
             delete_blog_bat(req, res);
         }),
         vector { { "DELETE"s } }));
 
-    admin_api_router->add_router(sf_http_router::make_instance(
+    admin_api_router->add_router(http_router::make_instance(
         "/blog_group_bat"s,
-        function([this](const sf_http_request& req, sf_http_response& res) {
+        function([this](const http_request& req, http_response& res) {
             update_blog_group_bat(req, res);
         }),
         vector { { "PUT"s } }));
 
-    admin_api_router->add_router(sf_http_router::make_instance(
+    admin_api_router->add_router(http_router::make_instance(
         "/blog_label_bat"s,
-        function([this](const sf_http_request& req, sf_http_response& res) {
+        function([this](const http_request& req, http_response& res) {
             add_blog_label_bat(req, res);
         }),
         vector { { "POST"s } }));
 
-    admin_api_router->add_router(sf_http_router::make_instance(
+    admin_api_router->add_router(http_router::make_instance(
         "/uploaded_file_list"s,
-        function([this](const sf_http_request& req, sf_http_response& res) {
+        function([this](const http_request& req, http_response& res) {
             uploaded_file_list(req, res);
         }),
         vector { { "GET"s } }));
 
-    admin_api_router->add_router(sf_http_router::make_instance(
+    admin_api_router->add_router(http_router::make_instance(
         "/heart_beat"s,
-        function([this](const sf_http_request& req, sf_http_response& res) {
+        function([this](const http_request& req, http_response& res) {
             heart_beat(req, res);
         }),
         vector { { "GET"s } }));
 
-    admin_api_router->add_router(sf_http_router::make_instance(
+    admin_api_router->add_router(http_router::make_instance(
         "/upload_file"s,
-        function([this](const sf_http_request& req, sf_http_response& res) {
+        function([this](const http_request& req, http_response& res) {
             upload_file(req, res);
         }),
         vector { { "POST"s } }));
 
-    admin_api_router->add_router(sf_http_router::make_instance(
+    admin_api_router->add_router(http_router::make_instance(
         "/file"s,
-        function([this](const sf_http_request& req, sf_http_response& res) {
+        function([this](const http_request& req, http_response& res) {
             delete_file(req, res);
         }),
         vector { { "DELETE"s } }));
 
-    admin_api_router->add_router(sf_http_router::make_instance(
+    admin_api_router->add_router(http_router::make_instance(
         "/comment"s,
-        function([this](const sf_http_request& req, sf_http_response& res) {
+        function([this](const http_request& req, http_response& res) {
             delete_comment(req, res);
         }),
         vector { { "DELETE"s } }));
 
-    admin_api_router->add_router(sf_http_router::make_instance(
+    admin_api_router->add_router(http_router::make_instance(
         "/audit_comment"s,
-        function([this](const sf_http_request& req, sf_http_response& res) {
+        function([this](const http_request& req, http_response& res) {
             audit_comment(req, res);
         }),
         vector { { "POST"s } }));
 
-    admin_api_router->add_router(sf_http_router::make_instance(
+    admin_api_router->add_router(http_router::make_instance(
         "/comment"s,
-        function([this](const sf_http_request& req, sf_http_response& res) {
+        function([this](const http_request& req, http_response& res) {
             get_comment(req, res);
         }),
         vector { { "GET"s } }));
 
-    admin_api_router->add_router(sf_http_router::make_instance("/download/(\\d+)/.*md", function([this](const sf_http_request& req, sf_http_response& res, string, string id) {
+    admin_api_router->add_router(http_router::make_instance("/download/(\\d+)/.*md", function([this](const http_request& req, http_response& res, string, string id) {
         download_md(req, res, id);
     }),
         vector { { "GET"s } }));
@@ -506,11 +506,11 @@ void blog_server::setup_server(const sf_http_server_config& server_conf)
 
 bool blog_server::start() { return server__->start(); }
 
-void blog_server::admin_login(const sf_http_request& req,
-    sf_http_response& res)
+void blog_server::admin_login(const http_request& req,
+    http_response& res)
 {
-    sf_json ret;
-    sf_finally([&res, &ret] { res.set_json(ret); });
+    json ret;
+    finally([&res, &ret] { res.set_json(ret); });
 
     auto param = req.body_params();
     if (!check_param(param, { "name", "password" })) {
@@ -536,8 +536,8 @@ void blog_server::admin_login(const sf_http_request& req,
     }
 }
 
-bool blog_server::admin_check(const sf_http_request& req,
-    sf_http_response& res)
+bool blog_server::admin_check(const http_request& req,
+    http_response& res)
 {
     auto session_id = req.session_id();
     auto session = server__->session(session_id);
@@ -548,8 +548,8 @@ bool blog_server::admin_check(const sf_http_request& req,
     return true;
 }
 
-void blog_server::admin_root(const sf_http_request& req,
-    sf_http_response& res)
+void blog_server::admin_root(const http_request& req,
+    http_response& res)
 {
     auto session_id = req.session_id();
     auto session = server__->session(session_id);
@@ -560,22 +560,22 @@ void blog_server::admin_root(const sf_http_request& req,
     }
 }
 
-void blog_server::user_info(const sf_http_request& req, sf_http_response& res)
+void blog_server::user_info(const http_request& req, http_response& res)
 {
     auto session_id = req.session_id();
     auto session = server__->session(session_id);
-    sf_json ret;
+    json ret;
     ret["code"] = 0;
     ret["data"] = session["user"].deep_copy();
     ret["data"].remove("password");
     res.set_json(ret);
 }
 
-void blog_server::set_base_info(const sf_http_request& req,
-    sf_http_response& res)
+void blog_server::set_base_info(const http_request& req,
+    http_response& res)
 {
-    sf_json ret;
-    sf_finally([&res, &ret] { res.set_json(ret); });
+    json ret;
+    finally([&res, &ret] { res.set_json(ret); });
     auto param = req.body_params();
     if (!check_param(param, { "name", "title", "desc" })) {
         ret["code"] = 1;
@@ -591,11 +591,11 @@ void blog_server::set_base_info(const sf_http_request& req,
     ret["code"] = 0;
 }
 
-void blog_server::change_password(const sf_http_request& req,
-    sf_http_response& res)
+void blog_server::change_password(const http_request& req,
+    http_response& res)
 {
-    sf_json ret;
-    sf_finally([&res, &ret] { res.set_json(ret); });
+    json ret;
+    finally([&res, &ret] { res.set_json(ret); });
     auto param = req.body_params();
     if (!check_param(param, { "old_password", "new_password" })) {
         ret["code"] = 1;
@@ -615,36 +615,36 @@ void blog_server::change_password(const sf_http_request& req,
     }
 }
 
-void blog_server::logout(const sf_http_request& req, sf_http_response& res)
+void blog_server::logout(const http_request& req, http_response& res)
 {
     auto session = server__->session(req.session_id());
     session.remove("user");
     res.redirect("/html/admin_login.html");
 }
 
-void blog_server::group_info(const sf_http_request& req,
-    sf_http_response& res)
+void blog_server::group_info(const http_request& req,
+    http_response& res)
 {
-    sf_json ret;
-    sf_finally([&res, &ret] { res.set_json(ret); });
+    json ret;
+    finally([&res, &ret] { res.set_json(ret); });
     ret["code"] = 0;
     ret["data"] = group_info();
 }
 
-sf_json blog_server::group_info()
+json blog_server::group_info()
 {
     auto big_groups = database__->all_big_group();
     auto sub_groups = database__->all_sub_group();
     auto blog_count = database__->sub_group_blog_count();
-    sf_json ret;
+    json ret;
     ret.convert_to_array();
     for (auto& p : big_groups) {
-        sf_json tmp = to_json(p);
-        tmp["sub_group"] = sf_json();
+        json tmp = to_json(p);
+        tmp["sub_group"] = json();
         tmp["sub_group"].convert_to_array();
         for (auto& q : sub_groups) {
             if (q.big_group == p.id) {
-                sf_json tmp_sub = to_json(q);
+                json tmp_sub = to_json(q);
                 if (blog_count.count(q.id) != 0) {
                     tmp_sub["blog_count"] = blog_count[q.id];
                 } else {
@@ -658,11 +658,11 @@ sf_json blog_server::group_info()
     return ret;
 }
 
-void blog_server::add_big_group(const sf_http_request& req,
-    sf_http_response& res)
+void blog_server::add_big_group(const http_request& req,
+    http_response& res)
 {
-    sf_json ret;
-    sf_finally([&res, &ret] { res.set_json(ret); });
+    json ret;
+    finally([&res, &ret] { res.set_json(ret); });
     auto param = req.body_params();
     if (!check_param(param, { "group_name" })) {
         ret["code"] = 1;
@@ -681,18 +681,18 @@ void blog_server::add_big_group(const sf_http_request& req,
     ret["code"] = 0;
 }
 
-void blog_server::add_sub_group(const sf_http_request& req,
-    sf_http_response& res)
+void blog_server::add_sub_group(const http_request& req,
+    http_response& res)
 {
-    sf_json ret;
-    sf_finally([&res, &ret] { res.set_json(ret); });
+    json ret;
+    finally([&res, &ret] { res.set_json(ret); });
     auto param = req.body_params();
     if (!check_param(param, { "big_group", "group_name" })) {
         ret["code"] = 1;
         ret["msg"] = "param error";
         return;
     }
-    auto big_group = static_cast<int>(sf_string_to_long_double(param["big_group"]));
+    auto big_group = static_cast<int>(string_to_long_double(param["big_group"]));
     if (database__->check_sub_group(big_group, param["group_name"]) != nullptr) {
         ret["code"] = 1;
         ret["msg"] = "type name already exists";
@@ -703,18 +703,18 @@ void blog_server::add_sub_group(const sf_http_request& req,
     ret["code"] = 0;
 }
 
-void blog_server::delete_big_group(const sf_http_request& req,
-    sf_http_response& res)
+void blog_server::delete_big_group(const http_request& req,
+    http_response& res)
 {
-    sf_json ret;
-    sf_finally([&res, &ret] { res.set_json(ret); });
+    json ret;
+    finally([&res, &ret] { res.set_json(ret); });
     auto param = req.body_params();
     if (!check_param(param, { "id" })) {
         ret["code"] = 1;
         ret["msg"] = "param error";
         return;
     }
-    auto big_group = static_cast<int>(sf_string_to_long_double(param["id"]));
+    auto big_group = static_cast<int>(string_to_long_double(param["id"]));
     if (database__->sub_group_count(big_group) != 0) {
         ret["code"] = 2;
         ret["msg"] = "big type has sub type";
@@ -724,18 +724,18 @@ void blog_server::delete_big_group(const sf_http_request& req,
     ret["code"] = 0;
 }
 
-void blog_server::delete_sub_group(const sf_http_request& req,
-    sf_http_response& res)
+void blog_server::delete_sub_group(const http_request& req,
+    http_response& res)
 {
-    sf_json ret;
-    sf_finally([&res, &ret] { res.set_json(ret); });
+    json ret;
+    finally([&res, &ret] { res.set_json(ret); });
     auto param = req.body_params();
     if (!check_param(param, { "id" })) {
         ret["code"] = 1;
         ret["msg"] = "param error";
         return;
     }
-    auto sub_group = static_cast<int>(sf_string_to_long_double(param["id"]));
+    auto sub_group = static_cast<int>(string_to_long_double(param["id"]));
     if (database__->sub_group_blog_count(sub_group) != 0) {
         ret["code"] = 2;
         ret["msg"] = "sub type has blogs";
@@ -745,18 +745,18 @@ void blog_server::delete_sub_group(const sf_http_request& req,
     ret["code"] = 0;
 }
 
-void blog_server::rename_big_group(const sf_http_request& req,
-    sf_http_response& res)
+void blog_server::rename_big_group(const http_request& req,
+    http_response& res)
 {
-    sf_json ret;
-    sf_finally([&res, &ret] { res.set_json(ret); });
+    json ret;
+    finally([&res, &ret] { res.set_json(ret); });
     auto param = req.body_params();
     if (!check_param(param, { "id", "new_name" })) {
         ret["code"] = 1;
         ret["msg"] = "param error";
         return;
     }
-    auto big_group = static_cast<int>(sf_string_to_long_double(param["id"]));
+    auto big_group = static_cast<int>(string_to_long_double(param["id"]));
     if (database__->big_group(big_group) == nullptr) {
         ret["code"] = 2;
         ret["msg"] = "type id not found";
@@ -772,19 +772,19 @@ void blog_server::rename_big_group(const sf_http_request& req,
     ret["code"] = 0;
 }
 
-void blog_server::rename_sub_group(const sf_http_request& req,
-    sf_http_response& res)
+void blog_server::rename_sub_group(const http_request& req,
+    http_response& res)
 {
-    sf_json ret;
-    sf_finally([&res, &ret] { res.set_json(ret); });
+    json ret;
+    finally([&res, &ret] { res.set_json(ret); });
     auto param = req.body_params();
     if (!check_param(param, { "id", "new_name", "big_group" })) {
         ret["code"] = 1;
         ret["msg"] = "param error";
         return;
     }
-    auto big_group = static_cast<int>(sf_string_to_long_double(param["big_group"]));
-    auto sub_group = static_cast<int>(sf_string_to_long_double(param["id"]));
+    auto big_group = static_cast<int>(string_to_long_double(param["big_group"]));
+    auto sub_group = static_cast<int>(string_to_long_double(param["id"]));
 
     if (database__->sub_group(sub_group) == nullptr) {
         ret["code"] = 2;
@@ -801,19 +801,19 @@ void blog_server::rename_sub_group(const sf_http_request& req,
     ret["code"] = 0;
 }
 
-void blog_server::get_label(const sf_http_request& req, sf_http_response& res)
+void blog_server::get_label(const http_request& req, http_response& res)
 {
-    sf_json ret;
-    sf_finally([&res, &ret] { res.set_json(ret); });
+    json ret;
+    finally([&res, &ret] { res.set_json(ret); });
     auto data = database__->all_label();
     ret["code"] = 0;
     ret["data"] = to_json(data);
 }
 
-void blog_server::add_label(const sf_http_request& req, sf_http_response& res)
+void blog_server::add_label(const http_request& req, http_response& res)
 {
-    sf_json ret;
-    sf_finally([&res, &ret] { res.set_json(ret); });
+    json ret;
+    finally([&res, &ret] { res.set_json(ret); });
     auto param = req.body_params();
     if (!check_param(param, { "name" })) {
         ret["code"] = 1;
@@ -830,18 +830,18 @@ void blog_server::add_label(const sf_http_request& req, sf_http_response& res)
     ret["code"] = 0;
 }
 
-void blog_server::rename_label(const sf_http_request& req,
-    sf_http_response& res)
+void blog_server::rename_label(const http_request& req,
+    http_response& res)
 {
-    sf_json ret;
-    sf_finally([&res, &ret] { res.set_json(ret); });
+    json ret;
+    finally([&res, &ret] { res.set_json(ret); });
     auto param = req.body_params();
     if (!check_param(param, { "id", "name" })) {
         ret["code"] = 1;
         ret["msg"] = "param error";
         return;
     }
-    auto lab_id = static_cast<int>(sf_string_to_long_double(param["id"]));
+    auto lab_id = static_cast<int>(string_to_long_double(param["id"]));
     if (database__->get_label(lab_id) == nullptr) {
         ret["code"] = 2;
         ret["msg"] = "label not found";
@@ -857,18 +857,18 @@ void blog_server::rename_label(const sf_http_request& req,
     ret["code"] = 0;
 }
 
-void blog_server::delete_label(const sf_http_request& req,
-    sf_http_response& res)
+void blog_server::delete_label(const http_request& req,
+    http_response& res)
 {
-    sf_json ret;
-    sf_finally([&res, &ret] { res.set_json(ret); });
+    json ret;
+    finally([&res, &ret] { res.set_json(ret); });
     auto param = req.body_params();
     if (!check_param(param, { "id" })) {
         ret["code"] = 1;
         ret["msg"] = "param name";
         return;
     }
-    auto lab_id = static_cast<int>(sf_string_to_long_double(param["id"]));
+    auto lab_id = static_cast<int>(string_to_long_double(param["id"]));
     if (database__->get_label(lab_id) == nullptr) {
         ret["code"] = 2;
         ret["msg"] = "label not found";
@@ -878,10 +878,10 @@ void blog_server::delete_label(const sf_http_request& req,
     ret["code"] = 0;
 }
 
-void blog_server::blog_list(const sf_http_request& req, sf_http_response& res)
+void blog_server::blog_list(const http_request& req, http_response& res)
 {
-    sf_json ret;
-    sf_finally([&res, &ret] { res.set_json(ret); });
+    json ret;
+    finally([&res, &ret] { res.set_json(ret); });
     auto blogs = database__->all_blog();
     sort(blogs.begin(), blogs.end(),
         [](blog& bl, blog& br) { return bl.publish_time > br.publish_time; });
@@ -908,28 +908,28 @@ void blog_server::blog_list(const sf_http_request& req, sf_http_response& res)
     ret["data"] = blogs_json;
 }
 
-void blog_server::draft_list(const sf_http_request& req,
-    sf_http_response& res)
+void blog_server::draft_list(const http_request& req,
+    http_response& res)
 {
-    sf_json ret;
-    sf_finally([&res, &ret] { res.set_json(ret); });
+    json ret;
+    finally([&res, &ret] { res.set_json(ret); });
     ret["code"] = 0;
     ret["data"] = to_json(database__->all_draft());
 }
 
-void blog_server::update_draft(const sf_http_request& req,
-    sf_http_response& res)
+void blog_server::update_draft(const http_request& req,
+    http_response& res)
 {
-    sf_json ret;
-    sf_finally([&res, &ret] { res.set_json(ret); });
+    json ret;
+    finally([&res, &ret] { res.set_json(ret); });
     auto param = req.body_params();
     if (!check_param(param, { "id", "title", "content", "blog_type" })) {
         ret["code"] = 1;
         ret["msg"] = "param error";
         return;
     }
-    auto draft_id = static_cast<int>(sf_string_to_long_double(param["id"]));
-    auto blog_type = static_cast<int>(sf_string_to_long_double(param["blog_type"]));
+    auto draft_id = static_cast<int>(string_to_long_double(param["id"]));
+    auto blog_type = static_cast<int>(string_to_long_double(param["blog_type"]));
     draft df { draft_id, param["title"], param["content"], blog_type };
     ret["code"] = 0;
     if (df.id == -1) {
@@ -940,18 +940,18 @@ void blog_server::update_draft(const sf_http_request& req,
     }
 }
 
-void blog_server::delete_draft(const sf_http_request& req,
-    sf_http_response& res)
+void blog_server::delete_draft(const http_request& req,
+    http_response& res)
 {
-    sf_json ret;
-    sf_finally([&res, &ret] { res.set_json(ret); });
+    json ret;
+    finally([&res, &ret] { res.set_json(ret); });
     auto param = req.body_params();
     if (!check_param(param, { "id" })) {
         ret["code"] = 1;
         ret["msg"] = "param error";
         return;
     }
-    auto draft_id = static_cast<int>(sf_string_to_long_double(param["id"]));
+    auto draft_id = static_cast<int>(string_to_long_double(param["id"]));
     if (database__->get_draft(draft_id) == nullptr) {
         ret["code"] = 2;
         ret["msg"] = "draft not found";
@@ -961,23 +961,23 @@ void blog_server::delete_draft(const sf_http_request& req,
     ret["code"] = 0;
 }
 
-void blog_server::delete_draft_list(const sf_http_request& req,
-    sf_http_response& res)
+void blog_server::delete_draft_list(const http_request& req,
+    http_response& res)
 {
-    sf_json ret;
-    sf_finally([&res, &ret] { res.set_json(ret); });
+    json ret;
+    finally([&res, &ret] { res.set_json(ret); });
     vector<int> ids;
-    from_json(sf_json::from_string(to_string(req.body())), ids);
+    from_json(json::from_string(to_string(req.body())), ids);
     for (auto& id : ids) {
         database__->delete_draft(id);
     }
     ret["code"] = 0;
 }
 
-void blog_server::add_blog(const sf_http_request& req, sf_http_response& res)
+void blog_server::add_blog(const http_request& req, http_response& res)
 {
-    sf_json ret;
-    sf_finally([&res, &ret] { res.set_json(ret); });
+    json ret;
+    finally([&res, &ret] { res.set_json(ret); });
     auto param = req.body_params();
     if (!check_param(
             param, { "blog_id", "draft_id", "sub_group", "title", "content", "blog_type" })) {
@@ -985,13 +985,13 @@ void blog_server::add_blog(const sf_http_request& req, sf_http_response& res)
         ret["msg"] = "param error";
         return;
     }
-    auto blog_id = static_cast<int>(sf_string_to_long_double(param["blog_id"]));
-    auto draft_id = static_cast<int>(sf_string_to_long_double(param["draft_id"]));
-    auto sub_group = static_cast<int>(sf_string_to_long_double(param["sub_group"]));
-    auto blog_type = static_cast<int>(sf_string_to_long_double(param["blog_type"]));
+    auto blog_id = static_cast<int>(string_to_long_double(param["blog_id"]));
+    auto draft_id = static_cast<int>(string_to_long_double(param["draft_id"]));
+    auto sub_group = static_cast<int>(string_to_long_double(param["sub_group"]));
+    auto blog_type = static_cast<int>(string_to_long_double(param["blog_type"]));
     ret["code"] = 0;
     if (blog_id == -1) {
-        blog b { blog_id, param["title"], sf_make_time_str(), 0, false,
+        blog b { blog_id, param["title"], make_time_str(), 0, false,
             sub_group, false, blog_type };
         blog_id = database__->insert_blog(b);
         blog_content bc { blog_id, param["content"] };
@@ -1014,19 +1014,19 @@ void blog_server::add_blog(const sf_http_request& req, sf_http_response& res)
     }
 }
 
-void blog_server::get_draft(const sf_http_request& req, sf_http_response& res)
+void blog_server::get_draft(const http_request& req, http_response& res)
 {
-    sf_json ret;
-    sf_finally([&res, &ret] { res.set_json(ret); });
+    json ret;
+    finally([&res, &ret] { res.set_json(ret); });
 
-    sf_http_param_t param = req.params();
+    http_param_t param = req.params();
 
     if (!check_param(param, { "id" })) {
         ret["code"] = 1;
         ret["msg"] = "param error";
         return;
     }
-    auto id = static_cast<int>(sf_string_to_long_double(param["id"]));
+    auto id = static_cast<int>(string_to_long_double(param["id"]));
     auto data = database__->get_draft(id);
     if (!data) {
         ret["code"] = 2;
@@ -1037,18 +1037,18 @@ void blog_server::get_draft(const sf_http_request& req, sf_http_response& res)
     ret["data"] = to_json(*data);
 }
 
-void blog_server::set_top(const sf_http_request& req, sf_http_response& res)
+void blog_server::set_top(const http_request& req, http_response& res)
 {
-    sf_json ret;
-    sf_finally([&res, &ret] { res.set_json(ret); });
+    json ret;
+    finally([&res, &ret] { res.set_json(ret); });
     auto param = req.body_params();
     if (!check_param(param, { "id", "value" })) {
         ret["code"] = 1;
         ret["msg"] = "param error";
         return;
     }
-    auto id = static_cast<int>(sf_string_to_long_double(param["id"]));
-    auto value = static_cast<int>(sf_string_to_long_double(param["value"]));
+    auto id = static_cast<int>(string_to_long_double(param["id"]));
+    auto value = static_cast<int>(string_to_long_double(param["value"]));
     auto data = database__->get_blog(id);
     if (!data) {
         ret["code"] = 2;
@@ -1060,18 +1060,18 @@ void blog_server::set_top(const sf_http_request& req, sf_http_response& res)
     ret["code"] = 0;
 }
 
-void blog_server::set_hide(const sf_http_request& req, sf_http_response& res)
+void blog_server::set_hide(const http_request& req, http_response& res)
 {
-    sf_json ret;
-    sf_finally([&res, &ret] { res.set_json(ret); });
+    json ret;
+    finally([&res, &ret] { res.set_json(ret); });
     auto param = req.body_params();
     if (!check_param(param, { "id", "value" })) {
         ret["code"] = 1;
         ret["msg"] = "param error";
         return;
     }
-    auto id = static_cast<int>(sf_string_to_long_double(param["id"]));
-    auto value = static_cast<int>(sf_string_to_long_double(param["value"]));
+    auto id = static_cast<int>(string_to_long_double(param["id"]));
+    auto value = static_cast<int>(string_to_long_double(param["value"]));
     auto data = database__->get_blog(id);
     if (!data) {
         ret["code"] = 2;
@@ -1083,18 +1083,18 @@ void blog_server::set_hide(const sf_http_request& req, sf_http_response& res)
     ret["code"] = 0;
 }
 
-void blog_server::delete_blog(const sf_http_request& req,
-    sf_http_response& res)
+void blog_server::delete_blog(const http_request& req,
+    http_response& res)
 {
-    sf_json ret;
-    sf_finally([&res, &ret] { res.set_json(ret); });
+    json ret;
+    finally([&res, &ret] { res.set_json(ret); });
     auto param = req.body_params();
     if (!check_param(param, { "id" })) {
         ret["code"] = 1;
         ret["msg"] = "param error";
         return;
     }
-    auto id = static_cast<int>(sf_string_to_long_double(param["id"]));
+    auto id = static_cast<int>(string_to_long_double(param["id"]));
     if (!database__->get_blog(id)) {
         ret["code"] = 2;
         ret["msg"] = "blog not found";
@@ -1104,20 +1104,20 @@ void blog_server::delete_blog(const sf_http_request& req,
     ret["code"] = 0;
 }
 
-void blog_server::get_blog_content(const sf_http_request& req,
-    sf_http_response& res)
+void blog_server::get_blog_content(const http_request& req,
+    http_response& res)
 {
-    sf_json ret;
-    sf_finally([&res, &ret] { res.set_json(ret); });
+    json ret;
+    finally([&res, &ret] { res.set_json(ret); });
 
-    sf_http_param_t param = req.params();
+    http_param_t param = req.params();
 
     if (!check_param(param, { "id" })) {
         ret["code"] = 1;
         ret["msg"] = "param error";
         return;
     }
-    auto id = static_cast<int>(sf_string_to_long_double(param["id"]));
+    auto id = static_cast<int>(string_to_long_double(param["id"]));
     auto data = database__->get_blog_content(id);
     if (!data) {
         ret["code"] = 2;
@@ -1128,12 +1128,12 @@ void blog_server::get_blog_content(const sf_http_request& req,
     ret["data"] = to_json(*data);
 }
 
-void blog_server::add_blog_label(const sf_http_request& req,
-    sf_http_response& res)
+void blog_server::add_blog_label(const http_request& req,
+    http_response& res)
 {
-    sf_json ret;
-    sf_finally([&res, &ret] { res.set_json(ret); });
-    auto param = sf_json::from_string(to_string(req.body()));
+    json ret;
+    finally([&res, &ret] { res.set_json(ret); });
+    auto param = json::from_string(to_string(req.body()));
 
     auto blog_id = param["blog_id"];
 
@@ -1149,19 +1149,19 @@ void blog_server::add_blog_label(const sf_http_request& req,
     ret["code"] = 0;
 }
 
-void blog_server::delete_blog_label(const sf_http_request& req,
-    sf_http_response& res)
+void blog_server::delete_blog_label(const http_request& req,
+    http_response& res)
 {
-    sf_json ret;
-    sf_finally([&res, &ret] { res.set_json(ret); });
+    json ret;
+    finally([&res, &ret] { res.set_json(ret); });
     auto param = req.body_params();
     if (!check_param(param, { "blog_id", "label_id" })) {
         ret["code"] = 1;
         ret["msg"] = "param error";
         return;
     }
-    auto blog_id = static_cast<int>(sf_string_to_long_double(param["blog_id"]));
-    auto label_id = static_cast<int>(sf_string_to_long_double(param["label_id"]));
+    auto blog_id = static_cast<int>(string_to_long_double(param["blog_id"]));
+    auto label_id = static_cast<int>(string_to_long_double(param["label_id"]));
     if (!database__->check_blog_label(blog_id, label_id)) {
         ret["code"] = 2;
         ret["msg"] = "label not found";
@@ -1171,22 +1171,22 @@ void blog_server::delete_blog_label(const sf_http_request& req,
     ret["code"] = 0;
 }
 
-void blog_server::editor(const sf_http_request& req, sf_http_response& res)
+void blog_server::editor(const http_request& req, http_response& res)
 {
-    sf_json data;
+    json data;
     bool ok = true;
-    sf_finally(function([&data, &res, this, &ok] {
+    finally(function([&data, &res, this, &ok] {
         if (ok) {
-            sf_json ret;
+            json ret;
             ret["data"] = data;
             auto result = env.render_file(
                 fs::path(blog_config__.template_path) / "html/editor.html"s,
-                sf_json_to_nlo_json(ret));
+                json_to_nlo_json(ret));
             res.set_html(result);
         }
     }));
 
-    sf_http_param_t param = req.params();
+    http_param_t param = req.params();
 
     if (!check_param(param, { "type" })) {
         ok = false;
@@ -1194,25 +1194,25 @@ void blog_server::editor(const sf_http_request& req, sf_http_response& res)
         return;
     }
 
-    auto type = static_cast<int>(sf_string_to_long_double(param["type"]));
+    auto type = static_cast<int>(string_to_long_double(param["type"]));
     auto blog_type = 0;
     if (param.count("blog_type") != 0) {
-        blog_type = static_cast<int>(sf_string_to_long_double(param["blog_type"]));
+        blog_type = static_cast<int>(string_to_long_double(param["blog_type"]));
     }
 
     data["group_data"] = group_info();
     data["big_group_index"] = 0;
     data["sub_group"] = -1;
     data["blog_type"] = blog_type;
-    data["converter"] = sf_json();
-    data["editor"] = sf_json();
+    data["converter"] = json();
+    data["editor"] = json();
     data["blog_id"] = -1;
     data["draft_id"] = -1;
     data["type"] = type;
     data["title"] = "";
     data["auto_save_flag"] = false;
-    data["timer"] = sf_json();
-    data["files"] = sf_json();
+    data["timer"] = json();
+    data["files"] = json();
 
     data["files"].convert_to_array();
 
@@ -1225,7 +1225,7 @@ void blog_server::editor(const sf_http_request& req, sf_http_response& res)
             res.set_status(403);
             return;
         }
-        data["draft_id"] = static_cast<int>(sf_string_to_long_double(param["draft_id"]));
+        data["draft_id"] = static_cast<int>(string_to_long_double(param["draft_id"]));
         return;
     } else if (type == 2) { // 编辑已有文章
         if (!check_param(param, { "blog_id" })) {
@@ -1233,7 +1233,7 @@ void blog_server::editor(const sf_http_request& req, sf_http_response& res)
             res.set_status(403);
             return;
         }
-        auto blog_id = static_cast<int>(sf_string_to_long_double(param["blog_id"]));
+        auto blog_id = static_cast<int>(string_to_long_double(param["blog_id"]));
         auto blog_data = database__->get_blog(blog_id);
         if (!blog_data) {
             ok = false;
@@ -1269,19 +1269,19 @@ void blog_server::editor(const sf_http_request& req, sf_http_response& res)
     }
 }
 
-void blog_server::update_blog_group(const sf_http_request& req,
-    sf_http_response& res)
+void blog_server::update_blog_group(const http_request& req,
+    http_response& res)
 {
-    sf_json ret;
-    sf_finally([&res, &ret] { res.set_json(ret); });
+    json ret;
+    finally([&res, &ret] { res.set_json(ret); });
     auto param = req.body_params();
     if (!check_param(param, { "blog_id", "sub_group" })) {
         ret["code"] = 1;
         ret["msg"] = "param error";
         return;
     }
-    auto blog_id = static_cast<int>(sf_string_to_long_double(param["blog_id"]));
-    auto sub_group = static_cast<int>(sf_string_to_long_double(param["sub_group"]));
+    auto blog_id = static_cast<int>(string_to_long_double(param["blog_id"]));
+    auto sub_group = static_cast<int>(string_to_long_double(param["sub_group"]));
     auto data = database__->get_blog(blog_id);
     if (!data) {
         ret["code"] = 2;
@@ -1293,19 +1293,19 @@ void blog_server::update_blog_group(const sf_http_request& req,
     ret["code"] = 0;
 }
 
-void blog_server::user_get_blog(const sf_http_request& req,
-    sf_http_response& res)
+void blog_server::user_get_blog(const http_request& req,
+    http_response& res)
 {
-    sf_json ret;
-    sf_finally([&res, &ret] { res.set_json(ret); });
+    json ret;
+    finally([&res, &ret] { res.set_json(ret); });
 
-    sf_http_param_t param = req.params();
+    http_param_t param = req.params();
     if (!check_param(param, { "sub_group" })) {
         ret["code"] = 1;
         ret["msg"] = "param error";
         return;
     }
-    auto sub_group = static_cast<int>(sf_string_to_long_double(param["sub_group"]));
+    auto sub_group = static_cast<int>(string_to_long_double(param["sub_group"]));
     auto blogs = database__->top_blogs(sub_group);
     sort(blogs.begin(), blogs.end(),
         [](blog& bl, blog& br) { return bl.publish_time > br.publish_time; });
@@ -1313,7 +1313,7 @@ void blog_server::user_get_blog(const sf_http_request& req,
     sort(data_normal.begin(), data_normal.end(),
         [](blog& bl, blog& br) { return bl.publish_time > br.publish_time; });
     blogs.insert(blogs.end(), data_normal.begin(), data_normal.end());
-    auto blogs_json = sf_json();
+    auto blogs_json = json();
     blogs_json.convert_to_array();
     for (int i = 0; i < blogs.size(); ++i) {
         auto tmp_ret = gen_blog_info(blogs[i]);
@@ -1325,11 +1325,11 @@ void blog_server::user_get_blog(const sf_http_request& req,
     ret["data"] = blogs_json;
 }
 
-void blog_server::user_get_all_blog(const sf_http_request& req,
-    sf_http_response& res)
+void blog_server::user_get_all_blog(const http_request& req,
+    http_response& res)
 {
-    sf_json ret;
-    sf_finally([&res, &ret] { res.set_json(ret); });
+    json ret;
+    finally([&res, &ret] { res.set_json(ret); });
     auto blogs = database__->top_blogs();
     sort(blogs.begin(), blogs.end(),
         [](blog& bl, blog& br) { return bl.publish_time > br.publish_time; });
@@ -1337,7 +1337,7 @@ void blog_server::user_get_all_blog(const sf_http_request& req,
     sort(data_normal.begin(), data_normal.end(),
         [](blog& bl, blog& br) { return bl.publish_time > br.publish_time; });
     blogs.insert(blogs.end(), data_normal.begin(), data_normal.end());
-    auto blogs_json = sf_json(); //to_json(blogs);
+    auto blogs_json = json(); //to_json(blogs);
     blogs_json.convert_to_array();
     for (int i = 0; i < blogs.size(); ++i) {
         auto tmp_ret = gen_blog_info(blogs[i]);
@@ -1349,19 +1349,19 @@ void blog_server::user_get_all_blog(const sf_http_request& req,
     ret["data"] = blogs_json;
 }
 
-void blog_server::user_get_content(const sf_http_request& req,
-    sf_http_response& res)
+void blog_server::user_get_content(const http_request& req,
+    http_response& res)
 {
-    sf_json ret;
-    sf_finally([&res, &ret] { res.set_json(ret); });
+    json ret;
+    finally([&res, &ret] { res.set_json(ret); });
 
-    sf_http_param_t param = req.params();
+    http_param_t param = req.params();
     if (!check_param(param, { "blog_id" })) {
         ret["code"] = 1;
         ret["msg"] = "param error";
         return;
     }
-    auto blog_id = static_cast<int>(sf_string_to_long_double(param["blog_id"]));
+    auto blog_id = static_cast<int>(string_to_long_double(param["blog_id"]));
     auto data = database__->get_blog_content(blog_id);
     if (!data) {
         ret["code"] = 2;
@@ -1380,19 +1380,19 @@ void blog_server::user_get_content(const sf_http_request& req,
     ret["data"] = to_json(*data);
 }
 
-void blog_server::user_get_label(const sf_http_request& req,
-    sf_http_response& res)
+void blog_server::user_get_label(const http_request& req,
+    http_response& res)
 {
-    sf_json ret;
-    sf_finally([&res, &ret] { res.set_json(ret); });
+    json ret;
+    finally([&res, &ret] { res.set_json(ret); });
 
-    sf_http_param_t param = req.params();
+    http_param_t param = req.params();
     if (!check_param(param, { "blog_id" })) {
         ret["code"] = 1;
         ret["msg"] = "param error";
         return;
     }
-    auto blog_id = static_cast<int>(sf_string_to_long_double(param["blog_id"]));
+    auto blog_id = static_cast<int>(string_to_long_double(param["blog_id"]));
     auto base_info = database__->get_blog(blog_id);
     if (!base_info) {
         ret["code"] = 2;
@@ -1408,11 +1408,11 @@ void blog_server::user_get_label(const sf_http_request& req,
     ret["data"] = to_json(database__->blog_labels(blog_id));
 }
 
-void blog_server::get_blog_info(const sf_http_request& req,
-    sf_http_response& res)
+void blog_server::get_blog_info(const http_request& req,
+    http_response& res)
 {
-    sf_json ret;
-    sf_finally([&res, &ret] { res.set_json(ret); });
+    json ret;
+    finally([&res, &ret] { res.set_json(ret); });
     auto data = database__->get_blog_info();
     if (!data) {
         ret["code"] = 1;
@@ -1423,12 +1423,12 @@ void blog_server::get_blog_info(const sf_http_request& req,
     ret["data"] = to_json(*data);
 }
 
-void blog_server::set_top_bat(const sf_http_request& req,
-    sf_http_response& res)
+void blog_server::set_top_bat(const http_request& req,
+    http_response& res)
 {
-    sf_json ret;
-    sf_finally([&res, &ret] { res.set_json(ret); });
-    auto param = sf_json::from_string(to_string(req.body()));
+    json ret;
+    finally([&res, &ret] { res.set_json(ret); });
+    auto param = json::from_string(to_string(req.body()));
     if (!param.has("blogs") || !param.has("value")) {
         ret["code"] = 1;
         ret["msg"] = "param error";
@@ -1448,12 +1448,12 @@ void blog_server::set_top_bat(const sf_http_request& req,
     ret["code"] = 0;
 }
 
-void blog_server::set_hide_bat(const sf_http_request& req,
-    sf_http_response& res)
+void blog_server::set_hide_bat(const http_request& req,
+    http_response& res)
 {
-    sf_json ret;
-    sf_finally([&res, &ret] { res.set_json(ret); });
-    auto param = sf_json::from_string(to_string(req.body()));
+    json ret;
+    finally([&res, &ret] { res.set_json(ret); });
+    auto param = json::from_string(to_string(req.body()));
     if (!param.has("blogs") || !param.has("value")) {
         ret["code"] = 1;
         ret["msg"] = "param error";
@@ -1473,24 +1473,24 @@ void blog_server::set_hide_bat(const sf_http_request& req,
     ret["code"] = 0;
 }
 
-void blog_server::delete_blog_bat(const sf_http_request& req,
-    sf_http_response& res)
+void blog_server::delete_blog_bat(const http_request& req,
+    http_response& res)
 {
-    sf_json ret;
-    sf_finally([&res, &ret] { res.set_json(ret); });
-    auto param = sf_json::from_string(to_string(req.body()));
+    json ret;
+    finally([&res, &ret] { res.set_json(ret); });
+    auto param = json::from_string(to_string(req.body()));
     for (int i = 0; i < param.size(); ++i) {
         database__->delete_blog(param[i]);
     }
     ret["code"] = 0;
 }
 
-void blog_server::update_blog_group_bat(const sf_http_request& req,
-    sf_http_response& res)
+void blog_server::update_blog_group_bat(const http_request& req,
+    http_response& res)
 {
-    sf_json ret;
-    sf_finally([&res, &ret] { res.set_json(ret); });
-    auto param = sf_json::from_string(to_string(req.body()));
+    json ret;
+    finally([&res, &ret] { res.set_json(ret); });
+    auto param = json::from_string(to_string(req.body()));
     if (!param.has("blogs") || !param.has("sub_group")) {
         ret["code"] = 1;
         ret["msg"] = "param error";
@@ -1510,12 +1510,12 @@ void blog_server::update_blog_group_bat(const sf_http_request& req,
     ret["code"] = 0;
 }
 
-void blog_server::add_blog_label_bat(const sf_http_request& req,
-    sf_http_response& res)
+void blog_server::add_blog_label_bat(const http_request& req,
+    http_response& res)
 {
-    sf_json ret;
-    sf_finally([&res, &ret] { res.set_json(ret); });
-    auto param = sf_json::from_string(to_string(req.body()));
+    json ret;
+    finally([&res, &ret] { res.set_json(ret); });
+    auto param = json::from_string(to_string(req.body()));
     if (!param.has("blogs") || !param.has("labels")) {
         ret["code"] = 1;
         ret["msg"] = "param error";
@@ -1535,24 +1535,24 @@ void blog_server::add_blog_label_bat(const sf_http_request& req,
     ret["code"] = 0;
 }
 
-void blog_server::read_blog(const sf_http_request& req, sf_http_response& res)
+void blog_server::read_blog(const http_request& req, http_response& res)
 {
-    sf_json ret;
-    sf_finally(function([&res, &ret, this] {
+    json ret;
+    finally(function([&res, &ret, this] {
         res.set_html(env.render_file(
             fs::path(blog_config__.template_path) / "html/index.html"s,
-            sf_json_to_nlo_json(ret)));
+            json_to_nlo_json(ret)));
     }));
 
-    sf_http_param_t param = req.params();
+    http_param_t param = req.params();
     ret["type"] = 0;
-    ret["blog"] = sf_json();
+    ret["blog"] = json();
     ret["blog"].convert_to_object();
-    sf_info(ret);
-    sf_json(to_json(param));
+    info(ret);
+    json(to_json(param));
     if (param.count("blog") != 0) {
         ret["type"] = 1;
-        auto blog_id = static_cast<int>(sf_string_to_long_double(param["blog"]));
+        auto blog_id = static_cast<int>(string_to_long_double(param["blog"]));
         auto data = database__->get_blog(blog_id);
         if (!data) {
             ret["type"] = 0;
@@ -1565,18 +1565,18 @@ void blog_server::read_blog(const sf_http_request& req, sf_http_response& res)
     }
 }
 
-sf_json blog_server::gen_blog_info(const blog& data)
+json blog_server::gen_blog_info(const blog& data)
 {
-    sf_json ret = to_json(data);
+    json ret = to_json(data);
     auto sub_group = database__->sub_group(data.sub_group);
 
     if (sub_group == nullptr) {
-        return sf_json();
+        return json();
     }
     ret["sub_group"] = to_json(*sub_group);
     auto big_group = database__->big_group(sub_group->big_group);
     if (big_group == nullptr) {
-        return sf_json();
+        return json();
     }
     ret["big_group"] = to_json(*big_group);
     auto labels = database__->blog_labels(data.id);
@@ -1594,13 +1594,13 @@ sf_json blog_server::gen_blog_info(const blog& data)
     return ret;
 }
 
-void blog_server::uploaded_file_list(const sf_http_request& req,
-    sf_http_response& res)
+void blog_server::uploaded_file_list(const http_request& req,
+    http_response& res)
 {
-    sf_json ret;
-    sf_finally([&res, &ret] { res.set_json(ret); });
+    json ret;
+    finally([&res, &ret] { res.set_json(ret); });
     ret["code"] = 0;
-    ret["data"] = sf_json();
+    ret["data"] = json();
     ret["data"].convert_to_array();
     auto file_path = blog_config__.uploaded_file_path;
     auto prefix_len = file_path.size();
@@ -1608,24 +1608,24 @@ void blog_server::uploaded_file_list(const sf_http_request& req,
     for (auto& p : fs::recursive_directory_iterator(file_path)) {
         if (!fs::is_directory(p.path())) {
             auto t = string(p.path().filename());
-            ret["data"].append(sf_json(t));
+            ret["data"].append(json(t));
         }
     }
 }
 
-void blog_server::heart_beat(const sf_http_request& req,
-    sf_http_response& res)
+void blog_server::heart_beat(const http_request& req,
+    http_response& res)
 {
-    sf_json ret;
+    json ret;
     ret["code"] = 0;
     res.set_json(ret);
 }
 
-void blog_server::upload_file(const sf_http_request& req,
-    sf_http_response& res)
+void blog_server::upload_file(const http_request& req,
+    http_response& res)
 {
-    sf_json ret;
-    sf_finally([&res, &ret] { res.set_json(ret); });
+    json ret;
+    finally([&res, &ret] { res.set_json(ret); });
     if (!req.is_multipart_data()) {
         ret["code"] = 1;
         ret["msg"] = "param error";
@@ -1637,21 +1637,21 @@ void blog_server::upload_file(const sf_http_request& req,
         auto h = p.header().header();
         if (h.count("Content-Disposition") != 0) {
             auto cd = h["Content-Disposition"];
-            sf_http_param_t param;
-            auto sp = sf_split_string(cd, ";");
+            http_param_t param;
+            auto sp = split_string(cd, ";");
             for (auto hd : sp) {
-                hd = sf_string_trim(hd);
-                auto x = sf_split_string(hd, "=");
+                hd = string_trim(hd);
+                auto x = split_string(hd, "=");
                 if (x.size() == 2 && x[1].size() > 1) {
                     param[x[0]] = x[1].substr(1, x[1].size() - 2);
                 }
             }
             // TODO 此处应该需要一个转换安装文件名的函数
             if (param.count("filename") != 0) {
-                auto safe_file_name = sf_safe_path(param["filename"]);
+                auto safe_file_name = safe_path(param["filename"]);
                 auto new_file_name = fs::path(blog_config__.uploaded_file_path) / safe_file_name;
                 if (fs::exists(new_file_name)) {
-                    new_file_name = fs::path(blog_config__.uploaded_file_path) / (sf_random::instance()->uuid_str() + safe_file_name);
+                    new_file_name = fs::path(blog_config__.uploaded_file_path) / (random::instance()->uuid_str() + safe_file_name);
                 }
                 std::error_code ec;
                 fs::copy(p.filename(), new_file_name, ec);
@@ -1663,18 +1663,18 @@ void blog_server::upload_file(const sf_http_request& req,
     ret["code"] = 0;
 }
 
-void blog_server::delete_file(const sf_http_request& req,
-    sf_http_response& res)
+void blog_server::delete_file(const http_request& req,
+    http_response& res)
 {
-    sf_json ret;
-    sf_finally([&res, &ret] { res.set_json(ret); });
+    json ret;
+    finally([&res, &ret] { res.set_json(ret); });
     auto param = req.body_params();
     if (!check_param(param, { "path" })) {
         ret["code"] = 1;
         ret["msg"] = "param error";
         return;
     }
-    auto path = sf_safe_path(param["path"]);
+    auto path = safe_path(param["path"]);
     std::error_code ec;
     fs::remove(fs::path(blog_config__.uploaded_file_path) / path, ec);
     if (ec.value() != 0) {
@@ -1685,17 +1685,17 @@ void blog_server::delete_file(const sf_http_request& req,
     ret["code"] = 0;
 }
 
-void blog_server::add_comment(const sf_http_request& req, sf_http_response& res)
+void blog_server::add_comment(const http_request& req, http_response& res)
 {
-    sf_json ret;
-    sf_finally([&res, &ret] { res.set_json(ret); });
+    json ret;
+    finally([&res, &ret] { res.set_json(ret); });
     auto param = req.body_params();
     if (!check_param(param, { "name", "blog_id", "content", "qq", "email" })) {
         ret["code"] = 1;
         ret["msg"] = "param error";
         return;
     }
-    auto blog_id = static_cast<int>(sf_string_to_long_double(param["blog_id"]));
+    auto blog_id = static_cast<int>(string_to_long_double(param["blog_id"]));
     auto b = database__->get_blog(blog_id);
     if (!b) {
         ret["code"] = 2;
@@ -1706,23 +1706,23 @@ void blog_server::add_comment(const sf_http_request& req, sf_http_response& res)
         -1,
         param["name"],
         blog_id,
-        sf_make_time_str(), param["content"], param["qq"], param["email"], 0
+        make_time_str(), param["content"], param["qq"], param["email"], 0
     };
     database__->insert_comment(c);
     ret["code"] = 0;
 }
 
-void blog_server::delete_comment(const sf_http_request& req, sf_http_response& res)
+void blog_server::delete_comment(const http_request& req, http_response& res)
 {
-    sf_json ret;
-    sf_finally([&res, &ret] { res.set_json(ret); });
+    json ret;
+    finally([&res, &ret] { res.set_json(ret); });
     auto param = req.body_params();
     if (!check_param(param, { "id" })) {
         ret["code"] = 1;
         ret["msg"] = "param error";
         return;
     }
-    auto id = static_cast<int>(sf_string_to_long_double(param["id"]));
+    auto id = static_cast<int>(string_to_long_double(param["id"]));
     if (!database__->get_comment(id)) {
         ret["code"] = 2;
         ret["msg"] = "comment not found";
@@ -1732,17 +1732,17 @@ void blog_server::delete_comment(const sf_http_request& req, sf_http_response& r
     ret["code"] = 0;
 }
 
-void blog_server::audit_comment(const sf_http_request& req, sf_http_response& res)
+void blog_server::audit_comment(const http_request& req, http_response& res)
 {
-    sf_json ret;
-    sf_finally(function([&res, &ret]() { res.set_json(ret); }));
+    json ret;
+    finally(function([&res, &ret]() { res.set_json(ret); }));
     auto param = req.body_params();
     if (!check_param(param, { "id" })) {
         ret["code"] = 1;
         ret["msg"] = "Invalid parameter";
         return;
     }
-    auto id = static_cast<int>(sf_string_to_long_double(param["id"]));
+    auto id = static_cast<int>(string_to_long_double(param["id"]));
     auto c = database__->get_comment(id);
     if (!c) {
         ret["code"] = 2;
@@ -1759,10 +1759,10 @@ void blog_server::audit_comment(const sf_http_request& req, sf_http_response& re
     ret["code"] = 0;
 }
 
-void blog_server::get_comment(const sf_http_request& req, sf_http_response& res)
+void blog_server::get_comment(const http_request& req, http_response& res)
 {
-    sf_json ret;
-    sf_finally([&res, &ret] { res.set_json(ret); });
+    json ret;
+    finally([&res, &ret] { res.set_json(ret); });
     auto c = database__->get_comment();
     sort(c.begin(), c.end(), [&](auto& a, auto& b) {
         return a.publish_time > b.publish_time;
@@ -1777,17 +1777,17 @@ void blog_server::get_comment(const sf_http_request& req, sf_http_response& res)
     }
 }
 
-void blog_server::get_audited_comment(const sf_http_request& req, sf_http_response& res)
+void blog_server::get_audited_comment(const http_request& req, http_response& res)
 {
-    sf_json ret;
-    sf_finally([&res, &ret] { res.set_json(ret); });
+    json ret;
+    finally([&res, &ret] { res.set_json(ret); });
     auto param = req.params();
     if (!check_param(param, { "blog_id" })) {
         ret["code"] = 1;
         ret["msg"] = "param error";
         return;
     }
-    auto blog_id = static_cast<int>(sf_string_to_long_double(param["blog_id"]));
+    auto blog_id = static_cast<int>(string_to_long_double(param["blog_id"]));
     auto c = database__->get_blog_comment(blog_id);
     c.erase(remove_if(c.begin(), c.end(), [](auto& p) {
         return p.audit == 0;
@@ -1800,10 +1800,10 @@ void blog_server::get_audited_comment(const sf_http_request& req, sf_http_respon
     ret["data"] = to_json(c);
 }
 
-void blog_server::download_md(const sf_http_request& req, sf_http_response& res, string id)
+void blog_server::download_md(const http_request& req, http_response& res, string id)
 {
-    sf_json ret;
-    auto blog_id = static_cast<int>(sf_string_to_long_double(id));
+    json ret;
+    auto blog_id = static_cast<int>(string_to_long_double(id));
     auto blog_content = database__->get_blog_content(blog_id);
     if (!blog_content) {
         ret["code"] = false;
@@ -1812,5 +1812,5 @@ void blog_server::download_md(const sf_http_request& req, sf_http_response& res,
         return;
     }
     res.set_body(to_byte_array(blog_content->content));
-    res.set_content_type(sf_http_content_type["md"]);
+    res.set_content_type(http_content_type["md"]);
 }

@@ -143,7 +143,7 @@ inline auto init_user_storage(const string& path)
 
 string hash_password(const std::string& password);
 
-class database : public sf_single_instance<database> {
+class database : public single_instance<database> {
 private:
     using StorageType = decltype(init_user_storage(""));
     std::unique_ptr<StorageType> storage__;
