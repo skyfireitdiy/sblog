@@ -19,20 +19,20 @@ blog_server::blog_server(const std::string& config_file_path)
 
     config__ = config_manager::make_instance(config_file_path);
     if (!config__->inited()) {
-        error("config file load error", config_file_path);
+        sf_error("config file load error", config_file_path);
         assert(false);
     }
 
     auto server_json_config = config__->value("server"s);
 
     if (server_json_config.is_null()) {
-        error("server config error");
+        sf_error("server config error");
         assert(false);
     }
 
     auto blog_json_config = config__->value("blog"s);
     if (blog_json_config.is_null()) {
-        error("blog config error");
+        sf_error("blog config error");
         assert(false);
     }
 
@@ -42,10 +42,10 @@ blog_server::blog_server(const std::string& config_file_path)
     if (database__->check_user_empty()) {
         auto default_user_json = config__->value("default_user"s);
         if (default_user_json.is_null()) {
-            error("default_user config error");
+            sf_error("default_user config error");
             assert(false);
         }
-        info("user empty, create default user:", default_user_json);
+        sf_info("user empty, create default user:", default_user_json);
         admin_user user;
         from_json(default_user_json, user);
         user.id = -1;
@@ -56,10 +56,10 @@ blog_server::blog_server(const std::string& config_file_path)
     if (database__->check_blog_info_empty()) {
         auto blog_info_json = config__->value("blog_info"s);
         if (blog_info_json.is_null()) {
-            error("blog info config error");
+            sf_error("blog info config error");
             assert(false);
         }
-        info("blog_info empty, create default user:", blog_info_json);
+        sf_info("blog_info empty, create default user:", blog_info_json);
         blog_info info;
         from_json(blog_info_json, info);
         database__->insert_blog_info(info);
@@ -1548,7 +1548,7 @@ void blog_server::read_blog(const http_request& req, http_response& res)
     ret["type"] = 0;
     ret["blog"] = json();
     ret["blog"].convert_to_object();
-    info(ret);
+    sf_info(ret);
     json(to_json(param));
     if (param.count("blog") != 0) {
         ret["type"] = 1;

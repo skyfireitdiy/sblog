@@ -5,7 +5,7 @@
 
 database::database(const string& path)
 {
-    info("database path", path);
+    sf_info("database path", path);
     storage__ = make_unique<StorageType>(init_user_storage(path));
     storage__->sync_schema();
 }
