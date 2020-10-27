@@ -89,7 +89,7 @@ void blog_server::setup_server(const http_server_config& server_conf)
     server__ = http_server::make_instance(server_conf);
 
     auto root_router = http_part_router::make_instance(
-        "/"s, [this](const http_server_request& req, http_response& res) {
+        "/"s, [this](const http_server_request& req, http_server_response& res) {
             return true;
         });
     root_router->add_router(
@@ -97,20 +97,20 @@ void blog_server::setup_server(const http_server_config& server_conf)
 
     root_router->add_router(http_router::make_instance(
         "/"s,
-        function([this](const http_server_request& req, http_response& res) {
+        function([this](const http_server_request& req, http_server_response& res) {
             res.redirect("/blog");
         }),
         vector { { "GET"s } }));
 
     root_router->add_router(http_router::make_instance(
         "/blog"s,
-        function([this](const http_server_request& req, http_response& res) {
+        function([this](const http_server_request& req, http_server_response& res) {
             read_blog(req, res);
         }),
         vector { { "GET"s } }));
 
     auto file_router = http_part_router::make_instance(
-        "/file"s, [this](const http_server_request& req, http_response& res) {
+        "/file"s, [this](const http_server_request& req, http_server_response& res) {
             return true;
         });
 
@@ -120,7 +120,7 @@ void blog_server::setup_server(const http_server_config& server_conf)
     root_router->add_router(file_router);
 
     auto admin_router = http_part_router::make_instance(
-        "/admin"s, [this](const http_server_request& req, http_response& res) {
+        "/admin"s, [this](const http_server_request& req, http_server_response& res) {
             return admin_check(req, res);
         });
     admin_router->add_router(
@@ -128,74 +128,74 @@ void blog_server::setup_server(const http_server_config& server_conf)
 
     admin_router->add_router(http_router::make_instance(
         "/"s,
-        function([this](const http_server_request& req, http_response& res) {
+        function([this](const http_server_request& req, http_server_response& res) {
             admin_root(req, res);
         })));
 
     root_router->add_router(admin_router);
 
     auto api_router = http_part_router::make_instance(
-        "/api"s, [this](const http_server_request& req, http_response& res) {
+        "/api"s, [this](const http_server_request& req, http_server_response& res) {
             return true;
         });
     api_router->add_router(http_router::make_instance(
         "/login"s,
-        function([this](const http_server_request& req, http_response& res) {
+        function([this](const http_server_request& req, http_server_response& res) {
             admin_login(req, res);
         })));
 
     api_router->add_router(http_router::make_instance(
         "/group_info"s,
-        function([this](const http_server_request& req, http_response& res) {
+        function([this](const http_server_request& req, http_server_response& res) {
             group_info(req, res);
         }),
         vector { { "GET"s } }));
 
     api_router->add_router(http_router::make_instance(
         "/blog"s,
-        function([this](const http_server_request& req, http_response& res) {
+        function([this](const http_server_request& req, http_server_response& res) {
             user_get_blog(req, res);
         }),
         vector { { "GET"s } }));
 
     api_router->add_router(http_router::make_instance(
         "/blog_content"s,
-        function([this](const http_server_request& req, http_response& res) {
+        function([this](const http_server_request& req, http_server_response& res) {
             user_get_content(req, res);
         }),
         vector { { "GET"s } }));
 
     api_router->add_router(http_router::make_instance(
         "/blog_labels"s,
-        function([this](const http_server_request& req, http_response& res) {
+        function([this](const http_server_request& req, http_server_response& res) {
             user_get_label(req, res);
         }),
         vector { { "GET"s } }));
 
     api_router->add_router(http_router::make_instance(
         "/blog_info"s,
-        function([this](const http_server_request& req, http_response& res) {
+        function([this](const http_server_request& req, http_server_response& res) {
             get_blog_info(req, res);
         }),
         vector { { "GET"s } }));
 
     api_router->add_router(http_router::make_instance(
         "/blog_all"s,
-        function([this](const http_server_request& req, http_response& res) {
+        function([this](const http_server_request& req, http_server_response& res) {
             user_get_all_blog(req, res);
         }),
         vector { { "GET"s } }));
 
     api_router->add_router(http_router::make_instance(
         "/comment"s,
-        function([this](const http_server_request& req, http_response& res) {
+        function([this](const http_server_request& req, http_server_response& res) {
             add_comment(req, res);
         }),
         vector { { "POST"s } }));
 
     api_router->add_router(http_router::make_instance(
         "/audited_comment"s,
-        function([this](const http_server_request& req, http_response& res) {
+        function([this](const http_server_request& req, http_server_response& res) {
             get_audited_comment(req, res);
         }),
         vector { { "GET"s } }));
@@ -203,298 +203,298 @@ void blog_server::setup_server(const http_server_config& server_conf)
     root_router->add_router(api_router);
 
     auto admin_api_router = http_part_router::make_instance(
-        "/api"s, [this](const http_server_request& req, http_response& res) {
+        "/api"s, [this](const http_server_request& req, http_server_response& res) {
             return true;
         });
 
     admin_api_router->add_router(http_router::make_instance(
         "/user_info"s,
-        function([this](const http_server_request& req, http_response& res) {
+        function([this](const http_server_request& req, http_server_response& res) {
             user_info(req, res);
         }),
         vector { { "GET"s } }));
 
     admin_api_router->add_router(http_router::make_instance(
         "/base_info"s,
-        function([this](const http_server_request& req, http_response& res) {
+        function([this](const http_server_request& req, http_server_response& res) {
             set_base_info(req, res);
         }),
         vector { { "POST"s } }));
 
     admin_api_router->add_router(http_router::make_instance(
         "/change_password"s,
-        function([this](const http_server_request& req, http_response& res) {
+        function([this](const http_server_request& req, http_server_response& res) {
             change_password(req, res);
         }),
         vector { { "POST"s } }));
 
     admin_api_router->add_router(http_router::make_instance(
         "/logout"s,
-        function([this](const http_server_request& req, http_response& res) {
+        function([this](const http_server_request& req, http_server_response& res) {
             logout(req, res);
         }),
         vector { { "*"s } }));
 
     admin_api_router->add_router(http_router::make_instance(
         "/big_group"s,
-        function([this](const http_server_request& req, http_response& res) {
+        function([this](const http_server_request& req, http_server_response& res) {
             add_big_group(req, res);
         }),
         vector { { "POST"s } }));
 
     admin_api_router->add_router(http_router::make_instance(
         "/sub_group"s,
-        function([this](const http_server_request& req, http_response& res) {
+        function([this](const http_server_request& req, http_server_response& res) {
             add_sub_group(req, res);
         }),
         vector { { "POST"s } }));
 
     admin_api_router->add_router(http_router::make_instance(
         "/big_group"s,
-        function([this](const http_server_request& req, http_response& res) {
+        function([this](const http_server_request& req, http_server_response& res) {
             rename_big_group(req, res);
         }),
         vector { { "PUT"s } }));
 
     admin_api_router->add_router(http_router::make_instance(
         "/sub_group"s,
-        function([this](const http_server_request& req, http_response& res) {
+        function([this](const http_server_request& req, http_server_response& res) {
             rename_sub_group(req, res);
         }),
         vector { { "PUT"s } }));
 
     admin_api_router->add_router(http_router::make_instance(
         "/big_group"s,
-        function([this](const http_server_request& req, http_response& res) {
+        function([this](const http_server_request& req, http_server_response& res) {
             delete_big_group(req, res);
         }),
         vector { { "DELETE"s } }));
 
     admin_api_router->add_router(http_router::make_instance(
         "/sub_group"s,
-        function([this](const http_server_request& req, http_response& res) {
+        function([this](const http_server_request& req, http_server_response& res) {
             delete_sub_group(req, res);
         }),
         vector { { "DELETE"s } }));
 
     admin_api_router->add_router(http_router::make_instance(
         "/label"s,
-        function([this](const http_server_request& req, http_response& res) {
+        function([this](const http_server_request& req, http_server_response& res) {
             get_label(req, res);
         }),
         vector { { "GET"s } }));
 
     admin_api_router->add_router(http_router::make_instance(
         "/label"s,
-        function([this](const http_server_request& req, http_response& res) {
+        function([this](const http_server_request& req, http_server_response& res) {
             delete_label(req, res);
         }),
         vector { { "DELETE"s } }));
 
     admin_api_router->add_router(http_router::make_instance(
         "/label"s,
-        function([this](const http_server_request& req, http_response& res) {
+        function([this](const http_server_request& req, http_server_response& res) {
             rename_label(req, res);
         }),
         vector { { "PUT"s } }));
 
     admin_api_router->add_router(http_router::make_instance(
         "/label"s,
-        function([this](const http_server_request& req, http_response& res) {
+        function([this](const http_server_request& req, http_server_response& res) {
             add_label(req, res);
         }),
         vector { { "POST"s } }));
 
     admin_api_router->add_router(http_router::make_instance(
         "/blog_list"s,
-        function([this](const http_server_request& req, http_response& res) {
+        function([this](const http_server_request& req, http_server_response& res) {
             blog_list(req, res);
         }),
         vector { { "GET"s } }));
 
     admin_api_router->add_router(http_router::make_instance(
         "/draft"s,
-        function([this](const http_server_request& req, http_response& res) {
+        function([this](const http_server_request& req, http_server_response& res) {
             update_draft(req, res);
         }),
         vector { { "PUT"s } }));
 
     admin_api_router->add_router(http_router::make_instance(
         "/draft"s,
-        function([this](const http_server_request& req, http_response& res) {
+        function([this](const http_server_request& req, http_server_response& res) {
             delete_draft(req, res);
         }),
         vector { { "DELETE"s } }));
 
     admin_api_router->add_router(http_router::make_instance(
         "/draft_list"s,
-        function([this](const http_server_request& req, http_response& res) {
+        function([this](const http_server_request& req, http_server_response& res) {
             draft_list(req, res);
         }),
         vector { { "GET"s } }));
 
     admin_api_router->add_router(http_router::make_instance(
         "/draft_list"s,
-        function([this](const http_server_request& req, http_response& res) {
+        function([this](const http_server_request& req, http_server_response& res) {
             delete_draft_list(req, res);
         }),
         vector { { "DELETE"s } }));
 
     admin_api_router->add_router(http_router::make_instance(
         "/blog"s,
-        function([this](const http_server_request& req, http_response& res) {
+        function([this](const http_server_request& req, http_server_response& res) {
             add_blog(req, res);
         }),
         vector { { "POST"s } }));
 
     admin_api_router->add_router(http_router::make_instance(
         "/editor"s,
-        function([this](const http_server_request& req, http_response& res) {
+        function([this](const http_server_request& req, http_server_response& res) {
             editor(req, res);
         }),
         vector { { "GET"s } }));
 
     admin_api_router->add_router(http_router::make_instance(
         "/draft"s,
-        function([this](const http_server_request& req, http_response& res) {
+        function([this](const http_server_request& req, http_server_response& res) {
             get_draft(req, res);
         }),
         vector { { "GET"s } }));
 
     admin_api_router->add_router(http_router::make_instance(
         "/top"s,
-        function([this](const http_server_request& req, http_response& res) {
+        function([this](const http_server_request& req, http_server_response& res) {
             set_top(req, res);
         }),
         vector { { "PUT"s } }));
 
     admin_api_router->add_router(http_router::make_instance(
         "/hide"s,
-        function([this](const http_server_request& req, http_response& res) {
+        function([this](const http_server_request& req, http_server_response& res) {
             set_hide(req, res);
         }),
         vector { { "PUT"s } }));
 
     admin_api_router->add_router(http_router::make_instance(
         "/blog"s,
-        function([this](const http_server_request& req, http_response& res) {
+        function([this](const http_server_request& req, http_server_response& res) {
             delete_blog(req, res);
         }),
         vector { { "DELETE"s } }));
 
     admin_api_router->add_router(http_router::make_instance(
         "/blog_content"s,
-        function([this](const http_server_request& req, http_response& res) {
+        function([this](const http_server_request& req, http_server_response& res) {
             get_blog_content(req, res);
         }),
         vector { { "GET"s } }));
 
     admin_api_router->add_router(http_router::make_instance(
         "/blog_label"s,
-        function([this](const http_server_request& req, http_response& res) {
+        function([this](const http_server_request& req, http_server_response& res) {
             add_blog_label(req, res);
         }),
         vector { { "POST"s } }));
 
     admin_api_router->add_router(http_router::make_instance(
         "/blog_label"s,
-        function([this](const http_server_request& req, http_response& res) {
+        function([this](const http_server_request& req, http_server_response& res) {
             delete_blog_label(req, res);
         }),
         vector { { "DELETE"s } }));
 
     admin_api_router->add_router(http_router::make_instance(
         "/blog_group"s,
-        function([this](const http_server_request& req, http_response& res) {
+        function([this](const http_server_request& req, http_server_response& res) {
             update_blog_group(req, res);
         }),
         vector { { "PUT"s } }));
 
     admin_api_router->add_router(http_router::make_instance(
         "/top_bat"s,
-        function([this](const http_server_request& req, http_response& res) {
+        function([this](const http_server_request& req, http_server_response& res) {
             set_top_bat(req, res);
         }),
         vector { { "PUT"s } }));
 
     admin_api_router->add_router(http_router::make_instance(
         "/hide_bat"s,
-        function([this](const http_server_request& req, http_response& res) {
+        function([this](const http_server_request& req, http_server_response& res) {
             set_hide_bat(req, res);
         }),
         vector { { "PUT"s } }));
 
     admin_api_router->add_router(http_router::make_instance(
         "/blog_bat"s,
-        function([this](const http_server_request& req, http_response& res) {
+        function([this](const http_server_request& req, http_server_response& res) {
             delete_blog_bat(req, res);
         }),
         vector { { "DELETE"s } }));
 
     admin_api_router->add_router(http_router::make_instance(
         "/blog_group_bat"s,
-        function([this](const http_server_request& req, http_response& res) {
+        function([this](const http_server_request& req, http_server_response& res) {
             update_blog_group_bat(req, res);
         }),
         vector { { "PUT"s } }));
 
     admin_api_router->add_router(http_router::make_instance(
         "/blog_label_bat"s,
-        function([this](const http_server_request& req, http_response& res) {
+        function([this](const http_server_request& req, http_server_response& res) {
             add_blog_label_bat(req, res);
         }),
         vector { { "POST"s } }));
 
     admin_api_router->add_router(http_router::make_instance(
         "/uploaded_file_list"s,
-        function([this](const http_server_request& req, http_response& res) {
+        function([this](const http_server_request& req, http_server_response& res) {
             uploaded_file_list(req, res);
         }),
         vector { { "GET"s } }));
 
     admin_api_router->add_router(http_router::make_instance(
         "/heart_beat"s,
-        function([this](const http_server_request& req, http_response& res) {
+        function([this](const http_server_request& req, http_server_response& res) {
             heart_beat(req, res);
         }),
         vector { { "GET"s } }));
 
     admin_api_router->add_router(http_router::make_instance(
         "/upload_file"s,
-        function([this](const http_server_request& req, http_response& res) {
+        function([this](const http_server_request& req, http_server_response& res) {
             upload_file(req, res);
         }),
         vector { { "POST"s } }));
 
     admin_api_router->add_router(http_router::make_instance(
         "/file"s,
-        function([this](const http_server_request& req, http_response& res) {
+        function([this](const http_server_request& req, http_server_response& res) {
             delete_file(req, res);
         }),
         vector { { "DELETE"s } }));
 
     admin_api_router->add_router(http_router::make_instance(
         "/comment"s,
-        function([this](const http_server_request& req, http_response& res) {
+        function([this](const http_server_request& req, http_server_response& res) {
             delete_comment(req, res);
         }),
         vector { { "DELETE"s } }));
 
     admin_api_router->add_router(http_router::make_instance(
         "/audit_comment"s,
-        function([this](const http_server_request& req, http_response& res) {
+        function([this](const http_server_request& req, http_server_response& res) {
             audit_comment(req, res);
         }),
         vector { { "POST"s } }));
 
     admin_api_router->add_router(http_router::make_instance(
         "/comment"s,
-        function([this](const http_server_request& req, http_response& res) {
+        function([this](const http_server_request& req, http_server_response& res) {
             get_comment(req, res);
         }),
         vector { { "GET"s } }));
 
-    admin_api_router->add_router(http_router::make_instance("/download/(\\d+)/.*md", function([this](const http_server_request& req, http_response& res, string, string id) {
+    admin_api_router->add_router(http_router::make_instance("/download/(\\d+)/.*md", function([this](const http_server_request& req, http_server_response& res, string, string id) {
         download_md(req, res, id);
     }),
         vector { { "GET"s } }));
@@ -507,7 +507,7 @@ void blog_server::setup_server(const http_server_config& server_conf)
 bool blog_server::start() { return server__->start(); }
 
 void blog_server::admin_login(const http_server_request& req,
-    http_response& res)
+    http_server_response& res)
 {
     json ret;
     finally([&res, &ret] { res.set_json(ret); });
@@ -537,7 +537,7 @@ void blog_server::admin_login(const http_server_request& req,
 }
 
 bool blog_server::admin_check(const http_server_request& req,
-    http_response& res)
+    http_server_response& res)
 {
     auto session_id = req.session_id();
     auto session = server__->session(session_id);
@@ -549,7 +549,7 @@ bool blog_server::admin_check(const http_server_request& req,
 }
 
 void blog_server::admin_root(const http_server_request& req,
-    http_response& res)
+    http_server_response& res)
 {
     auto session_id = req.session_id();
     auto session = server__->session(session_id);
@@ -560,7 +560,7 @@ void blog_server::admin_root(const http_server_request& req,
     }
 }
 
-void blog_server::user_info(const http_server_request& req, http_response& res)
+void blog_server::user_info(const http_server_request& req, http_server_response& res)
 {
     auto session_id = req.session_id();
     auto session = server__->session(session_id);
@@ -572,7 +572,7 @@ void blog_server::user_info(const http_server_request& req, http_response& res)
 }
 
 void blog_server::set_base_info(const http_server_request& req,
-    http_response& res)
+    http_server_response& res)
 {
     json ret;
     finally([&res, &ret] { res.set_json(ret); });
@@ -592,7 +592,7 @@ void blog_server::set_base_info(const http_server_request& req,
 }
 
 void blog_server::change_password(const http_server_request& req,
-    http_response& res)
+    http_server_response& res)
 {
     json ret;
     finally([&res, &ret] { res.set_json(ret); });
@@ -615,7 +615,7 @@ void blog_server::change_password(const http_server_request& req,
     }
 }
 
-void blog_server::logout(const http_server_request& req, http_response& res)
+void blog_server::logout(const http_server_request& req, http_server_response& res)
 {
     auto session = server__->session(req.session_id());
     session.remove("user");
@@ -623,7 +623,7 @@ void blog_server::logout(const http_server_request& req, http_response& res)
 }
 
 void blog_server::group_info(const http_server_request& req,
-    http_response& res)
+    http_server_response& res)
 {
     json ret;
     finally([&res, &ret] { res.set_json(ret); });
@@ -659,7 +659,7 @@ json blog_server::group_info()
 }
 
 void blog_server::add_big_group(const http_server_request& req,
-    http_response& res)
+    http_server_response& res)
 {
     json ret;
     finally([&res, &ret] { res.set_json(ret); });
@@ -682,7 +682,7 @@ void blog_server::add_big_group(const http_server_request& req,
 }
 
 void blog_server::add_sub_group(const http_server_request& req,
-    http_response& res)
+    http_server_response& res)
 {
     json ret;
     finally([&res, &ret] { res.set_json(ret); });
@@ -704,7 +704,7 @@ void blog_server::add_sub_group(const http_server_request& req,
 }
 
 void blog_server::delete_big_group(const http_server_request& req,
-    http_response& res)
+    http_server_response& res)
 {
     json ret;
     finally([&res, &ret] { res.set_json(ret); });
@@ -725,7 +725,7 @@ void blog_server::delete_big_group(const http_server_request& req,
 }
 
 void blog_server::delete_sub_group(const http_server_request& req,
-    http_response& res)
+    http_server_response& res)
 {
     json ret;
     finally([&res, &ret] { res.set_json(ret); });
@@ -746,7 +746,7 @@ void blog_server::delete_sub_group(const http_server_request& req,
 }
 
 void blog_server::rename_big_group(const http_server_request& req,
-    http_response& res)
+    http_server_response& res)
 {
     json ret;
     finally([&res, &ret] { res.set_json(ret); });
@@ -773,7 +773,7 @@ void blog_server::rename_big_group(const http_server_request& req,
 }
 
 void blog_server::rename_sub_group(const http_server_request& req,
-    http_response& res)
+    http_server_response& res)
 {
     json ret;
     finally([&res, &ret] { res.set_json(ret); });
@@ -801,7 +801,7 @@ void blog_server::rename_sub_group(const http_server_request& req,
     ret["code"] = 0;
 }
 
-void blog_server::get_label(const http_server_request& req, http_response& res)
+void blog_server::get_label(const http_server_request& req, http_server_response& res)
 {
     json ret;
     finally([&res, &ret] { res.set_json(ret); });
@@ -810,7 +810,7 @@ void blog_server::get_label(const http_server_request& req, http_response& res)
     ret["data"] = to_json(data);
 }
 
-void blog_server::add_label(const http_server_request& req, http_response& res)
+void blog_server::add_label(const http_server_request& req, http_server_response& res)
 {
     json ret;
     finally([&res, &ret] { res.set_json(ret); });
@@ -831,7 +831,7 @@ void blog_server::add_label(const http_server_request& req, http_response& res)
 }
 
 void blog_server::rename_label(const http_server_request& req,
-    http_response& res)
+    http_server_response& res)
 {
     json ret;
     finally([&res, &ret] { res.set_json(ret); });
@@ -858,7 +858,7 @@ void blog_server::rename_label(const http_server_request& req,
 }
 
 void blog_server::delete_label(const http_server_request& req,
-    http_response& res)
+    http_server_response& res)
 {
     json ret;
     finally([&res, &ret] { res.set_json(ret); });
@@ -878,7 +878,7 @@ void blog_server::delete_label(const http_server_request& req,
     ret["code"] = 0;
 }
 
-void blog_server::blog_list(const http_server_request& req, http_response& res)
+void blog_server::blog_list(const http_server_request& req, http_server_response& res)
 {
     json ret;
     finally([&res, &ret] { res.set_json(ret); });
@@ -909,7 +909,7 @@ void blog_server::blog_list(const http_server_request& req, http_response& res)
 }
 
 void blog_server::draft_list(const http_server_request& req,
-    http_response& res)
+    http_server_response& res)
 {
     json ret;
     finally([&res, &ret] { res.set_json(ret); });
@@ -918,7 +918,7 @@ void blog_server::draft_list(const http_server_request& req,
 }
 
 void blog_server::update_draft(const http_server_request& req,
-    http_response& res)
+    http_server_response& res)
 {
     json ret;
     finally([&res, &ret] { res.set_json(ret); });
@@ -941,7 +941,7 @@ void blog_server::update_draft(const http_server_request& req,
 }
 
 void blog_server::delete_draft(const http_server_request& req,
-    http_response& res)
+    http_server_response& res)
 {
     json ret;
     finally([&res, &ret] { res.set_json(ret); });
@@ -962,7 +962,7 @@ void blog_server::delete_draft(const http_server_request& req,
 }
 
 void blog_server::delete_draft_list(const http_server_request& req,
-    http_response& res)
+    http_server_response& res)
 {
     json ret;
     finally([&res, &ret] { res.set_json(ret); });
@@ -974,7 +974,7 @@ void blog_server::delete_draft_list(const http_server_request& req,
     ret["code"] = 0;
 }
 
-void blog_server::add_blog(const http_server_request& req, http_response& res)
+void blog_server::add_blog(const http_server_request& req, http_server_response& res)
 {
     json ret;
     finally([&res, &ret] { res.set_json(ret); });
@@ -1014,7 +1014,7 @@ void blog_server::add_blog(const http_server_request& req, http_response& res)
     }
 }
 
-void blog_server::get_draft(const http_server_request& req, http_response& res)
+void blog_server::get_draft(const http_server_request& req, http_server_response& res)
 {
     json ret;
     finally([&res, &ret] { res.set_json(ret); });
@@ -1037,7 +1037,7 @@ void blog_server::get_draft(const http_server_request& req, http_response& res)
     ret["data"] = to_json(*data);
 }
 
-void blog_server::set_top(const http_server_request& req, http_response& res)
+void blog_server::set_top(const http_server_request& req, http_server_response& res)
 {
     json ret;
     finally([&res, &ret] { res.set_json(ret); });
@@ -1060,7 +1060,7 @@ void blog_server::set_top(const http_server_request& req, http_response& res)
     ret["code"] = 0;
 }
 
-void blog_server::set_hide(const http_server_request& req, http_response& res)
+void blog_server::set_hide(const http_server_request& req, http_server_response& res)
 {
     json ret;
     finally([&res, &ret] { res.set_json(ret); });
@@ -1084,7 +1084,7 @@ void blog_server::set_hide(const http_server_request& req, http_response& res)
 }
 
 void blog_server::delete_blog(const http_server_request& req,
-    http_response& res)
+    http_server_response& res)
 {
     json ret;
     finally([&res, &ret] { res.set_json(ret); });
@@ -1105,7 +1105,7 @@ void blog_server::delete_blog(const http_server_request& req,
 }
 
 void blog_server::get_blog_content(const http_server_request& req,
-    http_response& res)
+    http_server_response& res)
 {
     json ret;
     finally([&res, &ret] { res.set_json(ret); });
@@ -1129,7 +1129,7 @@ void blog_server::get_blog_content(const http_server_request& req,
 }
 
 void blog_server::add_blog_label(const http_server_request& req,
-    http_response& res)
+    http_server_response& res)
 {
     json ret;
     finally([&res, &ret] { res.set_json(ret); });
@@ -1150,7 +1150,7 @@ void blog_server::add_blog_label(const http_server_request& req,
 }
 
 void blog_server::delete_blog_label(const http_server_request& req,
-    http_response& res)
+    http_server_response& res)
 {
     json ret;
     finally([&res, &ret] { res.set_json(ret); });
@@ -1171,7 +1171,7 @@ void blog_server::delete_blog_label(const http_server_request& req,
     ret["code"] = 0;
 }
 
-void blog_server::editor(const http_server_request& req, http_response& res)
+void blog_server::editor(const http_server_request& req, http_server_response& res)
 {
     json data;
     bool ok = true;
@@ -1270,7 +1270,7 @@ void blog_server::editor(const http_server_request& req, http_response& res)
 }
 
 void blog_server::update_blog_group(const http_server_request& req,
-    http_response& res)
+    http_server_response& res)
 {
     json ret;
     finally([&res, &ret] { res.set_json(ret); });
@@ -1294,7 +1294,7 @@ void blog_server::update_blog_group(const http_server_request& req,
 }
 
 void blog_server::user_get_blog(const http_server_request& req,
-    http_response& res)
+    http_server_response& res)
 {
     json ret;
     finally([&res, &ret] { res.set_json(ret); });
@@ -1326,7 +1326,7 @@ void blog_server::user_get_blog(const http_server_request& req,
 }
 
 void blog_server::user_get_all_blog(const http_server_request& req,
-    http_response& res)
+    http_server_response& res)
 {
     json ret;
     finally([&res, &ret] { res.set_json(ret); });
@@ -1350,7 +1350,7 @@ void blog_server::user_get_all_blog(const http_server_request& req,
 }
 
 void blog_server::user_get_content(const http_server_request& req,
-    http_response& res)
+    http_server_response& res)
 {
     json ret;
     finally([&res, &ret] { res.set_json(ret); });
@@ -1381,7 +1381,7 @@ void blog_server::user_get_content(const http_server_request& req,
 }
 
 void blog_server::user_get_label(const http_server_request& req,
-    http_response& res)
+    http_server_response& res)
 {
     json ret;
     finally([&res, &ret] { res.set_json(ret); });
@@ -1409,7 +1409,7 @@ void blog_server::user_get_label(const http_server_request& req,
 }
 
 void blog_server::get_blog_info(const http_server_request& req,
-    http_response& res)
+    http_server_response& res)
 {
     json ret;
     finally([&res, &ret] { res.set_json(ret); });
@@ -1424,7 +1424,7 @@ void blog_server::get_blog_info(const http_server_request& req,
 }
 
 void blog_server::set_top_bat(const http_server_request& req,
-    http_response& res)
+    http_server_response& res)
 {
     json ret;
     finally([&res, &ret] { res.set_json(ret); });
@@ -1449,7 +1449,7 @@ void blog_server::set_top_bat(const http_server_request& req,
 }
 
 void blog_server::set_hide_bat(const http_server_request& req,
-    http_response& res)
+    http_server_response& res)
 {
     json ret;
     finally([&res, &ret] { res.set_json(ret); });
@@ -1474,7 +1474,7 @@ void blog_server::set_hide_bat(const http_server_request& req,
 }
 
 void blog_server::delete_blog_bat(const http_server_request& req,
-    http_response& res)
+    http_server_response& res)
 {
     json ret;
     finally([&res, &ret] { res.set_json(ret); });
@@ -1486,7 +1486,7 @@ void blog_server::delete_blog_bat(const http_server_request& req,
 }
 
 void blog_server::update_blog_group_bat(const http_server_request& req,
-    http_response& res)
+    http_server_response& res)
 {
     json ret;
     finally([&res, &ret] { res.set_json(ret); });
@@ -1511,7 +1511,7 @@ void blog_server::update_blog_group_bat(const http_server_request& req,
 }
 
 void blog_server::add_blog_label_bat(const http_server_request& req,
-    http_response& res)
+    http_server_response& res)
 {
     json ret;
     finally([&res, &ret] { res.set_json(ret); });
@@ -1535,7 +1535,7 @@ void blog_server::add_blog_label_bat(const http_server_request& req,
     ret["code"] = 0;
 }
 
-void blog_server::read_blog(const http_server_request& req, http_response& res)
+void blog_server::read_blog(const http_server_request& req, http_server_response& res)
 {
     json ret;
     finally(function([&res, &ret, this] {
@@ -1595,7 +1595,7 @@ json blog_server::gen_blog_info(const blog& data)
 }
 
 void blog_server::uploaded_file_list(const http_server_request& req,
-    http_response& res)
+    http_server_response& res)
 {
     json ret;
     finally([&res, &ret] { res.set_json(ret); });
@@ -1614,7 +1614,7 @@ void blog_server::uploaded_file_list(const http_server_request& req,
 }
 
 void blog_server::heart_beat(const http_server_request& req,
-    http_response& res)
+    http_server_response& res)
 {
     json ret;
     ret["code"] = 0;
@@ -1622,7 +1622,7 @@ void blog_server::heart_beat(const http_server_request& req,
 }
 
 void blog_server::upload_file(const http_server_request& req,
-    http_response& res)
+    http_server_response& res)
 {
     json ret;
     finally([&res, &ret] { res.set_json(ret); });
@@ -1664,7 +1664,7 @@ void blog_server::upload_file(const http_server_request& req,
 }
 
 void blog_server::delete_file(const http_server_request& req,
-    http_response& res)
+    http_server_response& res)
 {
     json ret;
     finally([&res, &ret] { res.set_json(ret); });
@@ -1685,7 +1685,7 @@ void blog_server::delete_file(const http_server_request& req,
     ret["code"] = 0;
 }
 
-void blog_server::add_comment(const http_server_request& req, http_response& res)
+void blog_server::add_comment(const http_server_request& req, http_server_response& res)
 {
     json ret;
     finally([&res, &ret] { res.set_json(ret); });
@@ -1712,7 +1712,7 @@ void blog_server::add_comment(const http_server_request& req, http_response& res
     ret["code"] = 0;
 }
 
-void blog_server::delete_comment(const http_server_request& req, http_response& res)
+void blog_server::delete_comment(const http_server_request& req, http_server_response& res)
 {
     json ret;
     finally([&res, &ret] { res.set_json(ret); });
@@ -1732,7 +1732,7 @@ void blog_server::delete_comment(const http_server_request& req, http_response& 
     ret["code"] = 0;
 }
 
-void blog_server::audit_comment(const http_server_request& req, http_response& res)
+void blog_server::audit_comment(const http_server_request& req, http_server_response& res)
 {
     json ret;
     finally(function([&res, &ret]() { res.set_json(ret); }));
@@ -1759,7 +1759,7 @@ void blog_server::audit_comment(const http_server_request& req, http_response& r
     ret["code"] = 0;
 }
 
-void blog_server::get_comment(const http_server_request& req, http_response& res)
+void blog_server::get_comment(const http_server_request& req, http_server_response& res)
 {
     json ret;
     finally([&res, &ret] { res.set_json(ret); });
@@ -1777,7 +1777,7 @@ void blog_server::get_comment(const http_server_request& req, http_response& res
     }
 }
 
-void blog_server::get_audited_comment(const http_server_request& req, http_response& res)
+void blog_server::get_audited_comment(const http_server_request& req, http_server_response& res)
 {
     json ret;
     finally([&res, &ret] { res.set_json(ret); });
@@ -1800,7 +1800,7 @@ void blog_server::get_audited_comment(const http_server_request& req, http_respo
     ret["data"] = to_json(c);
 }
 
-void blog_server::download_md(const http_server_request& req, http_response& res, string id)
+void blog_server::download_md(const http_server_request& req, http_server_response& res, string id)
 {
     json ret;
     auto blog_id = static_cast<int>(string_to_long_double(id));
