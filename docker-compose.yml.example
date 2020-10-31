@@ -6,6 +6,7 @@ services:
       - "8080"
     volumes:
       - .:/opt/my_blog
+    command: /tmp/run.sh
   nginx:
     image: nginx
     volumes:
