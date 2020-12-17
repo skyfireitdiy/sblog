@@ -4,6 +4,8 @@ add_rules("mode.debug", "mode.release")
 -- define target
 target("blog_server")
 
+add_cxxflags("-Wall", "-Werror")
+
 -- set kind
 set_kind("binary")
 
