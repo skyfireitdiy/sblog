@@ -1,0 +1,37 @@
+#!/bin/bash
+
+if [ 0 -ne "$(id -u)" ]; then
+    if sudo --version >/dev/null 2>&1
+    then
+        sudoprefix=sudo
+    else
+        sudoprefix=
+    fi
+else
+    sudoprefix=
+fi
+
+test_tools(){
+    { docker --version > /dev/null 2>&1; } && 
+    { docker-compose --version > /dev/null 2>&1; } &&
+    { git version > /dev/null 2>&1; }
+}
+
+install_tools(){
+    { apt --version >/dev/null 2>&1 && $sudoprefix apt install -y git docker docker-compose; } ||
+    { yum --version >/dev/null 2>&1 && $sudoprefix yum install -y git docker docker-compose; } ||
+    { zypper --version >/dev/null 2>&1 && $sudoprefix zypper --non-interactive git install docker docker-compose; } ||
+    { pacman -V >/dev/null 2>&1 && $sudoprefix pacman -S --noconfirm --needed git docker docker-compose; } ||
+    { pkg list-installed >/dev/null 2>&1 && $sudoprefix pkg install -y git docker docker-compose; } || # termux
+    { pkg help >/dev/null 2>&1 && $sudoprefix pkg install -y git docker docker-compose; } 
+}
+
+exit_error(){
+    echo $1
+    exit -1
+}
+
+test_tools || install_tools && systemctl start docker 
+test_tools || exit_error "tools install error"
+
+git clone --recursive https://github.com/skyfireitdiy/my_blog && cd my_blog && bash ./make_docker.sh && bash ./build.sh && bash ./run.sh && echo -e "http://localhost:8888 for home page\nhttp://localhost:8888/admin for admin page\n"
