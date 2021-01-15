@@ -12,17 +12,16 @@ else
 fi
 
 test_tools(){
-    { docker --version > /dev/null 2>&1; } && 
-    { git version > /dev/null 2>&1; }
+    { docker --version > /dev/null 2>&1; } 
 }
 
 install_tools(){
-    { apt --version >/dev/null 2>&1 && $sudoprefix apt install -y git docker ; } ||
-    { yum --version >/dev/null 2>&1 && $sudoprefix yum install -y git docker ; } ||
-    { zypper --version >/dev/null 2>&1 && $sudoprefix zypper --non-interactive git install docker ; } ||
-    { pacman -V >/dev/null 2>&1 && $sudoprefix pacman -S --noconfirm --needed git docker ; } ||
-    { pkg list-installed >/dev/null 2>&1 && $sudoprefix pkg install -y git docker ; } || # termux
-    { pkg help >/dev/null 2>&1 && $sudoprefix pkg install -y git docker ; } 
+    { apt --version >/dev/null 2>&1 && $sudoprefix apt install -y  docker ; } ||
+    { yum --version >/dev/null 2>&1 && $sudoprefix yum install -y  docker ; } ||
+    { zypper --version >/dev/null 2>&1 && $sudoprefix zypper --non-interactive  install docker ; } ||
+    { pacman -V >/dev/null 2>&1 && $sudoprefix pacman -S --noconfirm --needed  docker ; } ||
+    { pkg list-installed >/dev/null 2>&1 && $sudoprefix pkg install -y  docker ; } || # termux
+    { pkg help >/dev/null 2>&1 && $sudoprefix pkg install -y  docker ; } 
 }
 
 exit_error(){
@@ -33,4 +32,4 @@ exit_error(){
 test_tools || install_tools && systemctl start docker 
 test_tools || exit_error "tools install error"
 
-git clone --recursive https://github.com/skyfireitdiy/my_blog && cd my_blog && cp config.json.example config.json && bash ./make_docker.sh && bash ./run.sh && echo -e "http://localhost:8888 for home page\nhttp://localhost:8888/admin for admin page\n"
+docker run --rm -d --net=host --name=blog_server wmb521/blog_run_docker && echo -e "http://localhost:8080 for home page\nhttp://localhost:8080/admin for admin page\n"

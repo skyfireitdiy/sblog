@@ -3,10 +3,7 @@ services:
   blog_server: 
     image: blog_build_docker
     ports:
-      - "8080"
-    volumes:
-      - .:/opt/my_blog
-    command: /tmp/run.sh
+      - 8080:8080
   nginx:
     image: nginx
     volumes:

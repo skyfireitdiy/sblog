@@ -89,7 +89,7 @@ void blog_server::setup_server(const http_server_config& server_conf)
     server__ = http_server::make_instance(server_conf);
 
     auto root_router = http_part_router::make_instance(
-        "/"s, [this](const http_server_request& req, http_server_response& res) {
+        "/"s, [](const http_server_request& req, http_server_response& res) {
             return true;
         });
     root_router->add_router(
@@ -97,7 +97,7 @@ void blog_server::setup_server(const http_server_config& server_conf)
 
     root_router->add_router(http_router::make_instance(
         "/"s,
-        function([this](const http_server_request& req, http_server_response& res) {
+        function([](const http_server_request& req, http_server_response& res) {
             res.redirect("/blog");
         }),
         vector { { "GET"s } }));
@@ -110,7 +110,7 @@ void blog_server::setup_server(const http_server_config& server_conf)
         vector { { "GET"s } }));
 
     auto file_router = http_part_router::make_instance(
-        "/file"s, [this](const http_server_request& req, http_server_response& res) {
+        "/file"s, [](const http_server_request& req, http_server_response& res) {
             return true;
         });
 
@@ -135,7 +135,7 @@ void blog_server::setup_server(const http_server_config& server_conf)
     root_router->add_router(admin_router);
 
     auto api_router = http_part_router::make_instance(
-        "/api"s, [this](const http_server_request& req, http_server_response& res) {
+        "/api"s, [](const http_server_request& req, http_server_response& res) {
             return true;
         });
     api_router->add_router(http_router::make_instance(
@@ -203,7 +203,7 @@ void blog_server::setup_server(const http_server_config& server_conf)
     root_router->add_router(api_router);
 
     auto admin_api_router = http_part_router::make_instance(
-        "/api"s, [this](const http_server_request& req, http_server_response& res) {
+        "/api"s, [](const http_server_request& req, http_server_response& res) {
             return true;
         });
 
@@ -1549,7 +1549,6 @@ void blog_server::read_blog(const http_server_request& req, http_server_response
     ret["blog"] = json();
     ret["blog"].convert_to_object();
     sf_info(ret);
-    json(to_json(param));
     if (param.count("blog") != 0) {
         ret["type"] = 1;
         auto blog_id = static_cast<int>(string_to_long_double(param["blog"]));

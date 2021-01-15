@@ -1,10 +1,11 @@
-from codehz/xmake
-copy build.sh /tmp/
-copy run.sh /tmp/
-run chmod +x /tmp/build.sh /tmp/run.sh
-workdir /opt/my_blog
-run sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories && apk update
-run apk add sqlite-dev
-run apk add openssl-dev
-run apk add zlib-dev
-cmd ["/tmp/build.sh"]
+FROM alpine
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories
+RUN apk add --no-cache curl bash clang
+RUN apk add --no-cache sqlite-dev
+RUN apk add --no-cache openssl-dev
+RUN apk add --no-cache zlib-dev
+RUN curl -fsSL https://xmake.io/shget.text | bash
+RUN rm -rf /var/cache/apk/* 
+RUN rm -rf /root/.cache 
+RUN rm -rf /tmp/*
+ENV PATH /root/.local/bin:$PATH
