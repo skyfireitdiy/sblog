@@ -12,3 +12,5 @@ file/*
 .clangd
 compile_commands.json
 blog_server
+*.bak
+
