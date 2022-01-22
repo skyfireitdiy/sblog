@@ -1,9 +1,7 @@
 #pragma once
 
 #include "sqlite_orm.h"
-#include <sf_json>
-#include <sf_single_instance>
-#include <string>
+#include <sflib.h>
 
 using namespace std;
 using namespace skyfire;

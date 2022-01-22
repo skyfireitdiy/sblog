@@ -1,11 +1,9 @@
 
 #include "database.h"
 #include "digestpp.hpp"
-#include <sf_logger>
 
 database::database(const string& path)
 {
-    sf_info("database path", path);
     storage__ = make_unique<StorageType>(init_user_storage(path));
     storage__->sync_schema();
 }

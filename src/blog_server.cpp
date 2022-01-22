@@ -1,11 +1,6 @@
 #include "blog_server.h"
 #include "blog_config.h"
 #include "database.h"
-#include <sf_finally>
-#include <sf_http_part_router>
-#include <sf_logger>
-#include <sf_stdc++>
-#include <sf_websocket_router>
 
 using namespace skyfire;
 using namespace std;
@@ -19,33 +14,33 @@ blog_server::blog_server(const std::string& config_file_path)
 
     config__ = config_manager::make_instance(config_file_path);
     if (!config__->inited()) {
-        sf_err("config file load error", config_file_path);
+
         assert(false);
     }
 
     auto server_json_config = config__->value("server"s);
 
     if (server_json_config.is_null()) {
-        sf_err("server config error");
+
         assert(false);
     }
 
     auto blog_json_config = config__->value("blog"s);
     if (blog_json_config.is_null()) {
-        sf_err("blog config error");
+
         assert(false);
     }
 
     from_json(blog_json_config, blog_config__);
 
-    database__ = database::instance((fs::path(blog_config__.db_path) / "database.db3"s));
+    database__ = database::instance((std::filesystem::path(blog_config__.db_path) / "database.db3"s));
     if (database__->check_user_empty()) {
         auto default_user_json = config__->value("default_user"s);
         if (default_user_json.is_null()) {
-            sf_err("default_user config error");
+
             assert(false);
         }
-        sf_info("user empty, create default user:", default_user_json);
+
         admin_user user;
         from_json(default_user_json, user);
         user.id = -1;
@@ -56,10 +51,10 @@ blog_server::blog_server(const std::string& config_file_path)
     if (database__->check_blog_info_empty()) {
         auto blog_info_json = config__->value("blog_info"s);
         if (blog_info_json.is_null()) {
-            sf_err("blog info config error");
+
             assert(false);
         }
-        sf_info("blog_info empty, create default user:", blog_info_json);
+
         blog_info info;
         from_json(blog_info_json, info);
         database__->insert_blog_info(info);
@@ -1180,7 +1175,7 @@ void blog_server::editor(const http_server_request& req, http_server_response& r
             json ret;
             ret["data"] = data;
             auto result = env.render_file(
-                fs::path(blog_config__.template_path) / "html/editor.html"s,
+                std::filesystem::path(blog_config__.template_path) / "html/editor.html"s,
                 json_to_nlo_json(ret));
             res.set_html(result);
         }
@@ -1540,7 +1535,7 @@ void blog_server::read_blog(const http_server_request& req, http_server_response
     json ret;
     sf_finally(function([&res, &ret, this] {
         res.set_html(env.render_file(
-            fs::path(blog_config__.template_path) / "html/index.html"s,
+            std::filesystem::path(blog_config__.template_path) / "html/index.html"s,
             json_to_nlo_json(ret)));
     }));
 
@@ -1548,7 +1543,7 @@ void blog_server::read_blog(const http_server_request& req, http_server_response
     ret["type"] = 0;
     ret["blog"] = json();
     ret["blog"].convert_to_object();
-    sf_info(ret);
+
     if (param.count("blog") != 0) {
         ret["type"] = 1;
         auto blog_id = static_cast<int>(string_to_long_double(param["blog"]));
@@ -1604,8 +1599,8 @@ void blog_server::uploaded_file_list(const http_server_request& req,
     auto file_path = blog_config__.uploaded_file_path;
     // auto prefix_len = file_path.size();
 
-    for (auto& p : fs::recursive_directory_iterator(file_path)) {
-        if (!fs::is_directory(p.path())) {
+    for (auto& p : std::filesystem::recursive_directory_iterator(file_path)) {
+        if (!std::filesystem::is_directory(p.path())) {
             auto t = string(p.path().filename());
             ret["data"].append(json(t));
         }
@@ -1648,16 +1643,16 @@ void blog_server::upload_file(const http_server_request& req,
             // TODO 此处应该需要一个转换安装文件名的函数
             if (param.count("filename") != 0) {
                 auto safe_file_name = safe_path(param["filename"]);
-                auto new_file_name = fs::path(blog_config__.uploaded_file_path) / safe_file_name;
-                if (fs::exists(new_file_name)) {
-                    new_file_name = fs::path(blog_config__.uploaded_file_path) / (random::instance()->uuid_str() + safe_file_name);
+                auto new_file_name = std::filesystem::path(blog_config__.uploaded_file_path) / safe_file_name;
+                if (std::filesystem::exists(new_file_name)) {
+                    new_file_name = std::filesystem::path(blog_config__.uploaded_file_path) / (random::instance()->uuid_str() + safe_file_name);
                 }
                 std::error_code ec;
-                fs::copy(p.filename(), new_file_name, ec);
+                std::filesystem::copy(p.filename(), new_file_name, ec);
             }
         }
         std::error_code ec;
-        fs::remove(p.filename(), ec);
+        std::filesystem::remove(p.filename(), ec);
     }
     ret["code"] = 0;
 }
@@ -1675,7 +1670,7 @@ void blog_server::delete_file(const http_server_request& req,
     }
     auto path = safe_path(param["path"]);
     std::error_code ec;
-    fs::remove(fs::path(blog_config__.uploaded_file_path) / path, ec);
+    std::filesystem::remove(std::filesystem::path(blog_config__.uploaded_file_path) / path, ec);
     if (ec.value() != 0) {
         ret["code"] = 1;
         ret["msg"] = ec.message();

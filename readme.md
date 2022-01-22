@@ -9,7 +9,7 @@
 * 安装 docker 与 docker-compose
 * 克隆代码
 ```bash
-git clone https://github.com/skyfireitdiy/my_blog --recursive
+git clone https://github.com/skyfireitdiy/sblog --recursive
 ```
 
 2. 构建docker镜像

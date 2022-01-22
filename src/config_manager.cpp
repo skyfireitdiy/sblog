@@ -3,11 +3,11 @@
 //
 #include "config_manager.h"
 #include <fstream>
-#include <sf_utils>
 
 using namespace skyfire;
 
-config_manager::config_manager(const std::string &filename) {
+config_manager::config_manager(const std::string& filename)
+{
     byte_array data;
     if (!read_file(filename, data)) {
         return;

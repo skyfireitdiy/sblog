@@ -4,7 +4,7 @@
 #include "config_manager.h"
 #include "database.h"
 #include "inja.hpp"
-#include <sf_http_server>
+#include <sflib.h>
 // #include "network/websocket_param_t.hpp"
 
 using namespace skyfire;

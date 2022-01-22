@@ -1,7 +1,6 @@
 #pragma once
 
-#include <sf_json>
-#include <sf_utils>
+#include <sflib.h>
 
 using namespace skyfire;
 
