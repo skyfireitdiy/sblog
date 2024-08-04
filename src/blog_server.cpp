@@ -1332,7 +1332,7 @@ void blog_server::user_get_all_blog(const http_server_request& req,
     sort(data_normal.begin(), data_normal.end(),
         [](blog& bl, blog& br) { return bl.publish_time > br.publish_time; });
     blogs.insert(blogs.end(), data_normal.begin(), data_normal.end());
-    auto blogs_json = json(); //to_json(blogs);
+    auto blogs_json = json(); // to_json(blogs);
     blogs_json.convert_to_array();
     for (size_t i = 0; i < blogs.size(); ++i) {
         auto tmp_ret = gen_blog_info(blogs[i]);

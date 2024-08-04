@@ -1,6 +1,7 @@
 
 #include "database.h"
 #include "digestpp.hpp"
+#include <iostream>
 
 database::database(const string& path)
 {
