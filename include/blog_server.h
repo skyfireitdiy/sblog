@@ -3,7 +3,7 @@
 #include "blog_config.h"
 #include "config_manager.h"
 #include "database.h"
-#include "inja.hpp"
+#include "inja/inja.hpp"
 #include <sflib.h>
 // #include "network/websocket_param_t.hpp"
 

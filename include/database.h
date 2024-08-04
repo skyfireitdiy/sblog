@@ -1,7 +1,7 @@
 #pragma once
 
-#include "sqlite_orm.h"
 #include <sflib.h>
+#include <sqlite_orm/sqlite_orm.h>
 
 using namespace std;
 using namespace skyfire;
@@ -89,14 +89,14 @@ inline auto init_user_storage(const string& path)
     return make_storage(
         path,
         make_table("admin_user",
-            make_column("id", &admin_user::id, autoincrement(),
-                primary_key(), unique()),
+            make_column("id", &admin_user::id, primary_key().autoincrement(),
+                unique()),
             make_column("name", &admin_user::name, unique()),
             make_column("password", &admin_user::password)),
         make_table("blog_info", make_column("title", &blog_info::title),
             make_column("desc", &blog_info::desc)),
         make_table("blog",
-            make_column("id", &blog::id, autoincrement(), primary_key(),
+            make_column("id", &blog::id, primary_key().autoincrement(),
                 unique()),
             make_column("title", &blog::title),
             make_column("publish_time", &blog::publish_time),
@@ -106,7 +106,7 @@ inline auto init_user_storage(const string& path)
             make_column("hide", &blog::hide),
             make_column("blog_type", &blog::blog_type)),
         make_table("draft",
-            make_column("id", &draft::id, autoincrement(), primary_key(),
+            make_column("id", &draft::id, primary_key().autoincrement(),
                 unique()),
             make_column("title", &draft::title),
             make_column("content", &draft::content),
@@ -115,21 +115,21 @@ inline auto init_user_storage(const string& path)
             make_column("id", &blog_content::id, primary_key()),
             make_column("content", &blog_content::content)),
         make_table("blog_big_group",
-            make_column("id", &blog_big_group::id, autoincrement(),
-                primary_key(), unique()),
+            make_column("id", &blog_big_group::id, primary_key().autoincrement(),
+                unique()),
             make_column("group_name", &blog_big_group::group_name)),
         make_table("blog_sub_group",
-            make_column("id", &blog_sub_group::id, autoincrement(),
-                primary_key(), unique()),
+            make_column("id", &blog_sub_group::id, primary_key().autoincrement(),
+                unique()),
             make_column("big_group", &blog_sub_group::big_group),
             make_column("group_name", &blog_sub_group::group_name)),
         make_table("label",
-            make_column("id", &label::id, autoincrement(), primary_key(),
+            make_column("id", &label::id, primary_key().autoincrement(),
                 unique()),
             make_column("label_name", &label::label_name)),
         make_table("blog_label", make_column("blog_id", &blog_label::blog_id),
             make_column("label_id", &blog_label::label_id)),
-        make_table("comment", make_column("id", &comment::id, autoincrement(), primary_key()),
+        make_table("comment", make_column("id", &comment::id, primary_key().autoincrement()),
             make_column("name", &comment::name),
             make_column("blog_id", &comment::blog_id),
             make_column("publish_time", &comment::publish_time),

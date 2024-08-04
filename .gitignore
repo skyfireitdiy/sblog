@@ -13,4 +13,6 @@ file/*
 compile_commands.json
 blog_server
 *.bak
-
+blog_run_docker/db 
+blog_run_docker/static
+blog_run_docker/template
